@@ -56,13 +56,6 @@ const HOW_IT_WORKS = [
   },
 ];
 
-type Persona = {
-  title: string;
-  text: string;
-  icon: React.ReactNode;
-};
-
-
 const PERSONAS = [
   {
     title: "HR Leaders",
