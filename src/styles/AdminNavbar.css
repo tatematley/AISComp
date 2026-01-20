@@ -1,0 +1,180 @@
+.adminNav {
+  width: 100%;
+  /* SAME as page background */
+  background: var(--midnight);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.adminNavInner {
+  width: 100%;
+  margin: 0;              
+  padding: 16px 50px;     
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+}
+/* LEFT */
+.adminNavLeft {
+  margin-left: 0px;
+}
+
+/* CENTER */
+.adminNavCenter {
+  display: flex;
+  justify-content: center;
+}
+
+/* RIGHT */
+.adminNavRight {
+  display: flex;
+  align-items: center;
+}
+
+
+.adminNavLogoLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.adminNavLogo {
+  height: 70px; /* larger logo */
+  width: auto;
+  opacity: 0.95;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.adminNavLogoLink:hover .adminNavLogo {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.adminNavLinks {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.adminNavLink {
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  color: rgba(255, 255, 255, 0.72);
+  padding: 6px 2px;
+  position: relative;
+}
+
+.adminNavLink:hover {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.adminNavLink.active {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.adminNavLink.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(218, 245, 97, 0.85);
+}
+
+/* Right user */
+.adminNavUser {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.adminNavUserBtn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  padding: 4px;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.adminNavUserBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(218, 245, 97, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.adminNavAvatar {
+  height: 60px;
+  width: 60px;
+  border-radius: 999px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Dropdown */
+.adminNavMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 190px;
+
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+}
+
+.adminNavMenuHeader {
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.adminNavMenuName {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 900;
+  font-size: 13.5px;
+}
+
+.adminNavMenuSub {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+.adminNavMenuItem {
+  width: 100%;
+  text-align: left;
+
+  padding: 11px 12px;
+  border: none;
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.adminNavMenuItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Mobile */
+@media (max-width: 840px) {
+  .adminNavInner {
+    padding: 14px 18px;
+  }
+
+  .adminNavLinks {
+    gap: 16px;
+  }
+}
