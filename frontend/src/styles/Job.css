@@ -1,0 +1,296 @@
+.jobPage {
+  min-height: 100vh;
+  width: 100%;
+  padding: 30px;
+  box-sizing: border-box;
+  background: var(--midnight);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.jobShell {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+/* Header row */
+.jobHeaderRow {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  /* align header with card content */
+
+  box-sizing: border-box;
+
+  margin-bottom: 2px;
+}
+
+.jobTitleBlock {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.jobBackLink {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 4px;
+
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13.5px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: color 120ms ease, transform 120ms ease;
+}
+
+.jobBackLink:hover {
+  color: rgba(218, 245, 97, 0.95);
+  transform: translateX(-2px);
+}
+
+.jobBackLink:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(218, 245, 97, 0.18);
+  border-radius: 6px;
+}
+
+.jobTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.jobTitle {
+  margin: 0;
+  font-size: 40px;
+  letter-spacing: -0.02em;
+}
+
+.jobRole {
+  margin: 6px 0 2px;
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* pill status */
+.jobPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.jobActionsRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.jobActionBtn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease,
+    transform 120ms ease;
+}
+
+.jobActionBtn:hover {
+  border-color: rgba(218, 245, 97, 0.7);
+  color: rgba(218, 245, 97, 0.95);
+  background: rgba(218, 245, 97, 0.08);
+  transform: translateY(-1px);
+}
+
+.jobActionBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(218, 245, 97, 0.18);
+}
+
+.jobActionBtn.danger:hover {
+  border-color: rgba(255, 170, 170, 0.75);
+  color: rgba(255, 200, 200, 0.95);
+  background: rgba(255, 170, 170, 0.08);
+}
+
+/* Glass card */
+.jobCard {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  padding: 18px;
+}
+
+/* Info grid */
+.jobInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 22px;
+}
+
+.jobInfoItem {
+  min-width: 0;
+}
+
+.jobLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.62);
+  margin-bottom: 4px;
+}
+
+.jobValue {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.10);
+  margin: 16px 0;
+}
+
+/* Description */
+.jobDescriptionText {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 80ch;
+}
+
+/* Section headers */
+.jobSectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.jobSectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.88);
+  letter-spacing: -0.01em;
+}
+
+.jobSectionMeta {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.jobMuted {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13.5px;
+  margin: 0;
+}
+
+/* Skills pills */
+.jobSkillsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.jobSkillPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(15, 23, 42, 0.4);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13.5px;
+  font-weight: 800;
+  transition: transform 120ms ease, background 120ms ease,
+    border-color 120ms ease;
+}
+
+.jobSkillPill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(218, 245, 97, 0.65);
+  background: rgba(218, 245, 97, 0.08);
+}
+
+.jobSkillName {
+  white-space: nowrap;
+}
+
+.jobSkillLevel {
+  font-size: 12px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Recommenders placeholder */
+.jobPlaceholderRow {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.jobPlaceholderCard {
+  height: 92px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.25);
+}
+
+/* State */
+.jobState {
+  padding: 18px 16px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13.5px;
+}
+
+.jobState.error {
+  color: rgba(255, 170, 170, 0.9);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .jobHeaderRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .jobInfoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .jobPlaceholderRow {
+    grid-template-columns: 1fr;
+  }
+}
