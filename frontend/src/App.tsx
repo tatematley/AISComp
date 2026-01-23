@@ -1,12 +1,22 @@
 import { Routes, Route } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+
 import Employees from "./pages/Employees";
-import Profile from "./pages/Profile";
-import Jobs from "./pages/Jobs";
+import Employee from "./pages/Employee";
+import EmployeeEdit from "./pages/EmployeeEdit";
+import EmployeeAdd from "./pages/EmployeeAdd";
+
 import Applicants from "./pages/Applicants";
+import Applicant from "./pages/Applicant"; 
+import ApplicantEdit from "./pages/ApplicantEdit";
+import ApplicantAdd from "./pages/ApplicantAdd";
+
+import Jobs from "./pages/Jobs";
 import Job from "./pages/Job";
-import ProfileEdit from "./pages/ProfileEdit";
+import JobEdit from "./pages/JobEdit";
+import JobAdd from "./pages/JobAdd";
 
 export default function App() {
   return (
@@ -15,18 +25,25 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
 
-      {/* Admin pages */}
+      {/* Employees (internal candidates) */}
       <Route path="/employees" element={<Employees />} />
-      <Route path="/employees/:id" element={<Profile />} />
+      <Route path="/employees/:id" element={<Employee />} />
+      <Route path="/employees/:id/edit" element={<EmployeeEdit />} />
+      <Route path="/employees/new" element={<EmployeeAdd />} />
+
+
+      {/* Applicants (non-internal candidates) */}
+      <Route path="/applicants" element={<Applicants />} />
+      <Route path="/applicants/:id" element={<Applicant />} />
+      <Route path="/applicants/:id/edit" element={<ApplicantEdit />} />
+      <Route path="/applicants/new" element={<ApplicantAdd />} />
+
+
+      {/* Jobs */}
       <Route path="/jobs" element={<Jobs />} />
       <Route path="/jobs/:id" element={<Job />} />
-      <Route path="/applicants" element={<Applicants />} />
-      {/* Edit pages */}
-      <Route path="/employees/:id/edit" element={<ProfileEdit />} />
+      <Route path="/jobs/:id/edit" element={<JobEdit />} />
+      <Route path="/jobs/new" element={<JobAdd />} />
     </Routes>
   );
-}
-
-
-
-
+};

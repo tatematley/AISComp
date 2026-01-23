@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/Employees.css";
-import { Link } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
+import { Link, useNavigate } from "react-router-dom";
+
 
 
 type EmployeeRow = {
@@ -18,6 +19,8 @@ export default function Employees() {
   const [employees, setEmployees] = useState<EmployeeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -84,10 +87,20 @@ export default function Employees() {
         <div className="employeesTitleBlock">
             <h1 className="employeesTitle">Employees</h1>
 
-            <span className="employeesAddAction" role="button" tabIndex={0}>
-                <span className="employeesAddIcon">+</span>
-                <span>New Employee</span>
+            <span
+              className="employeesAddAction"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate("/employees/new")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") navigate("/employees/new");
+              }}
+            >
+              <span className="employeesAddIcon">+</span>
+              <span onClick={() => navigate("/employees/new")}
+                >New Employee</span>
             </span>
+
 
             <p className="employeesSubtitle">Search and manage employee records.</p>
         </div>

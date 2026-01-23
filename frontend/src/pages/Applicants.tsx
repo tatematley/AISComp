@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/Applicants.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 
 type ApplicantRow = {
@@ -9,7 +9,7 @@ type ApplicantRow = {
   position: string | null;
   email: string | null;
   phone_number: string | null;
-  application_date: string | null; // comes over JSON as string
+  application_date: string | null;
 };
 
 const PAGE_SIZE = 20;
@@ -29,6 +29,8 @@ export default function Applicants() {
   const [applicants, setApplicants] = useState<ApplicantRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -93,7 +95,19 @@ export default function Applicants() {
           <div className="applicantsTitleBlock">
             <h1 className="applicantsTitle">Applicants</h1>
 
-            <span className="applicantsAddAction" role="button" tabIndex={0}>
+            {/* ✅ FIXED BUTTON */}
+            <span
+              className="applicantsAddAction"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate("/applicants/new")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate("/applicants/new");
+                }
+              }}
+            >
               <span className="applicantsAddIcon">+</span>
               <span>New Applicant</span>
             </span>
@@ -134,7 +148,7 @@ export default function Applicants() {
             !error &&
             pageRows.map((a) => (
               <Link
-                to={`/employees/${a.candidate_id}`}
+                to={`/applicants/${a.candidate_id}`}
                 className="applicantsRowLink"
                 key={a.candidate_id}
                 aria-label={`Open applicant ${a.name ?? a.candidate_id}`}

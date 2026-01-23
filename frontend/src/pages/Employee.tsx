@@ -4,7 +4,6 @@ import AdminNavbar from "../components/AdminNavbar";
 import "../styles/Profile.css";
 import { useNavigate } from "react-router-dom";
 
-
 type Skill = {
   candidate_skill_id: number;
   skill_name: string;
@@ -35,12 +34,10 @@ type ProfileData = {
   skills: Skill[];
 };
 
-
-export default function Profile() {
+export default function Employee() {
   const { id } = useParams();
   const candidateId = Number(id);
   const navigate = useNavigate();
-
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,11 +63,48 @@ export default function Profile() {
       .finally(() => setLoading(false));
   }, [candidateId]);
 
+  // ✅ DELETE HANDLER (added)
+  const handleDelete = async () => {
+    const ok = window.confirm("Delete this employee? This can’t be undone.");
+    if (!ok) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:5050/api/employees/${candidateId}`,
+        { method: "DELETE" }
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to delete employee");
+      }
+
+      navigate("/employees");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete employee");
+    }
+  };
+
   if (loading) return <div className="profileState">Loading…</div>;
   if (error) return <div className="profileState error">{error}</div>;
   if (!data) return null;
 
   const { candidate, internal, skills } = data;
+
+  if (!candidate.internal) {
+    return (
+      <div className="profileState error">
+        This record is an applicant. Go to{" "}
+        <button
+          className="profileBackLink"
+          onClick={() => navigate(`/applicants/${candidateId}`)}
+        >
+          Applicant page
+        </button>
+        .
+      </div>
+    );
+  }
 
   return (
     <>
@@ -82,17 +116,15 @@ export default function Profile() {
           <div className="profileHeaderRow">
             <div className="profileTitleBlock">
               <button
-                    className="profileBackLink"
-                    onClick={() => navigate("/employees")}
-                    type="button"
-                  >
-                    ← Back to Employees
-                </button>
+                className="profileBackLink"
+                onClick={() => navigate("/employees")}
+                type="button"
+              >
+                ← Back to Employees
+              </button>
               <div className="profileTitleRow">
                 <h1 className="profileTitle">{candidate.name}</h1>
-                {candidate.internal && (
-                  <span className="profilePill">Internal</span>
-                )}
+                {candidate.internal && <span className="profilePill">Internal</span>}
               </div>
 
               {/* bigger role */}
@@ -101,13 +133,19 @@ export default function Profile() {
 
             <div className="profileActionsRow">
               <button
-                  className="profileActionBtn"
-                  type="button"
-                  onClick={() => navigate(`/employees/${candidateId}/edit`)}
-                >
-                  Edit
+                className="profileActionBtn"
+                type="button"
+                onClick={() => navigate(`/employees/${candidateId}/edit`)}
+              >
+                Edit
               </button>
-              <button className="profileActionBtn danger" type="button">
+
+              {/* ✅ wire up delete */}
+              <button
+                className="profileActionBtn danger"
+                type="button"
+                onClick={handleDelete}
+              >
                 Delete
               </button>
             </div>
@@ -150,50 +188,38 @@ export default function Profile() {
 
                   <div className="profileInfoItem">
                     <div className="profileLabel">Phone</div>
-                    <div className="profileValue">
-                      {candidate.phone_number || "—"}
-                    </div>
+                    <div className="profileValue">{candidate.phone_number || "—"}</div>
                   </div>
                 </div>
 
-                {/* Internal info (no "Internal Info" title) */}
+                {/* Internal info */}
                 {internal && (
                   <div className="profileInternalBlock">
                     <div className="profileInfoGrid profileInternalGrid">
                       <div className="profileInfoItem">
                         <div className="profileLabel">Role</div>
-                        <div className="profileValue">
-                          {internal.currentrole || "—"}
-                        </div>
+                        <div className="profileValue">{internal.currentrole || "—"}</div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Department</div>
-                        <div className="profileValue">
-                          {internal.department_name || "—"}
-                        </div>
+                        <div className="profileValue">{internal.department_name || "—"}</div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Location</div>
-                        <div className="profileValue">
-                          {internal.location_name || "—"}
-                        </div>
+                        <div className="profileValue">{internal.location_name || "—"}</div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Education</div>
-                        <div className="profileValue">
-                          {internal.education_level || "—"}
-                        </div>
+                        <div className="profileValue">{internal.education_level || "—"}</div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Experience</div>
                         <div className="profileValue">
-                          {internal.years_exp != null
-                            ? `${internal.years_exp} yrs`
-                            : "—"}
+                          {internal.years_exp != null ? `${internal.years_exp} yrs` : "—"}
                         </div>
                       </div>
 
@@ -227,9 +253,7 @@ export default function Profile() {
                   <div key={s.candidate_skill_id} className="profileSkillPill">
                     <span className="profileSkillName">{s.skill_name}</span>
                     {s.proficiency_level != null && (
-                      <span className="profileSkillLevel">
-                        Lvl {s.proficiency_level}
-                      </span>
+                      <span className="profileSkillLevel">Lvl {s.proficiency_level}</span>
                     )}
                   </div>
                 ))}
@@ -241,8 +265,7 @@ export default function Profile() {
           <section className="profileCard">
             <h2 className="profileSectionTitle">Recommended Fits</h2>
             <p className="profileMuted">
-              Coming soon: recommended roles, top matching jobs, and next-skill
-              suggestions.
+              Coming soon: recommended roles, top matching jobs, and next-skill suggestions.
             </p>
 
             <div className="profilePlaceholderRow">

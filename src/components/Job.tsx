@@ -1,1 +1,0 @@
-import "../styles/Job.css";

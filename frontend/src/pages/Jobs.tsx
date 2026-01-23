@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../styles/Jobs.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 
 type JobRow = {
@@ -38,6 +38,7 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -106,24 +107,22 @@ export default function Jobs() {
         <header className="jobsHeader">
           <div className="jobsTitleBlock">
             <h1 className="jobsTitle">Jobs</h1>
-                <span
-                    className="jobsAddAction"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Add new job"
-                    onClick={() => {
-                        console.log("Add new job");
-                    }}
-                    onKeyDown={(e) => {
+                    <span
+                      className="jobsAddAction"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Add new job"
+                      onClick={() => navigate("/jobs/new")}
+                      onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        console.log("Add new job");
+                          e.preventDefault();
+                          navigate("/jobs/new");
                         }
-                    }}
+                      }}
                     >
-                    <span className="jobsAddIcon">+ </span>
-                    <span className="jobsAddText">New Job</span>
+                      <span className="jobsAddText">New Job</span>
                     </span>
+
 
             <p className="jobsSubtitle">Search and manage job postings.</p>
           </div>

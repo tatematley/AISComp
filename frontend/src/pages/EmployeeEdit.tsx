@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
-import "../styles/ProfileEdit.css";
+import "../styles/EmployeeEdit.css";
 
 type SkillRow = {
   candidate_skill_id: number;
@@ -41,7 +41,7 @@ type ProfileData = {
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
 
-export default function ProfileEdit() {
+export default function EmployeeEdit() {
   const { id } = useParams();
   const candidateId = Number(id);
   const navigate = useNavigate();
@@ -194,10 +194,18 @@ export default function ProfileEdit() {
     const picked = skillsCatalog.find((s) => s.id === newSkillId);
     if (!picked) return;
 
-    const lvl = newSkillLevel.trim() === "" ? null : Number(newSkillLevel);
-    if (newSkillLevel.trim() !== "" && (Number.isNaN(lvl) || lvl < 0 || lvl > 5)) {
-      setError("Skill level must be a number between 0 and 5.");
-      return;
+    const raw = newSkillLevel.trim();
+
+    // empty is allowed -> null
+    let lvl: number | null = null;
+
+    if (raw !== "") {
+      const n = Number(raw);
+      if (Number.isNaN(n) || n < 0 || n > 5) {
+        setError("Skill level must be a number between 0 and 5.");
+        return;
+      }
+      lvl = n;
     }
 
     // new skills don't have candidate_skill_id yet; use negative temp ids for React keys
@@ -211,6 +219,7 @@ export default function ProfileEdit() {
     setNewSkillId("");
     setNewSkillLevel("");
   };
+
 
   const onSave = async () => {
     if (!profile) return;
@@ -374,7 +383,7 @@ export default function ProfileEdit() {
                 />
               </div>
 
-              <div className="profileEditField profileEditSpacer" />
+
 
               {/* Internal section */}
               <div className="profileEditSectionHeader">
@@ -522,13 +531,22 @@ export default function ProfileEdit() {
                         className="profileEditSkillLevel"
                         value={s.proficiency_level == null ? "" : String(s.proficiency_level)}
                         onChange={(e) => {
-                          const v = e.target.value.trim();
-                          const n = v === "" ? null : Number(v);
-                          if (v !== "" && (Number.isNaN(n) || n < 0 || n > 5)) return;
+                          const raw = e.target.value.trim();
+
+                          // empty -> null
+                          if (raw === "") {
+                            updateSkillLevel(s.candidate_skill_id, null);
+                            return;
+                          }
+
+                          const n = Number(raw);
+                          if (Number.isNaN(n) || n < 0 || n > 5) return;
+
                           updateSkillLevel(s.candidate_skill_id, n);
                         }}
                         placeholder="Lvl"
                       />
+
 
                       <button
                         className="profileEditRemoveBtn"

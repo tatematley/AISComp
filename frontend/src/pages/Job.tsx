@@ -36,6 +36,28 @@ export default function Job() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const handleDelete = async () => {
+  const ok = window.confirm("Delete this job? This can’t be undone.");
+  if (!ok) return;
+
+  try {
+    const res = await fetch(`http://localhost:5050/api/jobs/${jobId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || "Failed to delete job");
+    }
+
+    // go back to jobs list (or wherever you want)
+    navigate("/jobs");
+  } catch (e) {
+    setError(e instanceof Error ? e.message : "Failed to delete job");
+  }
+};
+
+
   useEffect(() => {
     if (Number.isNaN(jobId)) {
       setError("Invalid job ID");
@@ -92,12 +114,17 @@ export default function Job() {
             </div>
 
             <div className="jobActionsRow">
-              <button className="jobActionBtn" type="button">
+              <button className="profileActionBtn" type="button"  onClick={() => navigate(`/jobs/${jobId}/edit`)}>
                 Edit
               </button>
-              <button className="jobActionBtn danger" type="button">
+              <button
+                className="jobActionBtn danger"
+                type="button"
+                onClick={handleDelete}
+              >
                 Delete
               </button>
+
             </div>
           </div>
 
