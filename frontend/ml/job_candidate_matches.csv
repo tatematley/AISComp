@@ -1,0 +1,361 @@
+job_id,job_title,department,candidate_id,current_role,match_score,eligible,skills_met,skills_required,total_gap,warnings
+201,Junior Data Scientist,Analytics,105,ML Engineer,0.6056338028169014,True,4,8,10.0,
+201,Junior Data Scientist,Analytics,101,Business Analyst,0.5774647887323944,True,5,8,8.0,
+201,Junior Data Scientist,Analytics,112,Analytics Manager,0.49295774647887325,True,4,8,10.0,
+201,Junior Data Scientist,Analytics,110,Data Visualization Specialist,0.4225352112676057,True,4,8,10.0,
+201,Junior Data Scientist,Analytics,103,Data Engineer,0.3098591549295775,True,2,8,15.0,
+201,Junior Data Scientist,Analytics,115,Software Engineer,0.3098591549295775,True,2,8,15.0,
+201,Junior Data Scientist,Analytics,106,Product Analyst,0.295774647887324,True,3,8,14.0,
+201,Junior Data Scientist,Analytics,102,Marketing Analyst,0.19718309859154928,True,2,8,15.0,
+201,Junior Data Scientist,Analytics,113,Talent Acquisition Coordinator,0.19718309859154928,True,2,8,15.0,
+201,Junior Data Scientist,Analytics,104,HR Operations Specialist,0.16431924882629106,True,1,8,16.0,
+201,Junior Data Scientist,Analytics,108,Security Analyst,0.09859154929577464,True,1,8,18.0,
+201,Junior Data Scientist,Analytics,109,Project Manager,0.09859154929577464,True,1,8,18.0,
+201,Junior Data Scientist,Analytics,114,Data Governance Analyst,0.09859154929577464,True,1,8,18.0,
+201,Junior Data Scientist,Analytics,111,Cloud Engineer,0.0,True,0,8,21.0,
+201,Junior Data Scientist,Analytics,107,Junior Data Analyst,0.33333333333333337,False,2,8,13.0,Below min years experience; Below education requirement;
+202,Senior Marketing Analyst,Marketing,102,Marketing Analyst,0.7012987012987013,True,4,8,9.0,
+202,Senior Marketing Analyst,Marketing,106,Product Analyst,0.6246753246753247,True,3,8,11.0,
+202,Senior Marketing Analyst,Marketing,112,Analytics Manager,0.5272727272727273,True,3,8,14.0,
+202,Senior Marketing Analyst,Marketing,109,Project Manager,0.35194805194805195,True,1,8,19.0,
+202,Senior Marketing Analyst,Marketing,108,Security Analyst,0.0935064935064935,True,0,8,27.0,
+202,Senior Marketing Analyst,Marketing,114,Data Governance Analyst,0.0935064935064935,True,0,8,27.0,
+202,Senior Marketing Analyst,Marketing,103,Data Engineer,0.0,True,0,8,30.0,
+202,Senior Marketing Analyst,Marketing,105,ML Engineer,0.0,True,0,8,30.0,
+202,Senior Marketing Analyst,Marketing,111,Cloud Engineer,0.0,True,0,8,30.0,
+202,Senior Marketing Analyst,Marketing,115,Software Engineer,0.0,True,0,8,30.0,
+202,Senior Marketing Analyst,Marketing,113,Talent Acquisition Coordinator,0.5844155844155844,False,3,8,12.0,Below min years experience;
+202,Senior Marketing Analyst,Marketing,110,Data Visualization Specialist,0.5142857142857142,False,3,8,14.0,Below min years experience;
+202,Senior Marketing Analyst,Marketing,104,HR Operations Specialist,0.45454545454545453,False,3,8,16.0,Below min years experience;
+202,Senior Marketing Analyst,Marketing,101,Business Analyst,0.3194805194805195,False,0,8,20.0,Below min years experience;
+202,Senior Marketing Analyst,Marketing,107,Junior Data Analyst,0.0935064935064935,False,0,8,27.0,Below min years experience; Below education requirement;
+203,Data Analyst (BI),Analytics,110,Data Visualization Specialist,1.0,True,7,7,0.0,
+203,Data Analyst (BI),Analytics,101,Business Analyst,0.6871794871794872,True,4,7,6.0,
+203,Data Analyst (BI),Analytics,112,Analytics Manager,0.4461538461538461,True,3,7,11.0,
+203,Data Analyst (BI),Analytics,106,Product Analyst,0.43076923076923074,True,3,7,11.0,
+203,Data Analyst (BI),Analytics,102,Marketing Analyst,0.29230769230769227,True,2,7,14.0,
+203,Data Analyst (BI),Analytics,113,Talent Acquisition Coordinator,0.29230769230769227,True,2,7,14.0,
+203,Data Analyst (BI),Analytics,104,HR Operations Specialist,0.24615384615384617,True,1,7,15.0,
+203,Data Analyst (BI),Analytics,103,Data Engineer,0.15384615384615385,True,1,7,18.0,
+203,Data Analyst (BI),Analytics,105,ML Engineer,0.15384615384615385,True,1,7,18.0,
+203,Data Analyst (BI),Analytics,109,Project Manager,0.15384615384615385,True,1,7,17.0,
+203,Data Analyst (BI),Analytics,115,Software Engineer,0.15384615384615385,True,1,7,18.0,
+203,Data Analyst (BI),Analytics,108,Security Analyst,0.11538461538461539,True,0,7,18.0,
+203,Data Analyst (BI),Analytics,114,Data Governance Analyst,0.11538461538461539,True,0,7,18.0,
+203,Data Analyst (BI),Analytics,111,Cloud Engineer,0.0,True,0,7,21.0,
+203,Data Analyst (BI),Analytics,107,Junior Data Analyst,0.2692307692307692,False,1,7,15.0,Below education requirement;
+204,Data Engineer,Data Platform,103,Data Engineer,0.8947368421052632,True,7,8,3.0,
+204,Data Engineer,Data Platform,115,Software Engineer,0.34210526315789475,True,2,8,16.0,
+204,Data Engineer,Data Platform,105,ML Engineer,0.3157894736842105,True,2,8,17.0,
+204,Data Engineer,Data Platform,111,Cloud Engineer,0.3157894736842105,True,3,8,17.0,
+204,Data Engineer,Data Platform,101,Business Analyst,0.2631578947368421,True,2,8,18.0,
+204,Data Engineer,Data Platform,114,Data Governance Analyst,0.2631578947368421,True,2,8,19.0,
+204,Data Engineer,Data Platform,110,Data Visualization Specialist,0.2236842105263158,True,1,8,19.0,
+204,Data Engineer,Data Platform,108,Security Analyst,0.19736842105263158,True,2,8,20.0,
+204,Data Engineer,Data Platform,112,Analytics Manager,0.15789473684210525,True,1,8,21.0,
+204,Data Engineer,Data Platform,102,Marketing Analyst,0.0,True,0,8,25.0,
+204,Data Engineer,Data Platform,104,HR Operations Specialist,0.0,True,0,8,25.0,
+204,Data Engineer,Data Platform,106,Product Analyst,0.0,True,0,8,25.0,
+204,Data Engineer,Data Platform,109,Project Manager,0.0,True,0,8,25.0,
+204,Data Engineer,Data Platform,107,Junior Data Analyst,0.31140350877192985,False,1,8,17.0,Below min years experience; Below education requirement;
+204,Data Engineer,Data Platform,113,Talent Acquisition Coordinator,0.0,False,0,8,25.0,Below min years experience;
+205,ML Engineer,AI Engineering,105,ML Engineer,0.8947368421052632,True,7,8,3.0,
+205,ML Engineer,AI Engineering,112,Analytics Manager,0.0,True,0,8,26.0,
+205,ML Engineer,AI Engineering,115,Software Engineer,0.4736842105263158,False,4,8,13.0,Below education requirement;
+205,ML Engineer,AI Engineering,111,Cloud Engineer,0.32894736842105265,False,3,8,17.0,Below education requirement;
+205,ML Engineer,AI Engineering,103,Data Engineer,0.3070175438596491,False,1,8,18.0,Below education requirement;
+205,ML Engineer,AI Engineering,108,Security Analyst,0.18421052631578946,False,1,8,21.0,Below education requirement;
+205,ML Engineer,AI Engineering,101,Business Analyst,0.0,False,0,8,26.0,Below min years experience; Below education requirement;
+205,ML Engineer,AI Engineering,102,Marketing Analyst,0.0,False,0,8,26.0,Below education requirement;
+205,ML Engineer,AI Engineering,104,HR Operations Specialist,0.0,False,0,8,26.0,Below min years experience; Below education requirement;
+205,ML Engineer,AI Engineering,106,Product Analyst,0.0,False,0,8,26.0,Below education requirement;
+205,ML Engineer,AI Engineering,107,Junior Data Analyst,0.0,False,0,8,26.0,Below min years experience; Below education requirement;
+205,ML Engineer,AI Engineering,109,Project Manager,0.0,False,0,8,26.0,Below education requirement;
+205,ML Engineer,AI Engineering,110,Data Visualization Specialist,0.0,False,0,8,26.0,Below min years experience; Below education requirement;
+205,ML Engineer,AI Engineering,113,Talent Acquisition Coordinator,0.0,False,0,8,26.0,Below min years experience; Below education requirement;
+205,ML Engineer,AI Engineering,114,Data Governance Analyst,0.0,False,0,8,26.0,Below education requirement;
+206,HR Talent Strategy Analyst,HR Analytics,104,HR Operations Specialist,0.74812734082397,True,6,10,8.0,
+206,HR Talent Strategy Analyst,HR Analytics,113,Talent Acquisition Coordinator,0.6320224719101123,True,5,10,12.0,
+206,HR Talent Strategy Analyst,HR Analytics,102,Marketing Analyst,0.5533707865168539,True,4,10,15.0,
+206,HR Talent Strategy Analyst,HR Analytics,112,Analytics Manager,0.5011235955056179,True,4,10,16.0,
+206,HR Talent Strategy Analyst,HR Analytics,106,Product Analyst,0.46741573033707867,True,3,10,18.0,
+206,HR Talent Strategy Analyst,HR Analytics,108,Security Analyst,0.4179775280898876,True,4,10,19.0,
+206,HR Talent Strategy Analyst,HR Analytics,114,Data Governance Analyst,0.350561797752809,True,3,10,21.0,
+206,HR Talent Strategy Analyst,HR Analytics,110,Data Visualization Specialist,0.27640449438202247,True,2,10,23.0,
+206,HR Talent Strategy Analyst,HR Analytics,109,Project Manager,0.23146067415730337,True,1,10,25.0,
+206,HR Talent Strategy Analyst,HR Analytics,101,Business Analyst,0.18651685393258424,True,1,10,26.0,
+206,HR Talent Strategy Analyst,HR Analytics,111,Cloud Engineer,0.10112359550561797,True,1,10,30.0,
+206,HR Talent Strategy Analyst,HR Analytics,103,Data Engineer,0.07865168539325842,True,1,10,30.0,
+206,HR Talent Strategy Analyst,HR Analytics,105,ML Engineer,0.07865168539325842,True,1,10,30.0,
+206,HR Talent Strategy Analyst,HR Analytics,115,Software Engineer,0.07865168539325842,True,1,10,30.0,
+206,HR Talent Strategy Analyst,HR Analytics,107,Junior Data Analyst,0.1595505617977528,False,1,10,27.0,Below min years experience; Below education requirement;
+207,Financial Analyst,Finance,102,Marketing Analyst,0.6333333333333333,True,4,7,8.0,
+207,Financial Analyst,Finance,113,Talent Acquisition Coordinator,0.5,True,4,7,10.0,
+207,Financial Analyst,Finance,106,Product Analyst,0.39999999999999997,True,3,7,13.0,
+207,Financial Analyst,Finance,112,Analytics Manager,0.39999999999999997,True,3,7,13.0,
+207,Financial Analyst,Finance,110,Data Visualization Specialist,0.3833333333333333,True,3,7,13.0,
+207,Financial Analyst,Finance,104,HR Operations Specialist,0.33888888888888885,True,2,7,14.0,
+207,Financial Analyst,Finance,101,Business Analyst,0.25,True,2,7,16.0,
+207,Financial Analyst,Finance,109,Project Manager,0.25,True,2,7,16.0,
+207,Financial Analyst,Finance,108,Security Analyst,0.13333333333333333,True,1,7,19.0,
+207,Financial Analyst,Finance,114,Data Governance Analyst,0.13333333333333333,True,1,7,19.0,
+207,Financial Analyst,Finance,103,Data Engineer,0.0,True,0,7,22.0,
+207,Financial Analyst,Finance,105,ML Engineer,0.0,True,0,7,22.0,
+207,Financial Analyst,Finance,111,Cloud Engineer,0.0,True,0,7,22.0,
+207,Financial Analyst,Finance,115,Software Engineer,0.0,True,0,7,22.0,
+207,Financial Analyst,Finance,107,Junior Data Analyst,0.2833333333333334,False,2,7,16.0,Below min years experience; Below education requirement;
+208,Account Executive,Sales,102,Marketing Analyst,0.6525423728813559,False,4,7,7.0,Below education requirement;
+208,Account Executive,Sales,113,Talent Acquisition Coordinator,0.5932203389830508,False,4,7,8.0,Below education requirement;
+208,Account Executive,Sales,106,Product Analyst,0.5694915254237287,False,3,7,9.0,Below education requirement;
+208,Account Executive,Sales,112,Analytics Manager,0.5694915254237287,False,3,7,9.0,Below education requirement;
+208,Account Executive,Sales,109,Project Manager,0.4677966101694915,False,2,7,11.0,Below education requirement;
+208,Account Executive,Sales,104,HR Operations Specialist,0.4576271186440678,False,3,7,11.0,Below education requirement;
+208,Account Executive,Sales,110,Data Visualization Specialist,0.3830508474576271,False,2,7,13.0,Below education requirement;
+208,Account Executive,Sales,101,Business Analyst,0.29830508474576267,False,1,7,15.0,Below education requirement;
+208,Account Executive,Sales,107,Junior Data Analyst,0.12203389830508474,False,0,7,19.0,Below min years experience; Below education requirement;
+208,Account Executive,Sales,108,Security Analyst,0.12203389830508474,False,0,7,19.0,Below education requirement;
+208,Account Executive,Sales,114,Data Governance Analyst,0.12203389830508474,False,0,7,19.0,Below education requirement;
+208,Account Executive,Sales,103,Data Engineer,0.0,False,0,7,22.0,Below education requirement;
+208,Account Executive,Sales,105,ML Engineer,0.0,False,0,7,22.0,Below education requirement;
+208,Account Executive,Sales,111,Cloud Engineer,0.0,False,0,7,22.0,Below education requirement;
+208,Account Executive,Sales,115,Software Engineer,0.0,False,0,7,22.0,Below education requirement;
+209,Sales Operations Analyst,Sales Ops,106,Product Analyst,0.5789473684210525,True,4,7,8.0,
+209,Sales Operations Analyst,Sales Ops,110,Data Visualization Specialist,0.5614035087719298,True,4,7,8.0,
+209,Sales Operations Analyst,Sales Ops,102,Marketing Analyst,0.45614035087719296,True,3,7,11.0,
+209,Sales Operations Analyst,Sales Ops,112,Analytics Manager,0.43859649122807015,True,3,7,11.0,
+209,Sales Operations Analyst,Sales Ops,113,Talent Acquisition Coordinator,0.42105263157894735,True,3,7,11.0,
+209,Sales Operations Analyst,Sales Ops,101,Business Analyst,0.40350877192982454,True,3,7,11.0,
+209,Sales Operations Analyst,Sales Ops,104,HR Operations Specialist,0.3684210526315789,True,2,7,12.0,
+209,Sales Operations Analyst,Sales Ops,109,Project Manager,0.24561403508771928,True,2,7,15.0,
+209,Sales Operations Analyst,Sales Ops,108,Security Analyst,0.12280701754385964,True,1,7,17.0,
+209,Sales Operations Analyst,Sales Ops,114,Data Governance Analyst,0.12280701754385964,True,1,7,17.0,
+209,Sales Operations Analyst,Sales Ops,103,Data Engineer,0.0,True,0,7,20.0,
+209,Sales Operations Analyst,Sales Ops,105,ML Engineer,0.0,True,0,7,20.0,
+209,Sales Operations Analyst,Sales Ops,111,Cloud Engineer,0.0,True,0,7,20.0,
+209,Sales Operations Analyst,Sales Ops,115,Software Engineer,0.0,True,0,7,20.0,
+209,Sales Operations Analyst,Sales Ops,107,Junior Data Analyst,0.12280701754385964,False,1,7,17.0,Below min years experience; Below education requirement;
+210,Product Analyst,Product,106,Product Analyst,0.9516908212560385,True,6,7,1.0,
+210,Product Analyst,Product,112,Analytics Manager,0.7101449275362319,True,5,7,7.0,
+210,Product Analyst,Product,102,Marketing Analyst,0.5797101449275363,True,4,7,10.0,
+210,Product Analyst,Product,101,Business Analyst,0.5289855072463767,True,3,7,11.0,
+210,Product Analyst,Product,110,Data Visualization Specialist,0.42028985507246375,True,3,7,13.0,
+210,Product Analyst,Product,104,HR Operations Specialist,0.27536231884057966,True,2,7,17.0,
+210,Product Analyst,Product,109,Project Manager,0.27536231884057966,True,2,7,17.0,
+210,Product Analyst,Product,113,Talent Acquisition Coordinator,0.27536231884057966,True,2,7,17.0,
+210,Product Analyst,Product,108,Security Analyst,0.10869565217391304,True,0,7,21.0,
+210,Product Analyst,Product,114,Data Governance Analyst,0.10869565217391304,True,0,7,21.0,
+210,Product Analyst,Product,103,Data Engineer,0.0,True,0,7,24.0,
+210,Product Analyst,Product,105,ML Engineer,0.0,True,0,7,24.0,
+210,Product Analyst,Product,111,Cloud Engineer,0.0,True,0,7,24.0,
+210,Product Analyst,Product,115,Software Engineer,0.0,True,0,7,24.0,
+210,Product Analyst,Product,107,Junior Data Analyst,0.10869565217391304,False,0,7,21.0,Below min years experience; Below education requirement;
+211,Product Manager,Product,109,Project Manager,0.7000000000000001,True,5,8,9.0,
+211,Product Manager,Product,106,Product Analyst,0.6166666666666667,True,3,8,11.0,
+211,Product Manager,Product,102,Marketing Analyst,0.5480769230769231,True,2,8,13.0,
+211,Product Manager,Product,112,Analytics Manager,0.3538461538461538,True,2,8,19.0,
+211,Product Manager,Product,108,Security Analyst,0.09230769230769231,True,0,8,27.0,
+211,Product Manager,Product,114,Data Governance Analyst,0.09230769230769231,True,0,8,27.0,
+211,Product Manager,Product,103,Data Engineer,0.0,True,0,8,30.0,
+211,Product Manager,Product,105,ML Engineer,0.0,True,0,8,30.0,
+211,Product Manager,Product,111,Cloud Engineer,0.0,True,0,8,30.0,
+211,Product Manager,Product,115,Software Engineer,0.0,True,0,8,30.0,
+211,Product Manager,Product,104,HR Operations Specialist,0.37820512820512825,False,2,8,18.0,Below min years experience;
+211,Product Manager,Product,113,Talent Acquisition Coordinator,0.37820512820512825,False,2,8,18.0,Below min years experience;
+211,Product Manager,Product,101,Business Analyst,0.12307692307692307,False,0,8,26.0,Below min years experience;
+211,Product Manager,Product,110,Data Visualization Specialist,0.12307692307692307,False,0,8,26.0,Below min years experience;
+211,Product Manager,Product,107,Junior Data Analyst,0.09230769230769231,False,0,8,27.0,Below min years experience; Below education requirement;
+212,Project Manager,Operations,109,Project Manager,0.8961038961038962,True,7,8,3.0,
+212,Project Manager,Operations,112,Analytics Manager,0.38961038961038963,True,3,8,18.0,
+212,Project Manager,Operations,104,HR Operations Specialist,0.3766233766233766,True,3,8,17.0,
+212,Project Manager,Operations,102,Marketing Analyst,0.34415584415584416,True,2,8,18.0,
+212,Project Manager,Operations,106,Product Analyst,0.2597402597402597,True,2,8,21.0,
+212,Project Manager,Operations,108,Security Analyst,0.22727272727272727,True,1,8,23.0,
+212,Project Manager,Operations,114,Data Governance Analyst,0.22727272727272727,True,1,8,23.0,
+212,Project Manager,Operations,101,Business Analyst,0.12987012987012986,True,1,8,25.0,
+212,Project Manager,Operations,110,Data Visualization Specialist,0.12987012987012986,True,1,8,25.0,
+212,Project Manager,Operations,103,Data Engineer,0.0,True,0,8,29.0,
+212,Project Manager,Operations,105,ML Engineer,0.0,True,0,8,29.0,
+212,Project Manager,Operations,111,Cloud Engineer,0.0,True,0,8,29.0,
+212,Project Manager,Operations,115,Software Engineer,0.0,True,0,8,29.0,
+212,Project Manager,Operations,113,Talent Acquisition Coordinator,0.3474025974025974,False,2,8,18.0,Below min years experience;
+212,Project Manager,Operations,107,Junior Data Analyst,0.09740259740259741,False,0,8,26.0,Below min years experience; Below education requirement;
+213,Scrum Master,Operations,109,Project Manager,0.8709677419354839,True,6,7,3.0,
+213,Scrum Master,Operations,102,Marketing Analyst,0.30645161290322576,True,2,7,16.0,
+213,Scrum Master,Operations,112,Analytics Manager,0.2741935483870968,True,2,7,17.0,
+213,Scrum Master,Operations,104,HR Operations Specialist,0.25806451612903225,True,2,7,17.0,
+213,Scrum Master,Operations,113,Talent Acquisition Coordinator,0.25806451612903225,True,2,7,17.0,
+213,Scrum Master,Operations,101,Business Analyst,0.14516129032258066,True,1,7,20.0,
+213,Scrum Master,Operations,106,Product Analyst,0.14516129032258066,True,1,7,20.0,
+213,Scrum Master,Operations,110,Data Visualization Specialist,0.14516129032258066,True,1,7,20.0,
+213,Scrum Master,Operations,108,Security Analyst,0.10887096774193548,True,0,7,21.0,
+213,Scrum Master,Operations,114,Data Governance Analyst,0.10887096774193548,True,0,7,21.0,
+213,Scrum Master,Operations,103,Data Engineer,0.0,True,0,7,24.0,
+213,Scrum Master,Operations,105,ML Engineer,0.0,True,0,7,24.0,
+213,Scrum Master,Operations,111,Cloud Engineer,0.0,True,0,7,24.0,
+213,Scrum Master,Operations,115,Software Engineer,0.0,True,0,7,24.0,
+213,Scrum Master,Operations,107,Junior Data Analyst,0.23790322580645162,False,1,7,18.0,Below min years experience; Below education requirement;
+214,UX Researcher,Design,102,Marketing Analyst,0.5636363636363636,True,4,7,10.0,
+214,UX Researcher,Design,106,Product Analyst,0.5636363636363636,True,4,7,10.0,
+214,UX Researcher,Design,109,Project Manager,0.5636363636363636,True,4,7,9.0,
+214,UX Researcher,Design,112,Analytics Manager,0.5636363636363636,True,4,7,10.0,
+214,UX Researcher,Design,104,HR Operations Specialist,0.41818181818181815,True,3,7,12.0,
+214,UX Researcher,Design,101,Business Analyst,0.30909090909090914,True,2,7,15.0,
+214,UX Researcher,Design,110,Data Visualization Specialist,0.30909090909090914,True,2,7,15.0,
+214,UX Researcher,Design,108,Security Analyst,0.12272727272727274,True,0,7,19.0,
+214,UX Researcher,Design,114,Data Governance Analyst,0.12272727272727274,True,0,7,19.0,
+214,UX Researcher,Design,103,Data Engineer,0.0,True,0,7,22.0,
+214,UX Researcher,Design,105,ML Engineer,0.0,True,0,7,22.0,
+214,UX Researcher,Design,111,Cloud Engineer,0.0,True,0,7,22.0,
+214,UX Researcher,Design,115,Software Engineer,0.0,True,0,7,22.0,
+214,UX Researcher,Design,113,Talent Acquisition Coordinator,0.5636363636363636,False,4,7,9.0,Below min years experience;
+214,UX Researcher,Design,107,Junior Data Analyst,0.2681818181818182,False,1,7,16.0,Below min years experience; Below education requirement;
+215,UI/UX Designer,Design,106,Product Analyst,0.6906779661016949,True,4,7,7.0,
+215,UI/UX Designer,Design,102,Marketing Analyst,0.6101694915254237,True,4,7,9.0,
+215,UI/UX Designer,Design,110,Data Visualization Specialist,0.5762711864406779,True,4,7,9.0,
+215,UI/UX Designer,Design,101,Business Analyst,0.5381355932203389,True,3,7,10.0,
+215,UI/UX Designer,Design,112,Analytics Manager,0.4576271186440678,True,3,7,12.0,
+215,UI/UX Designer,Design,109,Project Manager,0.4194915254237288,True,2,7,13.0,
+215,UI/UX Designer,Design,113,Talent Acquisition Coordinator,0.28389830508474573,True,1,7,16.0,
+215,UI/UX Designer,Design,104,HR Operations Specialist,0.1694915254237288,True,1,7,19.0,
+215,UI/UX Designer,Design,108,Security Analyst,0.1271186440677966,True,0,7,20.0,
+215,UI/UX Designer,Design,114,Data Governance Analyst,0.1271186440677966,True,0,7,20.0,
+215,UI/UX Designer,Design,103,Data Engineer,0.0,True,0,7,23.0,
+215,UI/UX Designer,Design,105,ML Engineer,0.0,True,0,7,23.0,
+215,UI/UX Designer,Design,111,Cloud Engineer,0.0,True,0,7,23.0,
+215,UI/UX Designer,Design,115,Software Engineer,0.0,True,0,7,23.0,
+215,UI/UX Designer,Design,107,Junior Data Analyst,0.1271186440677966,False,0,7,20.0,Below min years experience; Below education requirement;
+216,Software Engineer II,Engineering,115,Software Engineer,0.7936507936507937,True,6,8,6.0,
+216,Software Engineer II,Engineering,111,Cloud Engineer,0.6507936507936507,True,5,8,9.0,
+216,Software Engineer II,Engineering,103,Data Engineer,0.39682539682539686,True,3,8,14.0,
+216,Software Engineer II,Engineering,105,ML Engineer,0.36507936507936506,True,3,8,14.0,
+216,Software Engineer II,Engineering,108,Security Analyst,0.2222222222222222,True,2,8,17.0,
+216,Software Engineer II,Engineering,104,HR Operations Specialist,0.09523809523809523,True,1,8,19.0,
+216,Software Engineer II,Engineering,109,Project Manager,0.09523809523809523,True,1,8,19.0,
+216,Software Engineer II,Engineering,101,Business Analyst,0.0,True,0,8,22.0,
+216,Software Engineer II,Engineering,102,Marketing Analyst,0.0,True,0,8,22.0,
+216,Software Engineer II,Engineering,106,Product Analyst,0.0,True,0,8,22.0,
+216,Software Engineer II,Engineering,110,Data Visualization Specialist,0.0,True,0,8,22.0,
+216,Software Engineer II,Engineering,112,Analytics Manager,0.0,True,0,8,22.0,
+216,Software Engineer II,Engineering,114,Data Governance Analyst,0.0,True,0,8,22.0,
+216,Software Engineer II,Engineering,113,Talent Acquisition Coordinator,0.09523809523809523,False,1,8,19.0,Below min years experience;
+216,Software Engineer II,Engineering,107,Junior Data Analyst,0.0,False,0,8,22.0,Below min years experience; Below education requirement;
+217,Backend Engineer,Engineering,115,Software Engineer,0.7348484848484849,True,5,8,7.0,
+217,Backend Engineer,Engineering,111,Cloud Engineer,0.5833333333333334,True,4,8,11.0,
+217,Backend Engineer,Engineering,103,Data Engineer,0.446969696969697,True,2,8,14.0,
+217,Backend Engineer,Engineering,105,ML Engineer,0.3636363636363637,True,3,8,16.0,
+217,Backend Engineer,Engineering,108,Security Analyst,0.20202020202020204,True,1,8,20.0,
+217,Backend Engineer,Engineering,102,Marketing Analyst,0.0,True,0,8,25.0,
+217,Backend Engineer,Engineering,106,Product Analyst,0.0,True,0,8,25.0,
+217,Backend Engineer,Engineering,109,Project Manager,0.0,True,0,8,25.0,
+217,Backend Engineer,Engineering,112,Analytics Manager,0.0,True,0,8,25.0,
+217,Backend Engineer,Engineering,114,Data Governance Analyst,0.0,True,0,8,25.0,
+217,Backend Engineer,Engineering,101,Business Analyst,0.0,False,0,8,25.0,Below min years experience;
+217,Backend Engineer,Engineering,104,HR Operations Specialist,0.0,False,0,8,25.0,Below min years experience;
+217,Backend Engineer,Engineering,107,Junior Data Analyst,0.0,False,0,8,25.0,Below min years experience; Below education requirement;
+217,Backend Engineer,Engineering,110,Data Visualization Specialist,0.0,False,0,8,25.0,Below min years experience;
+217,Backend Engineer,Engineering,113,Talent Acquisition Coordinator,0.0,False,0,8,25.0,Below min years experience;
+218,QA Engineer,Engineering,115,Software Engineer,0.5272727272727272,True,3,7,11.0,
+218,QA Engineer,Engineering,103,Data Engineer,0.36363636363636365,True,3,7,14.0,
+218,QA Engineer,Engineering,111,Cloud Engineer,0.36363636363636365,True,3,7,14.0,
+218,QA Engineer,Engineering,105,ML Engineer,0.3090909090909091,True,1,7,15.0,
+218,QA Engineer,Engineering,104,HR Operations Specialist,0.2727272727272727,True,2,7,14.0,
+218,QA Engineer,Engineering,109,Project Manager,0.2727272727272727,True,2,7,14.0,
+218,QA Engineer,Engineering,108,Security Analyst,0.2545454545454545,True,2,7,15.0,
+218,QA Engineer,Engineering,113,Talent Acquisition Coordinator,0.2318181818181818,True,1,7,15.0,
+218,QA Engineer,Engineering,101,Business Analyst,0.10909090909090909,True,1,7,18.0,
+218,QA Engineer,Engineering,102,Marketing Analyst,0.10909090909090909,True,1,7,18.0,
+218,QA Engineer,Engineering,106,Product Analyst,0.10909090909090909,True,1,7,18.0,
+218,QA Engineer,Engineering,110,Data Visualization Specialist,0.10909090909090909,True,1,7,18.0,
+218,QA Engineer,Engineering,112,Analytics Manager,0.10909090909090909,True,1,7,18.0,
+218,QA Engineer,Engineering,114,Data Governance Analyst,0.10909090909090909,True,1,7,18.0,
+218,QA Engineer,Engineering,107,Junior Data Analyst,0.10909090909090909,False,1,7,18.0,Below min years experience; Below education requirement;
+219,Cloud Engineer,IT,111,Cloud Engineer,0.7753623188405797,True,5,8,6.0,
+219,Cloud Engineer,IT,108,Security Analyst,0.47101449275362317,True,3,8,14.0,
+219,Cloud Engineer,IT,115,Software Engineer,0.4070048309178744,True,1,8,15.0,
+219,Cloud Engineer,IT,105,ML Engineer,0.34057971014492755,True,1,8,17.0,
+219,Cloud Engineer,IT,103,Data Engineer,0.2934782608695652,True,1,8,18.0,
+219,Cloud Engineer,IT,101,Business Analyst,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,102,Marketing Analyst,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,104,HR Operations Specialist,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,106,Product Analyst,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,109,Project Manager,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,110,Data Visualization Specialist,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,112,Analytics Manager,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,114,Data Governance Analyst,0.0,True,0,8,26.0,
+219,Cloud Engineer,IT,107,Junior Data Analyst,0.10144927536231883,False,1,8,24.0,Below min years experience; Below education requirement;
+219,Cloud Engineer,IT,113,Talent Acquisition Coordinator,0.0,False,0,8,26.0,Below min years experience;
+220,Security Analyst,IT Security,108,Security Analyst,0.8970588235294117,True,7,8,3.0,
+220,Security Analyst,IT Security,111,Cloud Engineer,0.5220588235294118,True,3,8,13.0,
+220,Security Analyst,IT Security,114,Data Governance Analyst,0.4705882352941177,True,4,8,14.0,
+220,Security Analyst,IT Security,104,HR Operations Specialist,0.35294117647058826,True,3,8,17.0,
+220,Security Analyst,IT Security,112,Analytics Manager,0.338235294117647,True,3,8,17.0,
+220,Security Analyst,IT Security,105,ML Engineer,0.23529411764705882,True,1,8,20.0,
+220,Security Analyst,IT Security,115,Software Engineer,0.23529411764705882,True,1,8,20.0,
+220,Security Analyst,IT Security,109,Project Manager,0.20588235294117646,True,2,8,20.0,
+220,Security Analyst,IT Security,103,Data Engineer,0.10294117647058823,True,1,8,23.0,
+220,Security Analyst,IT Security,101,Business Analyst,0.08823529411764706,True,1,8,23.0,
+220,Security Analyst,IT Security,102,Marketing Analyst,0.08823529411764706,True,1,8,23.0,
+220,Security Analyst,IT Security,106,Product Analyst,0.08823529411764706,True,1,8,23.0,
+220,Security Analyst,IT Security,110,Data Visualization Specialist,0.08823529411764706,True,1,8,23.0,
+220,Security Analyst,IT Security,113,Talent Acquisition Coordinator,0.22058823529411764,False,2,8,20.0,Below min years experience;
+220,Security Analyst,IT Security,107,Junior Data Analyst,0.08823529411764706,False,1,8,23.0,Below min years experience; Below education requirement;
+221,Data Governance Analyst,Data Governance,114,Data Governance Analyst,0.9,True,7,8,3.0,
+221,Data Governance Analyst,Data Governance,104,HR Operations Specialist,0.5785714285714285,True,3,8,10.0,
+221,Data Governance Analyst,Data Governance,108,Security Analyst,0.5214285714285715,True,3,8,12.0,
+221,Data Governance Analyst,Data Governance,113,Talent Acquisition Coordinator,0.4321428571428571,True,2,8,14.0,
+221,Data Governance Analyst,Data Governance,103,Data Engineer,0.21428571428571427,True,2,8,21.0,
+221,Data Governance Analyst,Data Governance,112,Analytics Manager,0.19285714285714287,True,1,8,20.0,
+221,Data Governance Analyst,Data Governance,105,ML Engineer,0.1285714285714286,True,1,8,23.0,
+221,Data Governance Analyst,Data Governance,111,Cloud Engineer,0.12857142857142856,True,0,8,23.0,
+221,Data Governance Analyst,Data Governance,101,Business Analyst,0.08571428571428572,True,1,8,23.0,
+221,Data Governance Analyst,Data Governance,102,Marketing Analyst,0.08571428571428572,True,1,8,23.0,
+221,Data Governance Analyst,Data Governance,106,Product Analyst,0.08571428571428572,True,1,8,23.0,
+221,Data Governance Analyst,Data Governance,109,Project Manager,0.08571428571428572,True,1,8,23.0,
+221,Data Governance Analyst,Data Governance,110,Data Visualization Specialist,0.08571428571428572,True,1,8,23.0,
+221,Data Governance Analyst,Data Governance,115,Software Engineer,0.0,True,0,8,26.0,
+221,Data Governance Analyst,Data Governance,107,Junior Data Analyst,0.1857142857142857,False,2,8,21.0,Below min years experience; Below education requirement;
+222,Compliance Specialist,Legal,104,HR Operations Specialist,0.8412698412698413,True,6,7,4.0,
+222,Compliance Specialist,Legal,108,Security Analyst,0.6904761904761905,True,3,7,9.0,
+222,Compliance Specialist,Legal,114,Data Governance Analyst,0.6904761904761905,True,3,7,9.0,
+222,Compliance Specialist,Legal,113,Talent Acquisition Coordinator,0.6190476190476191,True,3,7,9.0,
+222,Compliance Specialist,Legal,109,Project Manager,0.5238095238095238,True,4,7,10.0,
+222,Compliance Specialist,Legal,112,Analytics Manager,0.5,True,3,7,12.0,
+222,Compliance Specialist,Legal,102,Marketing Analyst,0.2380952380952381,True,2,7,18.0,
+222,Compliance Specialist,Legal,106,Product Analyst,0.2380952380952381,True,2,7,18.0,
+222,Compliance Specialist,Legal,111,Cloud Engineer,0.14285714285714288,True,1,7,22.0,
+222,Compliance Specialist,Legal,101,Business Analyst,0.126984126984127,True,1,7,21.0,
+222,Compliance Specialist,Legal,110,Data Visualization Specialist,0.126984126984127,True,1,7,21.0,
+222,Compliance Specialist,Legal,103,Data Engineer,0.0,True,0,7,25.0,
+222,Compliance Specialist,Legal,105,ML Engineer,0.0,True,0,7,25.0,
+222,Compliance Specialist,Legal,115,Software Engineer,0.0,True,0,7,25.0,
+222,Compliance Specialist,Legal,107,Junior Data Analyst,0.09523809523809526,False,0,7,22.0,Below min years experience; Below education requirement;
+223,Customer Support Lead,Support,109,Project Manager,0.5793103448275863,False,3,7,10.0,Below education requirement;
+223,Customer Support Lead,Support,102,Marketing Analyst,0.3620689655172414,False,2,7,15.0,Below education requirement;
+223,Customer Support Lead,Support,104,HR Operations Specialist,0.3275862068965517,False,2,7,16.0,Below education requirement;
+223,Customer Support Lead,Support,113,Talent Acquisition Coordinator,0.3275862068965517,False,2,7,16.0,Below min years experience; Below education requirement;
+223,Customer Support Lead,Support,112,Analytics Manager,0.30344827586206896,False,1,7,17.0,Below education requirement;
+223,Customer Support Lead,Support,107,Junior Data Analyst,0.24482758620689654,False,1,7,18.0,Below min years experience; Below education requirement;
+223,Customer Support Lead,Support,101,Business Analyst,0.16551724137931034,False,0,7,20.0,Below education requirement;
+223,Customer Support Lead,Support,106,Product Analyst,0.16551724137931034,False,0,7,20.0,Below education requirement;
+223,Customer Support Lead,Support,110,Data Visualization Specialist,0.16551724137931034,False,0,7,20.0,Below education requirement;
+223,Customer Support Lead,Support,108,Security Analyst,0.12413793103448276,False,0,7,21.0,Below education requirement;
+223,Customer Support Lead,Support,114,Data Governance Analyst,0.12413793103448276,False,0,7,21.0,Below education requirement;
+223,Customer Support Lead,Support,103,Data Engineer,0.0,False,0,7,24.0,Below education requirement;
+223,Customer Support Lead,Support,105,ML Engineer,0.0,False,0,7,24.0,Below education requirement;
+223,Customer Support Lead,Support,111,Cloud Engineer,0.0,False,0,7,24.0,Below education requirement;
+223,Customer Support Lead,Support,115,Software Engineer,0.0,False,0,7,24.0,Below education requirement;
+224,People Operations Coordinator,People Ops,104,HR Operations Specialist,0.8833333333333333,True,7,8,3.0,
+224,People Operations Coordinator,People Ops,113,Talent Acquisition Coordinator,0.8833333333333333,True,7,8,3.0,
+224,People Operations Coordinator,People Ops,109,Project Manager,0.5499999999999999,True,4,8,11.0,
+224,People Operations Coordinator,People Ops,102,Marketing Analyst,0.5333333333333333,True,4,8,11.0,
+224,People Operations Coordinator,People Ops,106,Product Analyst,0.4166666666666667,True,3,8,14.0,
+224,People Operations Coordinator,People Ops,108,Security Analyst,0.3416666666666666,True,2,8,16.0,
+224,People Operations Coordinator,People Ops,114,Data Governance Analyst,0.3416666666666666,True,2,8,16.0,
+224,People Operations Coordinator,People Ops,112,Analytics Manager,0.3,True,2,8,17.0,
+224,People Operations Coordinator,People Ops,101,Business Analyst,0.16666666666666666,True,1,8,20.0,
+224,People Operations Coordinator,People Ops,110,Data Visualization Specialist,0.16666666666666666,True,1,8,20.0,
+224,People Operations Coordinator,People Ops,111,Cloud Engineer,0.09999999999999999,True,1,8,22.0,
+224,People Operations Coordinator,People Ops,103,Data Engineer,0.0,True,0,8,24.0,
+224,People Operations Coordinator,People Ops,105,ML Engineer,0.0,True,0,8,24.0,
+224,People Operations Coordinator,People Ops,115,Software Engineer,0.0,True,0,8,24.0,
+224,People Operations Coordinator,People Ops,107,Junior Data Analyst,0.125,False,0,8,21.0,Below education requirement;
