@@ -1,0 +1,71 @@
+/* ===== Page wrapper (accounts for AdminNavbar) ===== */
+.dashboardWithAdminNav {
+  padding-top: 72px; /* height of AdminNavbar */
+  min-height: 100vh;
+  background: var(--midnight);
+
+  /* TEMP FIX: prevent Tableau from switching to Phone layout */
+  min-width: 1200px;
+  overflow-x: auto;
+}
+
+/* ===== Page header under navbar ===== */
+.dashboardPageHeader {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.dashboardPageHeaderInner {
+  max-width: 1400px; /* MATCH dashboard card width */
+  margin: 0 auto;
+  padding: 0 30px; /* MATCH page padding */
+}
+
+/* ===== Title styles (FORCED so it never goes black) ===== */
+.dashboardTitle {
+  margin: 0;
+  font-size: 36px;
+  letter-spacing: -0.015em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.dashboardSubtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ===== Glass card wrapper for Tableau ===== */
+.dashboardCard {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+
+  /* TEMP FIX: force desktop width so Tableau stays in Desktop layout */
+  min-width: 1200px;
+  max-width: 1400px;
+  margin: 8px auto 48px;
+}
+
+/* ===== Tableau iframe ===== */
+.dashboardIframe {
+  width: 100%;
+  height: 900px; /* fixed height = stable Tableau rendering */
+  border: none;
+  display: block;
+}
+
+/* ===== Mobile adjustments (layout only, NOT iframe sizing) ===== */
+@media (max-width: 900px) {
+  .dashboardPageHeaderInner {
+    padding: 0 18px;
+  }
+
+  /* Keep fixed height to avoid Tableau reflow */
+  .dashboardIframe {
+    height: 900px;
+  }
+}

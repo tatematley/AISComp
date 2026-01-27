@@ -18,6 +18,9 @@ import Job from "./pages/Job";
 import JobEdit from "./pages/JobEdit";
 import JobAdd from "./pages/JobAdd";
 
+import Dashboard from "./pages/Dashboard";
+
+
 export default function App() {
   return (
     <Routes>
@@ -44,6 +47,10 @@ export default function App() {
       <Route path="/jobs/:id" element={<Job />} />
       <Route path="/jobs/:id/edit" element={<JobEdit />} />
       <Route path="/jobs/new" element={<JobAdd />} />
+
+      {/* Dashboard */}
+      <Route path="/dashboard" element={<Dashboard />} />
+
     </Routes>
   );
 };
