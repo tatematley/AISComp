@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { pool } from "./db";
+import jobRoutes from "./routes/jobs";
+// import fetch from "node-fetch";
 
 dotenv.config();
 
@@ -11,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 const port = Number(process.env.PORT) || 5050;
+
+// testing testing console.log("Loaded API key:", process.env.ANTHROPIC_API_KEY);
 
 /* ----------------------------- Health + Root ----------------------------- */
 
@@ -68,7 +72,6 @@ app.get("/api/applicants", async (_req, res) => {
   }
 });
 
-
 // CREATE applicant (non-internal candidate_information + optional candidate_skill)
 app.post("/api/applicants", async (req, res) => {
   const { candidate, skills } = req.body ?? {};
@@ -85,7 +88,7 @@ app.post("/api/applicants", async (req, res) => {
 
     // 1) Create base candidate row to generate candidate_id
     const candRes = await client.query(
-      `INSERT INTO candidate DEFAULT VALUES RETURNING candidate_id`
+      `INSERT INTO candidate DEFAULT VALUES RETURNING candidate_id`,
     );
     const candidateId = Number(candRes.rows[0].candidate_id);
 
@@ -105,7 +108,7 @@ app.post("/api/applicants", async (req, res) => {
         candidate?.phone_number ?? null,
         candidate?.application_date ?? null,
         candidate?.pronouns_id ?? null,
-      ]
+      ],
     );
 
     // 3) Optional skills (unchanged)
@@ -118,7 +121,7 @@ app.post("/api/applicants", async (req, res) => {
 
         const skillRes = await client.query(
           `SELECT skill_id FROM skill WHERE skill_name = $1`,
-          [skillName]
+          [skillName],
         );
         if (skillRes.rowCount === 0) continue;
 
@@ -143,7 +146,7 @@ app.post("/api/applicants", async (req, res) => {
           INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
           VALUES ($1, $2, $3)
           `,
-          [candidateId, skillId, lvl]
+          [candidateId, skillId, lvl],
         );
       }
     }
@@ -160,9 +163,6 @@ app.post("/api/applicants", async (req, res) => {
     client.release();
   }
 });
-
-
-
 
 // Shared “detail” endpoint used by Employee.tsx / Applicant.tsx
 app.get("/api/candidates/:id/profile", async (req, res) => {
@@ -187,7 +187,7 @@ app.get("/api/candidates/:id/profile", async (req, res) => {
       LEFT JOIN pronoun p ON p.pronoun_id = ci.pronouns_id
       WHERE ci.candidate_id = $1
       `,
-      [candidateId]
+      [candidateId],
     );
 
     if (candidateRes.rowCount === 0) {
@@ -210,7 +210,7 @@ app.get("/api/candidates/:id/profile", async (req, res) => {
       LEFT JOIN education e ON e.education_id = c.education_level_id
       WHERE c.candidate_id = $1
       `,
-      [candidateId]
+      [candidateId],
     );
 
     const skillsRes = await pool.query(
@@ -226,7 +226,7 @@ app.get("/api/candidates/:id/profile", async (req, res) => {
       WHERE cs.candidate_id = $1
       ORDER BY sc.skill_category, s.skill_name
       `,
-      [candidateId]
+      [candidateId],
     );
 
     const candidate = candidateRes.rows[0];
@@ -246,12 +246,21 @@ app.get("/api/candidates/:id/profile", async (req, res) => {
 
 app.get("/api/meta/profile-edit", async (_req, res) => {
   try {
-    const [pronouns, departments, locations, education, skills] = await Promise.all([
-      pool.query(`SELECT pronoun_id AS id, pronouns AS name FROM pronoun ORDER BY pronoun_id`),
-      pool.query(`SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`),
-      pool.query(`SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`),
-      pool.query(`SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`),
-      pool.query(`
+    const [pronouns, departments, locations, education, skills] =
+      await Promise.all([
+        pool.query(
+          `SELECT pronoun_id AS id, pronouns AS name FROM pronoun ORDER BY pronoun_id`,
+        ),
+        pool.query(
+          `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
+        ),
+        pool.query(
+          `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
+        ),
+        pool.query(
+          `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
+        ),
+        pool.query(`
         SELECT
           s.skill_id AS id,
           s.skill_name AS name,
@@ -260,7 +269,7 @@ app.get("/api/meta/profile-edit", async (_req, res) => {
         LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
         ORDER BY sc.skill_category NULLS LAST, s.skill_name
       `),
-    ]);
+      ]);
 
     res.json({
       pronouns: pronouns.rows,
@@ -291,7 +300,7 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
 
     const check = await client.query(
       `SELECT internal FROM candidate_information WHERE candidate_id = $1`,
-      [candidateId]
+      [candidateId],
     );
 
     if (check.rowCount === 0) {
@@ -301,7 +310,9 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
 
     if (check.rows[0].internal !== true) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Only internal employees can be edited here." });
+      return res
+        .status(400)
+        .json({ error: "Only internal employees can be edited here." });
     }
 
     await client.query(
@@ -322,7 +333,7 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
         candidate?.phone_number ?? null,
         candidate?.application_date ?? null,
         candidate?.pronouns_id ?? null,
-      ]
+      ],
     );
 
     await client.query(
@@ -347,10 +358,12 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
         internal?.department_id ?? null,
         internal?.location_id ?? null,
         internal?.education_level_id ?? null,
-      ]
+      ],
     );
 
-    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [candidateId]);
+    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [
+      candidateId,
+    ]);
 
     if (Array.isArray(skills) && skills.length > 0) {
       const insertedSkillIds = new Set<number>();
@@ -361,7 +374,7 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
 
         const skillRes = await client.query(
           `SELECT skill_id FROM skill WHERE skill_name = $1`,
-          [skillName]
+          [skillName],
         );
         if (skillRes.rowCount === 0) continue;
 
@@ -374,7 +387,7 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
           INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
           VALUES ($1, $2, $3)
           `,
-          [candidateId, skillId, s?.proficiency_level ?? null]
+          [candidateId, skillId, s?.proficiency_level ?? null],
         );
       }
     }
@@ -383,7 +396,10 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
     res.json({ ok: true });
   } catch (err: any) {
     await client.query("ROLLBACK");
-    console.error("PUT /api/candidates/:id/profile failed:", err?.message ?? err);
+    console.error(
+      "PUT /api/candidates/:id/profile failed:",
+      err?.message ?? err,
+    );
     res.status(500).json({ error: err?.message ?? "Failed to save profile" });
   } finally {
     client.release();
@@ -406,7 +422,7 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
 
     const check = await client.query(
       `SELECT internal FROM candidate_information WHERE candidate_id = $1`,
-      [candidateId]
+      [candidateId],
     );
 
     if (check.rowCount === 0) {
@@ -416,7 +432,9 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
 
     if (check.rows[0].internal === true) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "This is an internal employee (use the employee edit route)." });
+      return res.status(400).json({
+        error: "This is an internal employee (use the employee edit route).",
+      });
     }
 
     await client.query(
@@ -437,10 +455,12 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
         candidate?.phone_number ?? null,
         candidate?.application_date ?? null,
         candidate?.pronouns_id ?? null,
-      ]
+      ],
     );
 
-    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [candidateId]);
+    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [
+      candidateId,
+    ]);
 
     if (Array.isArray(skills) && skills.length > 0) {
       const insertedSkillIds = new Set<number>();
@@ -451,7 +471,7 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
 
         const skillRes = await client.query(
           `SELECT skill_id FROM skill WHERE skill_name = $1`,
-          [skillName]
+          [skillName],
         );
         if (skillRes.rowCount === 0) continue;
 
@@ -464,7 +484,7 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
           INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
           VALUES ($1, $2, $3)
           `,
-          [candidateId, skillId, s?.proficiency_level ?? null]
+          [candidateId, skillId, s?.proficiency_level ?? null],
         );
       }
     }
@@ -473,7 +493,10 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
     res.json({ ok: true });
   } catch (err: any) {
     await client.query("ROLLBACK");
-    console.error("PUT /api/candidates/:id/applicant failed:", err?.message ?? err);
+    console.error(
+      "PUT /api/candidates/:id/applicant failed:",
+      err?.message ?? err,
+    );
     res.status(500).json({ error: err?.message ?? "Failed to save applicant" });
   } finally {
     client.release();
@@ -512,7 +535,8 @@ app.get("/api/jobs", async (_req, res) => {
 // Job detail
 app.get("/api/jobs/:id", async (req, res) => {
   const jobId = Number(req.params.id);
-  if (Number.isNaN(jobId)) return res.status(400).json({ error: "Invalid job id" });
+  if (Number.isNaN(jobId))
+    return res.status(400).json({ error: "Invalid job id" });
 
   try {
     const jobRes = await pool.query(
@@ -533,10 +557,11 @@ app.get("/api/jobs/:id", async (req, res) => {
       LEFT JOIN job_status js ON js.job_status_id = j.job_status_id
       WHERE j.job_id = $1
       `,
-      [jobId]
+      [jobId],
     );
 
-    if (jobRes.rowCount === 0) return res.status(404).json({ error: "Job not found" });
+    if (jobRes.rowCount === 0)
+      return res.status(404).json({ error: "Job not found" });
 
     const skillsRes = await pool.query(
       `
@@ -551,7 +576,7 @@ app.get("/api/jobs/:id", async (req, res) => {
       WHERE jsk.job_id = $1
       ORDER BY sc.skill_category, s.skill_name
       `,
-      [jobId]
+      [jobId],
     );
 
     res.json({ job: jobRes.rows[0], skills: skillsRes.rows });
@@ -593,7 +618,7 @@ app.post("/api/employees", async (req, res) => {
         internal?.department_id ?? null,
         internal?.location_id ?? null,
         internal?.education_level_id ?? null,
-      ]
+      ],
     );
 
     const candidateId = Number(candRes.rows[0].candidate_id);
@@ -614,7 +639,7 @@ app.post("/api/employees", async (req, res) => {
         candidate?.phone_number ?? null,
         candidate?.application_date ?? null,
         candidate?.pronouns_id ?? null,
-      ]
+      ],
     );
 
     // 3) optional skills (unchanged)
@@ -627,7 +652,7 @@ app.post("/api/employees", async (req, res) => {
 
         const skillRes = await client.query(
           `SELECT skill_id FROM skill WHERE skill_name = $1`,
-          [skillName]
+          [skillName],
         );
         if (skillRes.rowCount === 0) continue;
 
@@ -652,7 +677,7 @@ app.post("/api/employees", async (req, res) => {
           INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
           VALUES ($1, $2, $3)
           `,
-          [candidateId, skillId, lvl]
+          [candidateId, skillId, lvl],
         );
       }
     }
@@ -670,16 +695,24 @@ app.post("/api/employees", async (req, res) => {
   }
 });
 
-
 // ✅ FIXED: meta job-edit education uses `education` table
 app.get("/api/meta/job-edit", async (_req, res) => {
   try {
-    const [jobStatuses, departments, locations, education, skills] = await Promise.all([
-      pool.query(`SELECT job_status_id AS id, job_status AS name FROM job_status ORDER BY job_status`),
-      pool.query(`SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`),
-      pool.query(`SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`),
-      pool.query(`SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`),
-      pool.query(`
+    const [jobStatuses, departments, locations, education, skills] =
+      await Promise.all([
+        pool.query(
+          `SELECT job_status_id AS id, job_status AS name FROM job_status ORDER BY job_status`,
+        ),
+        pool.query(
+          `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
+        ),
+        pool.query(
+          `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
+        ),
+        pool.query(
+          `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
+        ),
+        pool.query(`
         SELECT
           s.skill_id AS id,
           s.skill_name AS name,
@@ -688,7 +721,7 @@ app.get("/api/meta/job-edit", async (_req, res) => {
         LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
         ORDER BY sc.skill_category NULLS LAST, s.skill_name
       `),
-    ]);
+      ]);
 
     res.json({
       job_statuses: jobStatuses.rows,
@@ -706,7 +739,8 @@ app.get("/api/meta/job-edit", async (_req, res) => {
 // JobEdit page data
 app.get("/api/jobs/:id/edit", async (req, res) => {
   const jobId = Number(req.params.id);
-  if (Number.isNaN(jobId)) return res.status(400).json({ error: "Invalid job id" });
+  if (Number.isNaN(jobId))
+    return res.status(400).json({ error: "Invalid job id" });
 
   try {
     const jobRes = await pool.query(
@@ -730,10 +764,11 @@ app.get("/api/jobs/:id/edit", async (req, res) => {
       LEFT JOIN job_status js ON js.job_status_id = j.job_status_id
       WHERE j.job_id = $1
       `,
-      [jobId]
+      [jobId],
     );
 
-    if (jobRes.rowCount === 0) return res.status(404).json({ error: "Job not found" });
+    if (jobRes.rowCount === 0)
+      return res.status(404).json({ error: "Job not found" });
 
     const skillsRes = await pool.query(
       `
@@ -748,7 +783,7 @@ app.get("/api/jobs/:id/edit", async (req, res) => {
       WHERE jsk.job_id = $1
       ORDER BY s.skill_name
       `,
-      [jobId]
+      [jobId],
     );
 
     res.json({ job: jobRes.rows[0], skills: skillsRes.rows });
@@ -757,7 +792,6 @@ app.get("/api/jobs/:id/edit", async (req, res) => {
     res.status(500).json({ error: err?.message ?? "Failed to load job" });
   }
 });
-
 
 // CREATE job + required skills
 // CREATE job + required skills
@@ -780,15 +814,17 @@ app.post("/api/jobs", async (req, res) => {
     if (depName) {
       const depRes = await client.query(
         `SELECT department_id FROM department WHERE department_name = $1`,
-        [depName]
+        [depName],
       );
-      departmentId = depRes.rowCount ? Number(depRes.rows[0].department_id) : null;
+      departmentId = depRes.rowCount
+        ? Number(depRes.rows[0].department_id)
+        : null;
     }
 
     if (locName) {
       const locRes = await client.query(
         `SELECT location_id FROM location WHERE location_name = $1`,
-        [locName]
+        [locName],
       );
       locationId = locRes.rowCount ? Number(locRes.rows[0].location_id) : null;
     }
@@ -797,9 +833,11 @@ app.post("/api/jobs", async (req, res) => {
     if (eduName) {
       const eduRes = await client.query(
         `SELECT education_id FROM education WHERE education_level = $1`,
-        [eduName]
+        [eduName],
       );
-      educationId = eduRes.rowCount ? Number(eduRes.rows[0].education_id) : null;
+      educationId = eduRes.rowCount
+        ? Number(eduRes.rows[0].education_id)
+        : null;
     }
 
     // Insert job
@@ -821,10 +859,10 @@ app.post("/api/jobs", async (req, res) => {
         locationId,
         job?.job_status_id ?? null,
         job?.min_years_experience ?? null,
-        educationId,            // ✅ CHANGED (was job?.education_req)
+        educationId, // ✅ CHANGED (was job?.education_req)
         job?.job_salary ?? null,
         job?.start_date ?? null,
-      ]
+      ],
     );
 
     const jobId = Number(insertRes.rows[0].job_id);
@@ -844,7 +882,10 @@ app.post("/api/jobs", async (req, res) => {
             ? null
             : Number(s.required_level);
 
-        if (reqLevel !== null && (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)) {
+        if (
+          reqLevel !== null &&
+          (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)
+        ) {
           await client.query("ROLLBACK");
           return res.status(400).json({
             error: "required_level must be a number between 0 and 5 (or null).",
@@ -868,7 +909,7 @@ app.post("/api/jobs", async (req, res) => {
           INSERT INTO job_skill (job_id, skill_id, required_level, importance_weight)
           VALUES ($1, $2, $3, $4)
           `,
-          [jobId, skillId, reqLevel, weight]
+          [jobId, skillId, reqLevel, weight],
         );
       }
     }
@@ -878,19 +919,19 @@ app.post("/api/jobs", async (req, res) => {
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("POST /api/jobs failed:", err?.message ?? err);
-    return res.status(500).json({ error: err?.message ?? "Failed to create job" });
+    return res
+      .status(500)
+      .json({ error: err?.message ?? "Failed to create job" });
   } finally {
     client.release();
   }
 });
 
-
-
-
 // Update job + required skills
 app.put("/api/jobs/:id", async (req, res) => {
   const jobId = Number(req.params.id);
-  if (Number.isNaN(jobId)) return res.status(400).json({ error: "Invalid job id" });
+  if (Number.isNaN(jobId))
+    return res.status(400).json({ error: "Invalid job id" });
 
   const { job, skills } = req.body ?? {};
   const client = await pool.connect();
@@ -898,7 +939,10 @@ app.put("/api/jobs/:id", async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const check = await client.query(`SELECT job_id FROM job WHERE job_id = $1`, [jobId]);
+    const check = await client.query(
+      `SELECT job_id FROM job WHERE job_id = $1`,
+      [jobId],
+    );
     if (check.rowCount === 0) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Job not found" });
@@ -913,15 +957,17 @@ app.put("/api/jobs/:id", async (req, res) => {
     if (depName) {
       const depRes = await client.query(
         `SELECT department_id FROM department WHERE department_name = $1`,
-        [depName]
+        [depName],
       );
-      departmentId = depRes.rowCount ? Number(depRes.rows[0].department_id) : null;
+      departmentId = depRes.rowCount
+        ? Number(depRes.rows[0].department_id)
+        : null;
     }
 
     if (locName) {
       const locRes = await client.query(
         `SELECT location_id FROM location WHERE location_name = $1`,
-        [locName]
+        [locName],
       );
       locationId = locRes.rowCount ? Number(locRes.rows[0].location_id) : null;
     }
@@ -956,7 +1002,7 @@ app.put("/api/jobs/:id", async (req, res) => {
         job?.education_req ?? null,
         job?.job_salary ?? null,
         job?.start_date ?? null,
-      ]
+      ],
     );
 
     await client.query(`DELETE FROM job_skill WHERE job_id = $1`, [jobId]);
@@ -976,7 +1022,10 @@ app.put("/api/jobs/:id", async (req, res) => {
             ? null
             : Number(s.required_level);
 
-        if (reqLevel !== null && (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)) {
+        if (
+          reqLevel !== null &&
+          (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)
+        ) {
           await client.query("ROLLBACK");
           return res.status(400).json({
             error: "required_level must be a number between 0 and 5 (or null).",
@@ -1000,7 +1049,7 @@ app.put("/api/jobs/:id", async (req, res) => {
           INSERT INTO job_skill (job_id, skill_id, required_level, importance_weight)
           VALUES ($1, $2, $3, $4)
           `,
-          [jobId, skillId, reqLevel, weight]
+          [jobId, skillId, reqLevel, weight],
         );
       }
     }
@@ -1019,7 +1068,8 @@ app.put("/api/jobs/:id", async (req, res) => {
 // Delete job + required skills
 app.delete("/api/jobs/:id", async (req, res) => {
   const jobId = Number(req.params.id);
-  if (Number.isNaN(jobId)) return res.status(400).json({ error: "Invalid job id" });
+  if (Number.isNaN(jobId))
+    return res.status(400).json({ error: "Invalid job id" });
 
   const client = await pool.connect();
 
@@ -1030,7 +1080,7 @@ app.delete("/api/jobs/:id", async (req, res) => {
 
     const delJob = await client.query(
       `DELETE FROM job WHERE job_id = $1 RETURNING job_id`,
-      [jobId]
+      [jobId],
     );
 
     if (delJob.rowCount === 0) {
@@ -1049,7 +1099,6 @@ app.delete("/api/jobs/:id", async (req, res) => {
   }
 });
 
-
 app.delete("/api/employees/:id", async (req, res) => {
   const candidateId = Number(req.params.id);
   if (Number.isNaN(candidateId)) {
@@ -1064,7 +1113,7 @@ app.delete("/api/employees/:id", async (req, res) => {
     // optional: ensure it's an employee (internal = true)
     const check = await client.query(
       `SELECT internal FROM candidate_information WHERE candidate_id = $1`,
-      [candidateId]
+      [candidateId],
     );
 
     if (check.rowCount === 0) {
@@ -1074,15 +1123,22 @@ app.delete("/api/employees/:id", async (req, res) => {
 
     if (check.rows[0].internal !== true) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "That candidate is not an employee." });
+      return res
+        .status(400)
+        .json({ error: "That candidate is not an employee." });
     }
 
-    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [candidateId]);
-    await client.query(`DELETE FROM candidate_information WHERE candidate_id = $1`, [candidateId]);
+    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [
+      candidateId,
+    ]);
+    await client.query(
+      `DELETE FROM candidate_information WHERE candidate_id = $1`,
+      [candidateId],
+    );
 
     const delCandidate = await client.query(
       `DELETE FROM candidate WHERE candidate_id = $1 RETURNING candidate_id`,
-      [candidateId]
+      [candidateId],
     );
 
     if (delCandidate.rowCount === 0) {
@@ -1095,12 +1151,13 @@ app.delete("/api/employees/:id", async (req, res) => {
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("DELETE /api/employees/:id failed:", err?.message ?? err);
-    return res.status(500).json({ error: err?.message ?? "Failed to delete employee" });
+    return res
+      .status(500)
+      .json({ error: err?.message ?? "Failed to delete employee" });
   } finally {
     client.release();
   }
 });
-
 
 app.delete("/api/applicants/:id", async (req, res) => {
   const candidateId = Number(req.params.id);
@@ -1116,7 +1173,7 @@ app.delete("/api/applicants/:id", async (req, res) => {
     // optional: ensure it's an applicant (internal = false)
     const check = await client.query(
       `SELECT internal FROM candidate_information WHERE candidate_id = $1`,
-      [candidateId]
+      [candidateId],
     );
 
     if (check.rowCount === 0) {
@@ -1126,15 +1183,22 @@ app.delete("/api/applicants/:id", async (req, res) => {
 
     if (check.rows[0].internal !== false) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "That candidate is not an applicant." });
+      return res
+        .status(400)
+        .json({ error: "That candidate is not an applicant." });
     }
 
-    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [candidateId]);
-    await client.query(`DELETE FROM candidate_information WHERE candidate_id = $1`, [candidateId]);
+    await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [
+      candidateId,
+    ]);
+    await client.query(
+      `DELETE FROM candidate_information WHERE candidate_id = $1`,
+      [candidateId],
+    );
 
     const delCandidate = await client.query(
       `DELETE FROM candidate WHERE candidate_id = $1 RETURNING candidate_id`,
-      [candidateId]
+      [candidateId],
     );
 
     if (delCandidate.rowCount === 0) {
@@ -1147,12 +1211,107 @@ app.delete("/api/applicants/:id", async (req, res) => {
   } catch (err: any) {
     await client.query("ROLLBACK");
     console.error("DELETE /api/applicants/:id failed:", err?.message ?? err);
-    return res.status(500).json({ error: err?.message ?? "Failed to delete applicant" });
+    return res
+      .status(500)
+      .json({ error: err?.message ?? "Failed to delete applicant" });
   } finally {
     client.release();
   }
 });
 
+app.use("/api/jobs", jobRoutes);
+
+/* ----------------------------- AI Explanations ----------------------------- */
+
+// app.get(
+//   "/api/jobs/:jobId/recommendations/:candidateId/explanation",
+//   async (req, res) => {
+//     const { jobId, candidateId } = req.params;
+
+//     try {
+//       // 1️⃣ Fetch candidate details
+//       const candidateRes = await pool.query(
+//         `
+//         SELECT
+//           ci.name,
+//           ci.position,
+//           ci.internal,
+//           c.currentrole,
+//           c.years_exp,
+//           c.availability_hours,
+//           c.start_date
+//         FROM candidate_information ci
+//         LEFT JOIN candidate c ON ci.candidate_id = c.candidate_id
+//         WHERE ci.candidate_id = $1
+//         `,
+//         [candidateId],
+//       );
+
+//       if (candidateRes.rowCount === 0) {
+//         return res.status(404).json({ error: "Candidate not found" });
+//       }
+
+//       const candidate = candidateRes.rows[0];
+
+//       // 2️⃣ Fetch candidate skills
+//       const skillsRes = await pool.query(
+//         `
+//         SELECT s.skill_name, cs.proficiency_level
+//         FROM candidate_skill cs
+//         JOIN skill s ON s.skill_id = cs.skill_id
+//         WHERE cs.candidate_id = $1
+//         ORDER BY s.skill_name
+//         `,
+//         [candidateId],
+//       );
+
+//       const skills = skillsRes.rows.map(
+//         (s) => `${s.skill_name} (level ${s.proficiency_level ?? "N/A"})`,
+//       );
+
+//       // 3️⃣ Build prompt
+//       const promptText = `
+// Explain why the following candidate was recommended for job ${jobId}:
+
+// Name: ${candidate.name}
+// Position: ${candidate.position ?? "N/A"}
+// Role: ${candidate.currentrole ?? "N/A"}
+// Experience: ${candidate.years_exp ?? "N/A"} years
+// Availability Hours: ${candidate.availability_hours ?? "N/A"}
+// Start Date: ${candidate.start_date ?? "N/A"}
+// Skills: ${skills.join(", ")}
+
+// Give a concise explanation highlighting why they were recommended, focusing on their skills, experience, and role.
+// `;
+
+//       console.log("AI explanation prompt:", promptText);
+
+//       // 4️⃣ Call Claude API
+//       const response = await fetch("https://api.anthropic.com/v1/complete", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${process.env.ANTHROPIC_API_KEY}`,
+//         },
+//         body: JSON.stringify({
+//           model: "claude-1.3",
+//           prompt: promptText,
+//           max_tokens_to_sample: 300,
+//         }),
+//       });
+
+//       const data = await response.json();
+//       console.log("Claude API response:", data);
+
+//       // 5️⃣ Return explanation
+//       const explanation = data.completion ?? "No explanation returned";
+//       res.json({ explanation });
+//     } catch (err: any) {
+//       console.error("AI explanation failed:", err);
+//       res.status(500).json({ error: "Failed to generate explanation" });
+//     }
+//   },
+// );
 
 /* ----------------------------- Start ----------------------------- */
 
