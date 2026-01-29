@@ -1,6 +1,5 @@
 /* ===== Page wrapper (accounts for AdminNavbar) ===== */
 .dashboardWithAdminNav {
-  padding-top: 72px; /* height of AdminNavbar */
   min-height: 100vh;
   background: var(--midnight);
 
@@ -11,7 +10,6 @@
 
 /* ===== Page header under navbar ===== */
 .dashboardPageHeader {
-  margin-top: 16px;
   margin-bottom: 24px;
 }
 

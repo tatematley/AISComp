@@ -107,22 +107,21 @@ export default function Jobs() {
         <header className="jobsHeader">
           <div className="jobsTitleBlock">
             <h1 className="jobsTitle">Jobs</h1>
-                    <span
-                      className="jobsAddAction"
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Add new job"
-                      onClick={() => navigate("/jobs/new")}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          navigate("/jobs/new");
-                        }
-                      }}
-                    >
-                      <span className="jobsAddText">New Job</span>
-                    </span>
-
+            <span
+              className="jobsAddAction"
+              role="button"
+              tabIndex={0}
+              aria-label="Add new job"
+              onClick={() => navigate("/jobs/new")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate("/jobs/new");
+                }
+              }}
+            >
+              <span className="jobsAddText">New Job</span>
+            </span>
 
             <p className="jobsSubtitle">Search and manage job postings.</p>
           </div>
@@ -156,26 +155,29 @@ export default function Jobs() {
           {!loading &&
             !error &&
             pageRows.map((j) => (
-                <Link
+              <Link
                 to={`/jobs/${j.job_id}`}
                 className="jobsRowLink"
                 key={j.job_id}
                 aria-label={`Open job ${j.job_title ?? j.job_id}`}
-                >
+              >
                 <div className="jobsTitleCell">
-                    <div className="jobsPrimary">{j.job_title ?? `Job ${j.job_id}`}</div>
-                    <div className="jobsSecondary">
+                  <div className="jobsPrimary">
+                    {j.job_title ?? `Job ${j.job_id}`}
+                  </div>
+                  <div className="jobsSecondary">
                     {j.job_category ?? "—"} • {j.work_status ?? "—"}
-                    </div>
-                    <div className="jobsDesc">{clamp(j.job_description, 110)}</div>
+                  </div>
+                  <div className="jobsDesc">
+                    {clamp(j.job_description, 110)}
+                  </div>
                 </div>
 
                 <div className="jobsCell">{j.department ?? "—"}</div>
                 <div className="jobsCell">{j.job_location ?? "—"}</div>
                 <div className="jobsCell">{statusLabel(j.job_status_id)}</div>
-                </Link>
+              </Link>
             ))}
-
 
           <footer className="jobsFooter">
             <div className="jobsCount">

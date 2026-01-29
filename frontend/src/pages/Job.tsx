@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
+import CandidateCard from "../components/CandidateCard";
 import "../styles/Job.css";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
@@ -12,6 +13,27 @@ type JobSkill = {
   skill_category: string | null;
 };
 
+type SkillBreakdown = {
+  skill_name: string;
+  required_level: number;
+  proficiency_level: number;
+  meets_required: boolean;
+  importance_weight: number;
+  gap: number;
+};
+
+type Recommendation = {
+  rank: number;
+  candidate_id: number;
+  current_role: string;
+  match_score: number;
+  eligible: boolean;
+  skills_met: number;
+  skills_required: number;
+  total_gap: number;
+  breakdown: SkillBreakdown[];
+};
+
 type JobData = {
   job: {
     job_id: number;
@@ -19,14 +41,13 @@ type JobData = {
     job_category: string | null;
     job_description: string | null;
     work_status: string | null;
-
     department: string | null;
     job_location: string | null;
     job_status: string | null;
-
     job_status_id: number | null;
   };
   skills: JobSkill[];
+  recommendations?: Recommendation[];
 };
 
 export default function Job() {
@@ -37,9 +58,11 @@ export default function Job() {
 
   const [data, setData] = useState<JobData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingRecs, setLoadingRecs] = useState(false);
   const [error, setError] = useState("");
 
   const handleDelete = async () => {
+
     const ok = window.confirm("Delete this job? This can’t be undone.");
     if (!ok) return;
 
@@ -64,6 +87,7 @@ export default function Job() {
     }
   };
 
+  // Fetch job details
   useEffect(() => {
     if (Number.isNaN(jobId)) {
       setError("Invalid job ID");
@@ -94,11 +118,36 @@ export default function Job() {
       .finally(() => setLoading(false));
   }, [jobId, navigate]);
 
+  // Fetch recommendations separately
+  useEffect(() => {
+    if (Number.isNaN(jobId) || !data) return;
+
+    setLoadingRecs(true);
+
+    fetch(`http://localhost:5050/api/jobs/${jobId}/recommendations`)
+      .then(async (res) => {
+        if (!res.ok) {
+          console.error("Failed to load recommendations");
+          return null;
+        }
+        return res.json();
+      })
+      .then((mlData) => {
+        if (mlData && mlData.recommendations) {
+          setData((prev) =>
+            prev ? { ...prev, recommendations: mlData.recommendations } : prev,
+          );
+        }
+      })
+      .catch((e) => console.error("Error loading recommendations:", e))
+      .finally(() => setLoadingRecs(false));
+  }, [jobId, data?.job.job_id]);
+
   if (loading) return <div className="jobState">Loading…</div>;
   if (error) return <div className="jobState error">{error}</div>;
   if (!data) return null;
 
-  const { job, skills } = data;
+  const { job, skills, recommendations } = data;
 
   return (
     <>
@@ -115,7 +164,9 @@ export default function Job() {
 
               <div className="jobTitleRow">
                 <h1 className="jobTitle">{job.job_title}</h1>
-                {job.job_status && <span className="jobPill">{job.job_status}</span>}
+                {job.job_status && (
+                  <span className="jobPill">{job.job_status}</span>
+                )}
               </div>
 
               <p className="jobRole">
@@ -140,6 +191,7 @@ export default function Job() {
                 </button>
               </div>
             )}
+
           </div>
 
           {/* Main card */}
@@ -192,7 +244,9 @@ export default function Job() {
                   <div key={s.job_skill_id} className="jobSkillPill">
                     <span className="jobSkillName">{s.skill_name}</span>
                     {s.proficiency_level != null && (
-                      <span className="jobSkillLevel">Lvl {s.proficiency_level}</span>
+                      <span className="jobSkillLevel">
+                        Lvl {s.proficiency_level}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -200,18 +254,35 @@ export default function Job() {
             )}
           </section>
 
-          {/* Recommenders placeholder */}
+          {/* Recommended Candidates */}
           <section className="jobCard">
-            <h2 className="jobSectionTitle">Recommended Candidates</h2>
-            <p className="jobMuted">
-              Coming soon: best matches, skill-gap notes, and ranked recommendations.
-            </p>
-
-            <div className="jobPlaceholderRow">
-              <div className="jobPlaceholderCard" />
-              <div className="jobPlaceholderCard" />
-              <div className="jobPlaceholderCard" />
+            <div className="jobSectionHeader">
+              <h2 className="jobSectionTitle">Recommended Candidates</h2>
+              {recommendations && recommendations.length > 0 && (
+                <div className="jobSectionMeta">
+                  {recommendations.length} matches
+                </div>
+              )}
             </div>
+
+            {loadingRecs ? (
+              <p className="jobMuted">Loading recommendations...</p>
+            ) : !recommendations || recommendations.length === 0 ? (
+              <p className="jobMuted">
+                No recommendations available for this position.
+              </p>
+            ) : (
+              <div className="jobPlaceholderRow">
+                {recommendations.map((rec) => (
+                  <CandidateCard
+                    key={rec.candidate_id}
+                    recommendation={rec}
+                    jobTitle={job.job_title}
+                    jobId={jobId} // ← Add this
+                  />
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>
