@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../styles/Employees.css";
 import AdminNavbar from "../components/AdminNavbar";
 import { Link, useNavigate } from "react-router-dom";

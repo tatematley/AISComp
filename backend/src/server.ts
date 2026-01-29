@@ -48,6 +48,8 @@ function signToken(user: AuthedUser) {
 }
 
 function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+  console.log("AUTH header:", req.headers.authorization);
+
   const header = req.headers.authorization;
   const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
 
@@ -56,6 +58,7 @@ function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
   try {
     const secret = process.env.JWT_SECRET!;
     const payload = jwt.verify(token, secret) as AuthedUser;
+    console.log("JWT payload:", payload);
     req.user = payload;
     next();
   } catch {
@@ -63,9 +66,10 @@ function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
   }
 }
 
+
 function requireRole(...allowed: string[]) {
   return (req: AuthedRequest, res: Response, next: NextFunction) => {
-    const role = req.user?.role;
+    const role = req.user?.role?.trim().toLowerCase();
     if (!role) return res.status(401).json({ error: "Unauthorized" });
     if (!allowed.includes(role)) return res.status(403).json({ error: "Forbidden" });
     next();
@@ -74,7 +78,7 @@ function requireRole(...allowed: string[]) {
 /* ----------------------------- Login Endpoint ----------------------------- */
 
 app.post("/api/auth/login", async (req, res) => {
-  const username = String(req.body?.username ?? "").trim();
+  const username = String(req.body?.username ?? "").trim().toLowerCase();
   const password = String(req.body?.password ?? "");
 
   if (!username || !password) {
@@ -92,7 +96,7 @@ app.post("/api/auth/login", async (req, res) => {
         r.user_role
       FROM app_user u
       JOIN user_roles r ON r.user_role_id = u.user_role_id
-      WHERE u.username = $1
+      WHERE LOWER(u.username) = $1
       `,
       [username]
     );
@@ -110,8 +114,9 @@ app.post("/api/auth/login", async (req, res) => {
     const user = {
       user_id: Number(row.user_id),
       username: String(row.username),
-      role: String(row.user_role),
+      role: String(row.user_role).trim().toLowerCase(),
     };
+
 
     const token = signToken(user);
 
