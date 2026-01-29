@@ -1,14 +1,14 @@
 """
 recommend.py
 ------------
-Run job -> candidate recommendations.
+Run job <-> candidate recommendations.
 
 - Always prints JSON to stdout (for backend / LLM)
 - Optionally saves CSV output (for Tableau / analytics)
 
 Examples:
   python recommend.py --excel_path "Dummy Data.xlsx" --job_id 201
-  python recommend.py --excel_path "Dummy Data.xlsx" --job_id 201 --save_csv
+  python recommend.py --excel_path "Dummy Data.xlsx" --candidate_id 301
 """
 
 import argparse
@@ -44,7 +44,6 @@ def load_sheets(excel_path: str):
 def clean_tables(job, job_skill, candidate, candidate_skill, skill):
     """Standardize key columns + numeric types; drop blank Excel rows."""
 
-    # IDs
     job["job_id"] = pd.to_numeric(job["job_id"], errors="coerce").astype("Int64")
     skill["skill_id"] = pd.to_numeric(skill["skill_id"], errors="coerce").astype("Int64")
     candidate["candidate_id"] = pd.to_numeric(candidate["candidate_id"], errors="coerce").astype("Int64")
@@ -58,14 +57,12 @@ def clean_tables(job, job_skill, candidate, candidate_skill, skill):
     candidate_skill["skill_id"] = candidate_skill["skill_id"].apply(extract_int).astype("Int64")
     candidate_skill["proficiency_level"] = pd.to_numeric(candidate_skill["proficiency_level"], errors="coerce")
 
-    # Drop blank rows
     job = job.dropna(subset=["job_id"])
     skill = skill.dropna(subset=["skill_id"])
     candidate = candidate.dropna(subset=["candidate_id"])
     job_skill = job_skill.dropna(subset=["job_id", "skill_id"])
     candidate_skill = candidate_skill.dropna(subset=["candidate_id", "skill_id"])
 
-    # FK sanity
     job_skill = job_skill[job_skill["job_id"].isin(job["job_id"])]
     job_skill = job_skill[job_skill["skill_id"].isin(skill["skill_id"])]
     candidate_skill = candidate_skill[candidate_skill["candidate_id"].isin(candidate["candidate_id"])]
@@ -74,8 +71,9 @@ def clean_tables(job, job_skill, candidate, candidate_skill, skill):
     return job, job_skill, candidate, candidate_skill, skill
 
 
-# ---------- core recommender ----------
-def recommend_candidates(job_id: int, top_n: int, job, job_skill, candidate, candidate_skill, skill):
+# ---------- job -> candidate ----------
+def recommend_candidates(job_id: int, top_n: int,
+                         job, job_skill, candidate, candidate_skill, skill):
 
     req = (
         job_skill[job_skill["job_id"] == job_id]
@@ -109,10 +107,7 @@ def recommend_candidates(job_id: int, top_n: int, job, job_skill, candidate, can
     merged["proficiency_level"] = merged["proficiency_level"].fillna(0)
     merged["meets_required"] = merged["proficiency_level"] >= merged["required_level"]
     merged["gap"] = (merged["required_level"] - merged["proficiency_level"]).clip(lower=0)
-
-    merged["level_ratio"] = np.minimum(
-        merged["proficiency_level"] / merged["required_level"], 1
-    )
+    merged["level_ratio"] = np.minimum(merged["proficiency_level"] / merged["required_level"], 1)
     merged["weighted_points"] = merged["level_ratio"] * merged["importance_weight"]
 
     scores = (
@@ -146,48 +141,30 @@ def recommend_candidates(job_id: int, top_n: int, job, job_skill, candidate, can
     scores.loc[~scores["meets_edu_req"], "warnings"] += "Below education requirement; "
     scores["warnings"] = scores["warnings"].str.strip()
 
-    scores = scores.sort_values(
-        ["eligible", "match_score"], ascending=[False, False]
-    )
+    scores = scores.sort_values(["eligible", "match_score"], ascending=[False, False])
 
-    breakdown = (
-        merged[
-            [
-                "candidate_id",
-                "skill_id",
-                "skill_name",
-                "required_level",
-                "importance_weight",
-                "proficiency_level",
-                "meets_required",
-                "gap",
-                "weighted_points",
-            ]
-        ]
-        .sort_values(["candidate_id", "importance_weight"], ascending=[True, False])
-    )
+    breakdown = merged[[
+        "candidate_id", "skill_id", "skill_name",
+        "required_level", "importance_weight",
+        "proficiency_level", "meets_required",
+        "gap", "weighted_points",
+    ]]
 
     recs = []
     for rank, (_, row) in enumerate(scores.head(top_n).iterrows(), start=1):
         cid = int(row["candidate_id"])
-        cand_breakdown = breakdown[
-            breakdown["candidate_id"] == cid
-        ].to_dict(orient="records")
-
-        recs.append(
-            {
-                "rank": rank,
-                "candidate_id": cid,
-                "current_role": row["current_role"],
-                "match_score": float(row["match_score"]),
-                "eligible": bool(row["eligible"]),
-                "warnings": row["warnings"],
-                "skills_met": int(row["skills_met"]),
-                "skills_required": int(row["skills_required"]),
-                "total_gap": float(row["total_gap"]),
-                "breakdown": cand_breakdown,
-            }
-        )
+        recs.append({
+            "rank": rank,
+            "candidate_id": cid,
+            "current_role": row["current_role"],
+            "match_score": float(row["match_score"]),
+            "eligible": bool(row["eligible"]),
+            "warnings": row["warnings"],
+            "skills_met": int(row["skills_met"]),
+            "skills_required": int(row["skills_required"]),
+            "total_gap": float(row["total_gap"]),
+            "breakdown": breakdown[breakdown["candidate_id"] == cid].to_dict("records"),
+        })
 
     return {
         "job": {
@@ -204,58 +181,167 @@ def recommend_candidates(job_id: int, top_n: int, job, job_skill, candidate, can
     }
 
 
-# ---------- CSV helper ----------
+# ---------- candidate -> job ----------
+def recommend_jobs(candidate_id: int, top_n: int,
+                   job, job_skill, candidate, candidate_skill, skill):
+
+    cand_sk = (
+        candidate_skill[candidate_skill["candidate_id"] == candidate_id]
+        .merge(skill[["skill_id", "skill_name"]], on="skill_id", how="left")
+        [["skill_id", "skill_name", "proficiency_level"]]
+    )
+
+    if cand_sk.empty:
+        return {
+            "candidate": {"candidate_id": int(candidate_id)},
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "error": f"No candidate_skill rows found for candidate_id={candidate_id}.",
+            "recommendations": [],
+        }
+
+    req = (
+        job_skill.merge(skill[["skill_id", "skill_name"]], on="skill_id", how="left")
+        [["job_id", "skill_id", "skill_name", "required_level", "importance_weight"]]
+    )
+
+    merged = (
+        job.merge(req, on="job_id", how="left")
+        .merge(cand_sk[["skill_id", "proficiency_level"]], on="skill_id", how="left")
+    )
+
+    merged["proficiency_level"] = merged["proficiency_level"].fillna(0)
+    merged["meets_required"] = merged["proficiency_level"] >= merged["required_level"]
+    merged["gap"] = (merged["required_level"] - merged["proficiency_level"]).clip(lower=0)
+    merged["level_ratio"] = np.minimum(merged["proficiency_level"] / merged["required_level"], 1)
+    merged["weighted_points"] = merged["level_ratio"] * merged["importance_weight"]
+
+    scores = (
+        merged.groupby(
+            ["job_id", "job_title", "department",
+             "min_years_experience", "education_req",
+             "job_location", "work_status"],
+            as_index=False
+        )
+        .agg(
+            total_points=("weighted_points", "sum"),
+            possible_points=("importance_weight", "sum"),
+            skills_met=("meets_required", "sum"),
+            skills_required=("skill_id", "count"),
+            total_gap=("gap", "sum"),
+        )
+    )
+
+    scores["match_score"] = scores["total_points"] / scores["possible_points"]
+
+    cand_row = candidate[candidate["candidate_id"] == candidate_id].iloc[0]
+    years_exp = cand_row.get("years_exp", 0) or 0
+    edu_level = cand_row.get("education_level_id", 0) or 0
+
+    scores["meets_exp_req"] = years_exp >= scores["min_years_experience"]
+    scores["meets_edu_req"] = edu_level >= scores["education_req"]
+    scores["eligible"] = scores["meets_exp_req"] & scores["meets_edu_req"]
+
+    scores["warnings"] = ""
+    scores.loc[~scores["meets_exp_req"], "warnings"] += "Below min years experience; "
+    scores.loc[~scores["meets_edu_req"], "warnings"] += "Below education requirement; "
+    scores["warnings"] = scores["warnings"].str.strip()
+
+    scores = scores.sort_values(["eligible", "match_score"], ascending=[False, False])
+
+    recs = []
+    for rank, (_, row) in enumerate(scores.head(top_n).iterrows(), start=1):
+        jid = int(row["job_id"])
+        recs.append({
+            "rank": rank,
+            "job_id": jid,
+            "job_title": row["job_title"],
+            "department": row["department"],
+            "match_score": float(row["match_score"]),
+            "eligible": bool(row["eligible"]),
+            "warnings": row["warnings"],
+            "skills_met": int(row["skills_met"]),
+            "skills_required": int(row["skills_required"]),
+            "total_gap": float(row["total_gap"]),
+            "breakdown": merged[merged["job_id"] == jid][[
+                "skill_id", "skill_name",
+                "required_level", "importance_weight",
+                "proficiency_level", "meets_required",
+                "gap", "weighted_points"
+            ]].to_dict("records"),
+        })
+
+    return {
+        "candidate": {
+            "candidate_id": int(candidate_id),
+            "current_role": cand_row.get("current_role"),
+            "years_exp": years_exp,
+            "education_level_id": edu_level,
+        },
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "recommendations": recs,
+    }
+
+
+# ---------- CSV helper (job -> candidate only) ----------
 def recommendations_to_dataframe(results: dict) -> pd.DataFrame:
     rows = []
     job = results.get("job", {})
 
     for rec in results.get("recommendations", []):
-        rows.append(
-            {
-                "job_id": job.get("job_id"),
-                "job_title": job.get("job_title"),
-                "candidate_id": rec["candidate_id"],
-                "current_role": rec["current_role"],
-                "rank": rec["rank"],
-                "match_score": rec["match_score"],
-                "eligible": rec["eligible"],
-                "skills_met": rec["skills_met"],
-                "skills_required": rec["skills_required"],
-                "total_gap": rec["total_gap"],
-                "warnings": rec["warnings"],
-            }
-        )
+        rows.append({
+            "job_id": job.get("job_id"),
+            "job_title": job.get("job_title"),
+            "candidate_id": rec["candidate_id"],
+            "current_role": rec["current_role"],
+            "rank": rec["rank"],
+            "match_score": rec["match_score"],
+            "eligible": rec["eligible"],
+            "skills_met": rec["skills_met"],
+            "skills_required": rec["skills_required"],
+            "total_gap": rec["total_gap"],
+            "warnings": rec["warnings"],
+        })
 
     return pd.DataFrame(rows)
 
 
-# ---------- script entrypoint ----------
+# ---------- entrypoint ----------
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--excel_path", type=str, default="Dummy Data.xlsx")
-    parser.add_argument("--job_id", type=int, required=True)
+    parser.add_argument("--excel_path", type=str, default="../data/Dummy_Data.xlsx")
+    parser.add_argument("--job_id", type=int)
+    parser.add_argument("--candidate_id", type=int)
     parser.add_argument("--top_n", type=int, default=10)
     parser.add_argument("--save_csv", action="store_true")
     parser.add_argument("--csv_path", type=str, default=None)
 
     args = parser.parse_args()
 
+    if not args.job_id and not args.candidate_id:
+        parser.error("You must provide either --job_id or --candidate_id")
+
+    if args.job_id and args.candidate_id:
+        parser.error("Provide only one of --job_id or --candidate_id")
+
     job, job_skill, candidate, candidate_skill, skill = load_sheets(args.excel_path)
     job, job_skill, candidate, candidate_skill, skill = clean_tables(
         job, job_skill, candidate, candidate_skill, skill
     )
 
-    results = recommend_candidates(
-        args.job_id, args.top_n, job, job_skill, candidate, candidate_skill, skill
-    )
-
-    if args.save_csv:
-        df_out = recommendations_to_dataframe(results)
-        path = (
-            args.csv_path
-            if args.csv_path
-            else f"data/job_{args.job_id}_recommendations.csv"
+    if args.job_id:
+        results = recommend_candidates(
+            args.job_id, args.top_n,
+            job, job_skill, candidate, candidate_skill, skill
         )
+    else:
+        results = recommend_jobs(
+            args.candidate_id, args.top_n,
+            job, job_skill, candidate, candidate_skill, skill
+        )
+
+    if args.save_csv and args.job_id:
+        df_out = recommendations_to_dataframe(results)
+        path = args.csv_path or f"data/job_{args.job_id}_recommendations.csv"
         df_out.to_csv(path, index=False)
 
     print(json.dumps(results, indent=2, default=str))
