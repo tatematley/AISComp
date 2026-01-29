@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
+import { apiFetch } from "../lib/api";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
@@ -47,7 +48,17 @@ export default function JobAdd() {
         setLoading(true);
         setError(null);
 
-        const metaRes = await fetch("http://localhost:5050/api/meta/job-edit");
+        // ✅ token-aware request
+        const metaRes = await apiFetch("/api/meta/job-edit");
+
+        // ✅ same 401 handling as EmployeeAdd
+        if (metaRes.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
+
         if (!metaRes.ok) {
           const body = await metaRes.json().catch(() => ({}));
           throw new Error(body.error || "Failed to load dropdowns");
@@ -74,7 +85,7 @@ export default function JobAdd() {
     };
 
     run();
-  }, []);
+  }, [navigate]);
 
   const availableSkillOptions = useMemo(() => {
     const used = new Set(jobSkillEdits.map((s) => s.skill_id));
@@ -169,11 +180,20 @@ export default function JobAdd() {
         throw new Error("Salary must be a number.");
       }
 
-      const res = await fetch("http://localhost:5050/api/jobs", {
+      // ✅ token-aware request
+      const res = await apiFetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      // ✅ same 401 handling as EmployeeAdd
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

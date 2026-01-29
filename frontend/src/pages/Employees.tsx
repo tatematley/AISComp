@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../styles/Employees.css";
 import AdminNavbar from "../components/AdminNavbar";
 import { Link, useNavigate } from "react-router-dom";
-
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 
 type EmployeeRow = {
@@ -20,7 +21,7 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-
+  const canEdit = isManager();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -31,7 +32,14 @@ export default function Employees() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:5050/api/candidates");
+        const res = await apiFetch("/api/candidates");
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
+
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
         const data = (await res.json()) as EmployeeRow[];
@@ -79,6 +87,7 @@ export default function Employees() {
   const goPrev = () => setPage((p) => Math.max(1, p - 1));
   const goNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
+
   return (
     <>
     <AdminNavbar />
@@ -86,21 +95,20 @@ export default function Employees() {
       <header className="employeesHeader">
         <div className="employeesTitleBlock">
             <h1 className="employeesTitle">Employees</h1>
-
-            <span
-              className="employeesAddAction"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate("/employees/new")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") navigate("/employees/new");
-              }}
-            >
-              <span className="employeesAddIcon">+</span>
-              <span onClick={() => navigate("/employees/new")}
-                >New Employee</span>
-            </span>
-
+            {canEdit && (
+              <span
+                className="employeesAddAction"
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate("/employees/new")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") navigate("/employees/new");
+                }}
+              >
+                <span className="employeesAddIcon">+</span>
+                <span>New Employee</span>
+              </span>
+            )}
 
             <p className="employeesSubtitle">Search and manage employee records.</p>
         </div>
