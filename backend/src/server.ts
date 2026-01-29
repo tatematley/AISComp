@@ -1327,7 +1327,7 @@ app.delete("/api/applicants/:id", requireAuth, requireRole("manager"), async (re
   }
 });
 
-app.use("/api/jobs", jobRoutes);
+
 
 /* ----------------------------- AI Explanations ----------------------------- */
 
