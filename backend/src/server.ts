@@ -3,8 +3,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { pool } from "./db";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import type { Request, Response, NextFunction } from "express";
 import jobRoutes from "./routes/jobs";
-// import fetch from "node-fetch";
+
 
 dotenv.config();
 
@@ -14,7 +17,111 @@ app.use(express.json());
 
 const port = Number(process.env.PORT) || 5050;
 
-// testing testing console.log("Loaded API key:", process.env.ANTHROPIC_API_KEY);
+console.log("✅ server.ts starting up...");
+process.on("uncaughtException", (err) => {
+  console.error("❌ uncaughtException:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ unhandledRejection:", reason);
+});
+
+
+
+type AuthedUser = {
+  user_id: number;
+  username: string;
+  role: string; // "manager" | "employee"
+};
+
+const ROLES = {
+  MANAGER: "manager",
+  EMPLOYEE: "employee",
+} as const;
+
+
+type AuthedRequest = Request & { user?: AuthedUser };
+
+function signToken(user: AuthedUser) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET missing");
+  return jwt.sign(user, secret, { expiresIn: "2h" });
+}
+
+function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
+
+  if (!token) return res.status(401).json({ error: "Missing auth token" });
+
+  try {
+    const secret = process.env.JWT_SECRET!;
+    const payload = jwt.verify(token, secret) as AuthedUser;
+    req.user = payload;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
+
+function requireRole(...allowed: string[]) {
+  return (req: AuthedRequest, res: Response, next: NextFunction) => {
+    const role = req.user?.role;
+    if (!role) return res.status(401).json({ error: "Unauthorized" });
+    if (!allowed.includes(role)) return res.status(403).json({ error: "Forbidden" });
+    next();
+  };
+}
+/* ----------------------------- Login Endpoint ----------------------------- */
+
+app.post("/api/auth/login", async (req, res) => {
+  const username = String(req.body?.username ?? "").trim();
+  const password = String(req.body?.password ?? "");
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required." });
+  }
+
+  try {
+    // Pull user + role
+    const result = await pool.query(
+      `
+      SELECT
+        u.user_id,
+        u.username,
+        u.password,
+        r.user_role
+      FROM app_user u
+      JOIN user_roles r ON r.user_role_id = u.user_role_id
+      WHERE u.username = $1
+      `,
+      [username]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const row = result.rows[0];
+
+    // Compare password
+    const ok = await bcrypt.compare(password, row.password);
+    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+
+    const user = {
+      user_id: Number(row.user_id),
+      username: String(row.username),
+      role: String(row.user_role),
+    };
+
+    const token = signToken(user);
+
+    return res.json({ token, user });
+  } catch (err) {
+    console.error("POST /api/auth/login failed:", err);
+    return res.status(500).json({ error: "Login failed" });
+  }
+});
+
 
 /* ----------------------------- Health + Root ----------------------------- */
 
@@ -30,7 +137,7 @@ app.get("/", (_req, res) => {
 /* ----------------------------- Employees + Applicants ----------------------------- */
 
 // INTERNAL employees list (Employees.tsx)
-app.get("/api/candidates", async (_req, res) => {
+app.get("/api/candidates", requireAuth, requireRole("manager", "employee"), async (_req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -51,7 +158,7 @@ app.get("/api/candidates", async (_req, res) => {
 });
 
 // EXTERNAL applicants list (Applicants.tsx)
-app.get("/api/applicants", async (_req, res) => {
+app.get("/api/applicants", requireAuth, requireRole("manager", "employee"), async (_req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -73,7 +180,7 @@ app.get("/api/applicants", async (_req, res) => {
 });
 
 // CREATE applicant (non-internal candidate_information + optional candidate_skill)
-app.post("/api/applicants", async (req, res) => {
+app.post("/api/applicants", requireAuth, requireRole("manager"), async (req, res) => {
   const { candidate, skills } = req.body ?? {};
   const client = await pool.connect();
 
@@ -165,7 +272,7 @@ app.post("/api/applicants", async (req, res) => {
 });
 
 // Shared “detail” endpoint used by Employee.tsx / Applicant.tsx
-app.get("/api/candidates/:id/profile", async (req, res) => {
+app.get("/api/candidates/:id/profile", requireAuth, requireRole("manager", "employee"), async (req, res) => {
   const candidateId = Number(req.params.id);
   if (Number.isNaN(candidateId)) {
     return res.status(400).json({ error: "Invalid candidate id" });
@@ -244,7 +351,7 @@ app.get("/api/candidates/:id/profile", async (req, res) => {
 
 /* ----------------------------- Profile edit meta ----------------------------- */
 
-app.get("/api/meta/profile-edit", async (_req, res) => {
+app.get("/api/meta/profile-edit", requireAuth, requireRole("manager"), async (_req, res) => {
   try {
     const [pronouns, departments, locations, education, skills] =
       await Promise.all([
@@ -286,7 +393,7 @@ app.get("/api/meta/profile-edit", async (_req, res) => {
 
 /* ----------------------------- Employee Edit (internal only) ----------------------------- */
 
-app.put("/api/candidates/:id/profile", async (req, res) => {
+app.put("/api/candidates/:id/profile", requireAuth, requireRole("manager"), async (req, res) => {
   const candidateId = Number(req.params.id);
   if (Number.isNaN(candidateId)) {
     return res.status(400).json({ error: "Invalid candidate id" });
@@ -408,7 +515,7 @@ app.put("/api/candidates/:id/profile", async (req, res) => {
 
 /* ----------------------------- Applicant Edit (non-internal only) ----------------------------- */
 
-app.put("/api/candidates/:id/applicant", async (req, res) => {
+app.put("/api/candidates/:id/applicant", requireAuth, requireRole("manager"), async (req, res) => {
   const candidateId = Number(req.params.id);
   if (Number.isNaN(candidateId)) {
     return res.status(400).json({ error: "Invalid candidate id" });
@@ -506,7 +613,7 @@ app.put("/api/candidates/:id/applicant", async (req, res) => {
 /* ----------------------------- Jobs ----------------------------- */
 
 // Jobs list
-app.get("/api/jobs", async (_req, res) => {
+app.get("/api/jobs", requireAuth, requireRole("manager", "employee"), async (_req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -533,7 +640,7 @@ app.get("/api/jobs", async (_req, res) => {
 });
 
 // Job detail
-app.get("/api/jobs/:id", async (req, res) => {
+app.get("/api/jobs/:id", requireAuth, requireRole("manager", "employee"), async (req, res) => {
   const jobId = Number(req.params.id);
   if (Number.isNaN(jobId))
     return res.status(400).json({ error: "Invalid job id" });
@@ -588,7 +695,7 @@ app.get("/api/jobs/:id", async (req, res) => {
 
 // CREATE employee (internal candidate_information + candidate internal row + optional candidate_skill)
 // CREATE employee (internal candidate_information + candidate internal row + optional candidate_skill)
-app.post("/api/employees", async (req, res) => {
+app.post("/api/employees", requireAuth, requireRole("manager"), async (req, res) => {
   const { candidate, internal, skills } = req.body ?? {};
   const client = await pool.connect();
 
@@ -696,7 +803,7 @@ app.post("/api/employees", async (req, res) => {
 });
 
 // ✅ FIXED: meta job-edit education uses `education` table
-app.get("/api/meta/job-edit", async (_req, res) => {
+app.get("/api/meta/job-edit", requireAuth, requireRole("manager"), async (_req, res) => {
   try {
     const [jobStatuses, departments, locations, education, skills] =
       await Promise.all([
@@ -737,7 +844,7 @@ app.get("/api/meta/job-edit", async (_req, res) => {
 });
 
 // JobEdit page data
-app.get("/api/jobs/:id/edit", async (req, res) => {
+app.get("/api/jobs/:id/edit", requireAuth, requireRole("manager"), async (req, res) => {
   const jobId = Number(req.params.id);
   if (Number.isNaN(jobId))
     return res.status(400).json({ error: "Invalid job id" });
@@ -795,7 +902,7 @@ app.get("/api/jobs/:id/edit", async (req, res) => {
 
 // CREATE job + required skills
 // CREATE job + required skills
-app.post("/api/jobs", async (req, res) => {
+app.post("/api/jobs", requireAuth, requireRole("manager"), async (req, res) => {
   const { job, skills } = req.body ?? {};
   const client = await pool.connect();
 
@@ -928,7 +1035,7 @@ app.post("/api/jobs", async (req, res) => {
 });
 
 // Update job + required skills
-app.put("/api/jobs/:id", async (req, res) => {
+app.put("/api/jobs/:id", requireAuth, requireRole("manager"), async (req, res) => {
   const jobId = Number(req.params.id);
   if (Number.isNaN(jobId))
     return res.status(400).json({ error: "Invalid job id" });
@@ -1066,7 +1173,7 @@ app.put("/api/jobs/:id", async (req, res) => {
 });
 
 // Delete job + required skills
-app.delete("/api/jobs/:id", async (req, res) => {
+app.delete("/api/jobs/:id", requireAuth, requireRole("manager"), async (req, res) => {
   const jobId = Number(req.params.id);
   if (Number.isNaN(jobId))
     return res.status(400).json({ error: "Invalid job id" });
@@ -1099,7 +1206,8 @@ app.delete("/api/jobs/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/employees/:id", async (req, res) => {
+
+app.delete("/api/employees/:id", requireAuth, requireRole("manager"), async (req, res) => {
   const candidateId = Number(req.params.id);
   if (Number.isNaN(candidateId)) {
     return res.status(400).json({ error: "Invalid candidate id" });
@@ -1159,7 +1267,8 @@ app.delete("/api/employees/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/applicants/:id", async (req, res) => {
+
+app.delete("/api/applicants/:id", requireAuth, requireRole("manager"), async (req, res) => {
   const candidateId = Number(req.params.id);
   if (Number.isNaN(candidateId)) {
     return res.status(400).json({ error: "Invalid candidate id" });
@@ -1221,99 +1330,10 @@ app.delete("/api/applicants/:id", async (req, res) => {
 
 app.use("/api/jobs", jobRoutes);
 
-/* ----------------------------- AI Explanations ----------------------------- */
-
-// app.get(
-//   "/api/jobs/:jobId/recommendations/:candidateId/explanation",
-//   async (req, res) => {
-//     const { jobId, candidateId } = req.params;
-
-//     try {
-//       // 1️⃣ Fetch candidate details
-//       const candidateRes = await pool.query(
-//         `
-//         SELECT
-//           ci.name,
-//           ci.position,
-//           ci.internal,
-//           c.currentrole,
-//           c.years_exp,
-//           c.availability_hours,
-//           c.start_date
-//         FROM candidate_information ci
-//         LEFT JOIN candidate c ON ci.candidate_id = c.candidate_id
-//         WHERE ci.candidate_id = $1
-//         `,
-//         [candidateId],
-//       );
-
-//       if (candidateRes.rowCount === 0) {
-//         return res.status(404).json({ error: "Candidate not found" });
-//       }
-
-//       const candidate = candidateRes.rows[0];
-
-//       // 2️⃣ Fetch candidate skills
-//       const skillsRes = await pool.query(
-//         `
-//         SELECT s.skill_name, cs.proficiency_level
-//         FROM candidate_skill cs
-//         JOIN skill s ON s.skill_id = cs.skill_id
-//         WHERE cs.candidate_id = $1
-//         ORDER BY s.skill_name
-//         `,
-//         [candidateId],
-//       );
-
-//       const skills = skillsRes.rows.map(
-//         (s) => `${s.skill_name} (level ${s.proficiency_level ?? "N/A"})`,
-//       );
-
-//       // 3️⃣ Build prompt
-//       const promptText = `
-// Explain why the following candidate was recommended for job ${jobId}:
-
-// Name: ${candidate.name}
-// Position: ${candidate.position ?? "N/A"}
-// Role: ${candidate.currentrole ?? "N/A"}
-// Experience: ${candidate.years_exp ?? "N/A"} years
-// Availability Hours: ${candidate.availability_hours ?? "N/A"}
-// Start Date: ${candidate.start_date ?? "N/A"}
-// Skills: ${skills.join(", ")}
-
-// Give a concise explanation highlighting why they were recommended, focusing on their skills, experience, and role.
-// `;
-
-//       console.log("AI explanation prompt:", promptText);
-
-//       // 4️⃣ Call Claude API
-//       const response = await fetch("https://api.anthropic.com/v1/complete", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-//         },
-//         body: JSON.stringify({
-//           model: "claude-1.3",
-//           prompt: promptText,
-//           max_tokens_to_sample: 300,
-//         }),
-//       });
-
-//       const data = await response.json();
-//       console.log("Claude API response:", data);
-
-//       // 5️⃣ Return explanation
-//       const explanation = data.completion ?? "No explanation returned";
-//       res.json({ explanation });
-//     } catch (err: any) {
-//       console.error("AI explanation failed:", err);
-//       res.status(500).json({ error: "Failed to generate explanation" });
-//     }
-//   },
-// );
-
 /* ----------------------------- Start ----------------------------- */
+
+console.log("✅ about to listen, port =", port);
+
 
 app.listen(port, () => {
   console.log(`API running on http://localhost:${port}`);
