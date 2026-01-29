@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
+import { apiFetch } from "../lib/api";
 
 type SkillRow = {
   candidate_skill_id: number;
@@ -52,21 +53,18 @@ export default function EmployeeEdit() {
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
 
-  // dropdown data
   const [pronouns, setPronouns] = useState<Option[]>([]);
   const [departments, setDepartments] = useState<Option[]>([]);
   const [locations, setLocations] = useState<Option[]>([]);
   const [education, setEducation] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
 
-  // form state (candidate_information)
   const [position, setPosition] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [applicationDate, setApplicationDate] = useState<string>(""); // yyyy-mm-dd
+  const [applicationDate, setApplicationDate] = useState<string>("");
   const [pronounsId, setPronounsId] = useState<number | "">("");
 
-  // internal (candidate table)
   const [currentRole, setCurrentRole] = useState("");
   const [yearsExp, setYearsExp] = useState<string>("");
   const [availabilityHours, setAvailabilityHours] = useState<string>("");
@@ -75,14 +73,12 @@ export default function EmployeeEdit() {
   const [locationId, setLocationId] = useState<number | "">("");
   const [educationId, setEducationId] = useState<number | "">("");
 
-  // skills editor
   const [skillEdits, setSkillEdits] = useState<
     { candidate_skill_id: number; skill_name: string; proficiency_level: number | null }[]
   >([]);
   const [newSkillId, setNewSkillId] = useState<number | "">("");
   const [newSkillLevel, setNewSkillLevel] = useState<string>("");
 
-  // load everything
   useEffect(() => {
     const run = async () => {
       if (Number.isNaN(candidateId)) {
@@ -96,9 +92,16 @@ export default function EmployeeEdit() {
         setError(null);
 
         const [profileRes, metaRes] = await Promise.all([
-          fetch(`http://localhost:5050/api/candidates/${candidateId}/profile`),
-          fetch(`http://localhost:5050/api/meta/profile-edit`),
+          apiFetch(`/api/candidates/${candidateId}/profile`),
+          apiFetch(`/api/meta/profile-edit`),
         ]);
+
+        if (profileRes.status === 401 || metaRes.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
 
         if (!profileRes.ok) {
           const body = await profileRes.json().catch(() => ({}));
@@ -118,7 +121,6 @@ export default function EmployeeEdit() {
           skills: SkillOption[];
         };
 
-        // must be internal for this edit page
         if (!profileJson.candidate.internal) {
           throw new Error("This candidate is not an internal employee.");
         }
@@ -131,7 +133,6 @@ export default function EmployeeEdit() {
         setEducation(metaJson.education);
         setSkillsCatalog(metaJson.skills);
 
-        // seed form state
         setPosition(profileJson.candidate.position ?? "");
         setEmail(profileJson.candidate.email ?? "");
         setPhone(profileJson.candidate.phone_number ?? "");
@@ -170,10 +171,9 @@ export default function EmployeeEdit() {
     };
 
     run();
-  }, [candidateId]);
+  }, [candidateId, navigate]);
 
   const skillOptionsFiltered = useMemo(() => {
-    // hide skills already on candidate (by name)
     const existing = new Set(skillEdits.map((s) => s.skill_name.toLowerCase()));
     return skillsCatalog.filter((s) => !existing.has(s.name.toLowerCase()));
   }, [skillsCatalog, skillEdits]);
@@ -195,8 +195,6 @@ export default function EmployeeEdit() {
     if (!picked) return;
 
     const raw = newSkillLevel.trim();
-
-    // empty is allowed -> null
     let lvl: number | null = null;
 
     if (raw !== "") {
@@ -208,7 +206,6 @@ export default function EmployeeEdit() {
       lvl = n;
     }
 
-    // new skills don't have candidate_skill_id yet; use negative temp ids for React keys
     const tempId = -Math.floor(Math.random() * 1_000_000);
 
     setSkillEdits((prev) => [
@@ -219,7 +216,6 @@ export default function EmployeeEdit() {
     setNewSkillId("");
     setNewSkillLevel("");
   };
-
 
   const onSave = async () => {
     if (!profile) return;
@@ -246,27 +242,30 @@ export default function EmployeeEdit() {
           education_level_id: educationId === "" ? null : educationId,
         },
         skills: skillEdits.map((s) => ({
-          candidate_skill_id: s.candidate_skill_id, // negative means "new"
+          candidate_skill_id: s.candidate_skill_id,
           skill_name: s.skill_name,
           proficiency_level: s.proficiency_level,
         })),
       };
 
-      const res = await fetch(
-        `http://localhost:5050/api/candidates/${candidateId}/profile`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await apiFetch(`/api/candidates/${candidateId}/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Failed to save changes");
       }
 
-      // go back to profile detail
       navigate(`/employees/${candidateId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save");

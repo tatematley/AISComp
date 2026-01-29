@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import CandidateCard from "../components/CandidateCard";
 import "../styles/Job.css";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type JobSkill = {
   job_skill_id: number;
@@ -52,6 +54,7 @@ export default function Job() {
   const { id } = useParams();
   const jobId = Number(id);
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [data, setData] = useState<JobData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,13 +62,19 @@ export default function Job() {
   const [error, setError] = useState("");
 
   const handleDelete = async () => {
-    const ok = window.confirm("Delete this job? This can't be undone.");
+
+    const ok = window.confirm("Delete this job? This can’t be undone.");
     if (!ok) return;
 
     try {
-      const res = await fetch(`http://localhost:5050/api/jobs/${jobId}`, {
-        method: "DELETE",
-      });
+      const res = await apiFetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -86,18 +95,28 @@ export default function Job() {
       return;
     }
 
-    fetch(`http://localhost:5050/api/jobs/${jobId}`)
+    apiFetch(`/api/jobs/${jobId}`)
       .then(async (res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return null;
+        }
+
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || "Failed to load job");
         }
+
         return res.json();
       })
-      .then(setData)
+      .then((json) => {
+        if (json) setData(json);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [jobId]);
+  }, [jobId, navigate]);
 
   // Fetch recommendations separately
   useEffect(() => {
@@ -139,11 +158,7 @@ export default function Job() {
           {/* Header row */}
           <div className="jobHeaderRow">
             <div className="jobTitleBlock">
-              <button
-                className="jobBackLink"
-                onClick={() => navigate("/jobs")}
-                type="button"
-              >
+              <button className="jobBackLink" onClick={() => navigate("/jobs")} type="button">
                 ← Back to Jobs
               </button>
 
@@ -161,22 +176,22 @@ export default function Job() {
               </p>
             </div>
 
-            <div className="jobActionsRow">
-              <button
-                className="profileActionBtn"
-                type="button"
-                onClick={() => navigate(`/jobs/${jobId}/edit`)}
-              >
-                Edit
-              </button>
-              <button
-                className="jobActionBtn danger"
-                type="button"
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
-            </div>
+            {canEdit && (
+              <div className="jobActionsRow">
+                <button
+                  className="profileActionBtn"
+                  type="button"
+                  onClick={() => navigate(`/jobs/${jobId}/edit`)}
+                >
+                  Edit
+                </button>
+
+                <button className="jobActionBtn danger" type="button" onClick={handleDelete}>
+                  Delete
+                </button>
+              </div>
+            )}
+
           </div>
 
           {/* Main card */}

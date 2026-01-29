@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/Profile.css";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type Skill = {
   candidate_skill_id: number;
@@ -29,6 +31,7 @@ export default function Applicant() {
   const { id } = useParams();
   const candidateId = Number(id);
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,15 +44,24 @@ export default function Applicant() {
       return;
     }
 
-    fetch(`http://localhost:5050/api/candidates/${candidateId}/profile`)
+    apiFetch(`/api/candidates/${candidateId}/profile`)
       .then(async (res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return null;
+        }
+
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || "Failed to load applicant");
         }
         return res.json();
       })
-      .then((json: ProfileData) => {
+      .then((json: ProfileData | null) => {
+        if (!json) return;
+
         if (json?.candidate?.internal) {
           navigate(`/employees/${candidateId}`, { replace: true });
           return;
@@ -60,16 +72,28 @@ export default function Applicant() {
       .finally(() => setLoading(false));
   }, [candidateId, navigate]);
 
+  const toPhotoFile = (fullName: string) =>
+    `${fullName
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .slice(0, 2)
+      .join("_")}.jpeg`;
+
   // ✅ DELETE HANDLER (added)
   const handleDelete = async () => {
     const ok = window.confirm("Delete this applicant? This can’t be undone.");
     if (!ok) return;
 
     try {
-      const res = await fetch(
-        `http://localhost:5050/api/applicants/${candidateId}`,
-        { method: "DELETE" }
-      );
+      const res = await apiFetch(`/api/applicants/${candidateId}`, { method: "DELETE" });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -114,23 +138,25 @@ export default function Applicant() {
               <p className="profileRole">{candidate.position ?? "—"}</p>
             </div>
 
-            <div className="profileActionsRow">
-              <button
-                className="profileActionBtn"
-                type="button"
-                onClick={() => navigate(`/applicants/${candidateId}/edit`)}
-              >
-                Edit
-              </button>
+            {canEdit && (
+              <div className="profileActionsRow">
+                <button
+                  className="profileActionBtn"
+                  type="button"
+                  onClick={() => navigate(`/applicants/${candidateId}/edit`)}
+                >
+                  Edit
+                </button>
 
-              <button
-                className="profileActionBtn danger"
-                type="button"
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
-            </div>
+                <button
+                  className="profileActionBtn danger"
+                  type="button"
+                  onClick={handleDelete}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
 
           <section className="profileCard">
@@ -138,7 +164,7 @@ export default function Applicant() {
               <div className="profileLeftCol">
                 <div className="profileAvatar">
                   <img
-                    src="/images/parker.jpeg"
+                    src={`/images/profiles/${candidate.name ? toPhotoFile(candidate.name) : "sarah.jpeg"}`}
                     alt={`${candidate.name ?? "Applicant"} profile`}
                     className="profileAvatarImg"
                   />

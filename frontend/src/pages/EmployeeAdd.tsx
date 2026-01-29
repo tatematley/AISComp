@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
+import { apiFetch } from "../lib/api";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
@@ -50,7 +51,15 @@ export default function EmployeeAdd() {
         setLoading(true);
         setError(null);
 
-        const metaRes = await fetch(`http://localhost:5050/api/meta/profile-edit`);
+        const metaRes = await apiFetch(`/api/meta/profile-edit`);
+
+        if (metaRes.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
+
         if (!metaRes.ok) {
           const body = await metaRes.json().catch(() => ({}));
           throw new Error(body.error || "Failed to load dropdowns");
@@ -77,7 +86,7 @@ export default function EmployeeAdd() {
     };
 
     run();
-  }, []);
+  }, [navigate]);
 
   const skillOptionsFiltered = useMemo(() => {
     const existing = new Set(skillEdits.map((s) => s.skill_name.toLowerCase()));
@@ -151,11 +160,18 @@ export default function EmployeeAdd() {
         })),
       };
 
-      const res = await fetch("http://localhost:5050/api/employees", {
+      const res = await apiFetch("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

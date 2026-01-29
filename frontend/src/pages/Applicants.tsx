@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../styles/Applicants.css";
 import { Link, useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
+
 
 type ApplicantRow = {
   candidate_id: number;
@@ -31,6 +34,7 @@ export default function Applicants() {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -41,8 +45,17 @@ export default function Applicants() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:5050/api/applicants");
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        const res = await apiFetch("/api/applicants");
+
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+            return;
+          }
+
+          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+
 
         const data = (await res.json()) as ApplicantRow[];
         setApplicants(data);
@@ -95,22 +108,24 @@ export default function Applicants() {
           <div className="applicantsTitleBlock">
             <h1 className="applicantsTitle">Applicants</h1>
 
-            {/* ✅ FIXED BUTTON */}
-            <span
-              className="applicantsAddAction"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate("/applicants/new")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate("/applicants/new");
-                }
-              }}
-            >
-              <span className="applicantsAddIcon">+</span>
-              <span>New Applicant</span>
-            </span>
+            {canEdit && (
+              <span
+                className="applicantsAddAction"
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate("/applicants/new")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/applicants/new");
+                  }
+                }}
+              >
+                <span className="applicantsAddIcon">+</span>
+                <span>New Applicant</span>
+              </span>
+            )}
+
 
             <p className="applicantsSubtitle">
               Search and manage external applicants.
