@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type SkillRow = {
   candidate_skill_id: number;
@@ -33,6 +35,7 @@ export default function ApplicantEdit() {
   const { id } = useParams();
   const candidateId = Number(id);
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -71,9 +74,16 @@ export default function ApplicantEdit() {
         setError(null);
 
         const [profileRes, metaRes] = await Promise.all([
-          fetch(`http://localhost:5050/api/candidates/${candidateId}/profile`),
-          fetch(`http://localhost:5050/api/meta/profile-edit`),
+          apiFetch(`/api/candidates/${candidateId}/profile`),
+          apiFetch(`/api/meta/profile-edit`),
         ]);
+
+        if (profileRes.status === 401 || metaRes.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
 
         if (!profileRes.ok) {
           const body = await profileRes.json().catch(() => ({}));
@@ -92,10 +102,9 @@ export default function ApplicantEdit() {
 
         // must be applicant for this edit page
         if (profileJson.candidate.internal) {
-            navigate(`/employees/${candidateId}/edit`, { replace: true });
-            return;
+          navigate(`/employees/${candidateId}/edit`, { replace: true });
+          return;
         }
-
 
         setProfile(profileJson);
 
@@ -139,7 +148,11 @@ export default function ApplicantEdit() {
 
   const updateSkillLevel = (candidate_skill_id: number, level: number | null) => {
     setSkillEdits((prev) =>
-      prev.map((s) => (s.candidate_skill_id === candidate_skill_id ? { ...s, proficiency_level: level } : s))
+      prev.map((s) =>
+        s.candidate_skill_id === candidate_skill_id
+          ? { ...s, proficiency_level: level }
+          : s
+      )
     );
   };
 
@@ -178,6 +191,7 @@ export default function ApplicantEdit() {
 
   const onSave = async () => {
     if (!profile) return;
+    if (!canEdit) return;
 
     setSaving(true);
     setError(null);
@@ -200,11 +214,18 @@ export default function ApplicantEdit() {
 
       // IMPORTANT: this should be a separate endpoint for applicants,
       // because your current PUT /profile blocks non-internal users.
-      const res = await fetch(`http://localhost:5050/api/candidates/${candidateId}/applicant`, {
+      const res = await apiFetch(`/api/candidates/${candidateId}/applicant`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -246,14 +267,16 @@ export default function ApplicantEdit() {
               </p>
             </div>
 
-            <button
-              className="profileEditSaveTopBtn"
-              type="button"
-              onClick={onSave}
-              disabled={saving}
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
+            {canEdit && (
+              <button
+                className="profileEditSaveTopBtn"
+                type="button"
+                onClick={onSave}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            )}
           </div>
 
           {/* form card */}
@@ -282,6 +305,7 @@ export default function ApplicantEdit() {
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   placeholder="e.g., Data Analyst"
+                  disabled={!canEdit}
                 />
               </div>
 
@@ -291,6 +315,7 @@ export default function ApplicantEdit() {
                   className="profileEditSelect"
                   value={pronounsId}
                   onChange={(e) => setPronounsId(e.target.value === "" ? "" : Number(e.target.value))}
+                  disabled={!canEdit}
                 >
                   <option value="">—</option>
                   {pronouns.map((p) => (
@@ -308,6 +333,7 @@ export default function ApplicantEdit() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@email.com"
+                  disabled={!canEdit}
                 />
               </div>
 
@@ -318,6 +344,7 @@ export default function ApplicantEdit() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="555-0101"
+                  disabled={!canEdit}
                 />
               </div>
 
@@ -328,6 +355,7 @@ export default function ApplicantEdit() {
                   type="date"
                   value={applicationDate}
                   onChange={(e) => setApplicationDate(e.target.value)}
+                  disabled={!canEdit}
                 />
               </div>
 
@@ -341,6 +369,7 @@ export default function ApplicantEdit() {
                     className="profileEditSelect"
                     value={newSkillId}
                     onChange={(e) => setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))}
+                    disabled={!canEdit}
                   >
                     <option value="">Select a skill…</option>
                     {skillOptionsFiltered.map((s) => (
@@ -358,17 +387,20 @@ export default function ApplicantEdit() {
                     value={newSkillLevel}
                     onChange={(e) => setNewSkillLevel(e.target.value)}
                     placeholder="optional"
+                    disabled={!canEdit}
                   />
                 </div>
 
-                <button
-                  className="profileEditAddBtn"
-                  type="button"
-                  onClick={addSkill}
-                  disabled={newSkillId === ""}
-                >
-                  + Add
-                </button>
+                {canEdit && (
+                  <button
+                    className="profileEditAddBtn"
+                    type="button"
+                    onClick={addSkill}
+                    disabled={newSkillId === ""}
+                  >
+                    + Add
+                  </button>
+                )}
               </div>
 
               <div className="profileEditSkillsList">
@@ -383,6 +415,8 @@ export default function ApplicantEdit() {
                         className="profileEditSkillLevel"
                         value={s.proficiency_level == null ? "" : String(s.proficiency_level)}
                         onChange={(e) => {
+                          if (!canEdit) return;
+
                           const raw = e.target.value.trim();
 
                           if (raw === "") {
@@ -396,15 +430,18 @@ export default function ApplicantEdit() {
                           updateSkillLevel(s.candidate_skill_id, n);
                         }}
                         placeholder="Lvl"
+                        disabled={!canEdit}
                       />
 
-                      <button
-                        className="profileEditRemoveBtn"
-                        type="button"
-                        onClick={() => removeSkill(s.candidate_skill_id)}
-                      >
-                        Remove
-                      </button>
+                      {canEdit && (
+                        <button
+                          className="profileEditRemoveBtn"
+                          type="button"
+                          onClick={() => removeSkill(s.candidate_skill_id)}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
@@ -421,14 +458,16 @@ export default function ApplicantEdit() {
                 Cancel
               </button>
 
-              <button
-                className="profileEditSaveBtn"
-                type="button"
-                onClick={onSave}
-                disabled={saving}
-              >
-                {saving ? "Saving…" : "Save Changes"}
-              </button>
+              {canEdit && (
+                <button
+                  className="profileEditSaveBtn"
+                  type="button"
+                  onClick={onSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving…" : "Save Changes"}
+                </button>
+              )}
             </div>
           </section>
         </div>

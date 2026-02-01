@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import "../styles/Jobs.css";
 import { Link, useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type JobRow = {
   job_id: number;
@@ -39,6 +41,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -49,8 +52,15 @@ export default function Jobs() {
         setLoading(true);
         setError(null);
 
-        // TODO: update endpoint to whatever your API is
-        const res = await fetch("http://localhost:5050/api/jobs");
+        const res = await apiFetch("/api/jobs");
+
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
+
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
         const data = (await res.json()) as JobRow[];
@@ -107,21 +117,25 @@ export default function Jobs() {
         <header className="jobsHeader">
           <div className="jobsTitleBlock">
             <h1 className="jobsTitle">Jobs</h1>
-            <span
-              className="jobsAddAction"
-              role="button"
-              tabIndex={0}
-              aria-label="Add new job"
-              onClick={() => navigate("/jobs/new")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate("/jobs/new");
-                }
-              }}
-            >
-              <span className="jobsAddText">New Job</span>
-            </span>
+
+            {canEdit && (
+              <span
+                className="jobsAddAction"
+                role="button"
+                tabIndex={0}
+                aria-label="Add new job"
+                onClick={() => navigate("/jobs/new")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate("/jobs/new");
+                  }
+                }}
+              >
+                <span className="employeesAddIcon">+</span>
+                <span className="jobsAddText">New Job</span>
+              </span>
+            )}
 
             <p className="jobsSubtitle">Search and manage job postings.</p>
           </div>
@@ -168,9 +182,7 @@ export default function Jobs() {
                   <div className="jobsSecondary">
                     {j.job_category ?? "—"} • {j.work_status ?? "—"}
                   </div>
-                  <div className="jobsDesc">
-                    {clamp(j.job_description, 110)}
-                  </div>
+                  <div className="jobsDesc">{clamp(j.job_description, 110)}</div>
                 </div>
 
                 <div className="jobsCell">{j.department ?? "—"}</div>

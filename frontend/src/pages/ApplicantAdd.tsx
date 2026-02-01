@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
 
 export default function ApplicantAdd() {
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,7 +41,15 @@ export default function ApplicantAdd() {
         setLoading(true);
         setError(null);
 
-        const metaRes = await fetch(`http://localhost:5050/api/meta/profile-edit`);
+        const metaRes = await apiFetch(`/api/meta/profile-edit`);
+
+        if (metaRes.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
+
         if (!metaRes.ok) {
           const body = await metaRes.json().catch(() => ({}));
           throw new Error(body.error || "Failed to load dropdowns");
@@ -68,7 +79,11 @@ export default function ApplicantAdd() {
 
   const updateSkillLevel = (candidate_skill_id: number, level: number | null) => {
     setSkillEdits((prev) =>
-      prev.map((s) => (s.candidate_skill_id === candidate_skill_id ? { ...s, proficiency_level: level } : s))
+      prev.map((s) =>
+        s.candidate_skill_id === candidate_skill_id
+          ? { ...s, proficiency_level: level }
+          : s
+      )
     );
   };
 
@@ -106,6 +121,8 @@ export default function ApplicantAdd() {
   };
 
   const onCreate = async () => {
+    if (!canEdit) return;
+
     setSaving(true);
     setError(null);
 
@@ -130,11 +147,18 @@ export default function ApplicantAdd() {
         })),
       };
 
-      const res = await fetch("http://localhost:5050/api/applicants", {
+      const res = await apiFetch("/api/applicants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -174,14 +198,16 @@ export default function ApplicantAdd() {
               <p className="profileEditSubtitle">Create an external applicant record</p>
             </div>
 
-            <button
-              className="profileEditSaveTopBtn"
-              type="button"
-              onClick={onCreate}
-              disabled={saving}
-            >
-              {saving ? "Saving…" : "Create"}
-            </button>
+            {canEdit && (
+              <button
+                className="profileEditSaveTopBtn"
+                type="button"
+                onClick={onCreate}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Create"}
+              </button>
+            )}
           </div>
 
           {/* form card */}
@@ -284,14 +310,16 @@ export default function ApplicantAdd() {
                   />
                 </div>
 
-                <button
-                  className="profileEditAddBtn"
-                  type="button"
-                  onClick={addSkill}
-                  disabled={newSkillId === ""}
-                >
-                  + Add
-                </button>
+                {canEdit && (
+                  <button
+                    className="profileEditAddBtn"
+                    type="button"
+                    onClick={addSkill}
+                    disabled={newSkillId === ""}
+                  >
+                    + Add
+                  </button>
+                )}
               </div>
 
               <div className="profileEditSkillsList">
@@ -316,13 +344,15 @@ export default function ApplicantAdd() {
                         placeholder="Lvl"
                       />
 
-                      <button
-                        className="profileEditRemoveBtn"
-                        type="button"
-                        onClick={() => removeSkill(s.candidate_skill_id)}
-                      >
-                        Remove
-                      </button>
+                      {canEdit && (
+                        <button
+                          className="profileEditRemoveBtn"
+                          type="button"
+                          onClick={() => removeSkill(s.candidate_skill_id)}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
@@ -339,14 +369,16 @@ export default function ApplicantAdd() {
                 Cancel
               </button>
 
-              <button
-                className="profileEditSaveBtn"
-                type="button"
-                onClick={onCreate}
-                disabled={saving}
-              >
-                {saving ? "Saving…" : "Create Applicant"}
-              </button>
+              {canEdit && (
+                <button
+                  className="profileEditSaveBtn"
+                  type="button"
+                  onClick={onCreate}
+                  disabled={saving}
+                >
+                  {saving ? "Saving…" : "Create Applicant"}
+                </button>
+              )}
             </div>
           </section>
         </div>

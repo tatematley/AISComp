@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
+import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
@@ -36,6 +38,7 @@ export default function JobEdit() {
   const { id } = useParams();
   const jobId = Number(id);
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -79,9 +82,16 @@ export default function JobEdit() {
         setError(null);
 
         const [jobRes, metaRes] = await Promise.all([
-          fetch(`http://localhost:5050/api/jobs/${jobId}/edit`),
-          fetch(`http://localhost:5050/api/meta/job-edit`),
+          apiFetch(`/api/jobs/${jobId}/edit`),
+          apiFetch(`/api/meta/job-edit`),
         ]);
+
+        if (jobRes.status === 401 || metaRes.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
 
         if (!jobRes.ok) {
           const body = await jobRes.json().catch(() => ({}));
@@ -212,6 +222,7 @@ export default function JobEdit() {
 
   const onSave = async () => {
     if (!jobData) return;
+    if (!canEdit) return;
 
     setSaving(true);
     setError(null);
@@ -239,11 +250,18 @@ export default function JobEdit() {
         })),
       };
 
-      const res = await fetch(`http://localhost:5050/api/jobs/${jobId}`, {
+      const res = await apiFetch(`/api/jobs/${jobId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -284,14 +302,16 @@ export default function JobEdit() {
               </p>
             </div>
 
-            <button
-              className="profileEditSaveTopBtn"
-              type="button"
-              onClick={onSave}
-              disabled={saving}
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
+            {canEdit && (
+              <button
+                className="profileEditSaveTopBtn"
+                type="button"
+                onClick={onSave}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            )}
           </div>
 
           <section className="profileEditCard">
@@ -446,7 +466,9 @@ export default function JobEdit() {
                   <select
                     className="profileEditSelect"
                     value={newSkillId}
-                    onChange={(e) => setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))}
+                    onChange={(e) =>
+                      setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))
+                    }
                   >
                     <option value="">Select a skill…</option>
                     {skillOptionsFiltered.map((s) => (
@@ -478,14 +500,16 @@ export default function JobEdit() {
                   />
                 </div>
 
-                <button
-                  className="profileEditAddBtn"
-                  type="button"
-                  onClick={addSkill}
-                  disabled={newSkillId === ""}
-                >
-                  + Add
-                </button>
+                {canEdit && (
+                  <button
+                    className="profileEditAddBtn"
+                    type="button"
+                    onClick={addSkill}
+                    disabled={newSkillId === ""}
+                  >
+                    + Add
+                  </button>
+                )}
               </div>
 
               <div className="profileEditSkillsList">
@@ -538,13 +562,15 @@ export default function JobEdit() {
                         placeholder="Weight"
                       />
 
-                      <button
-                        className="profileEditRemoveBtn"
-                        type="button"
-                        onClick={() => removeSkill(s.jobskill_id)}
-                      >
-                        Remove
-                      </button>
+                      {canEdit && (
+                        <button
+                          className="profileEditRemoveBtn"
+                          type="button"
+                          onClick={() => removeSkill(s.jobskill_id)}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
@@ -561,14 +587,16 @@ export default function JobEdit() {
                 Cancel
               </button>
 
-              <button
-                className="profileEditSaveBtn"
-                type="button"
-                onClick={onSave}
-                disabled={saving}
-              >
-                {saving ? "Saving…" : "Save Changes"}
-              </button>
+              {canEdit && (
+                <button
+                  className="profileEditSaveBtn"
+                  type="button"
+                  onClick={onSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving…" : "Save Changes"}
+                </button>
+              )}
             </div>
           </section>
         </div>

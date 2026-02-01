@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/EmployeeEdit.css";
 import { apiFetch } from "../lib/api";
+import { isManager } from "../lib/auth";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
 
 export default function JobAdd() {
   const navigate = useNavigate();
+  const canEdit = isManager();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -145,6 +147,8 @@ export default function JobAdd() {
   };
 
   const onCreate = async () => {
+    if (!canEdit) return;
+
     setSaving(true);
     setError(null);
 
@@ -228,9 +232,11 @@ export default function JobAdd() {
               <p className="profileEditSubtitle">Create a job posting and required skills.</p>
             </div>
 
-            <button className="profileEditSaveTopBtn" type="button" onClick={onCreate} disabled={saving}>
-              {saving ? "Saving…" : "Create"}
-            </button>
+            {canEdit && (
+              <button className="profileEditSaveTopBtn" type="button" onClick={onCreate} disabled={saving}>
+                {saving ? "Saving…" : "Create"}
+              </button>
+            )}
           </div>
 
           <section className="profileEditCard">
@@ -352,9 +358,11 @@ export default function JobAdd() {
                   <input className="profileEditInput" value={newReqLevel} onChange={(e) => setNewReqLevel(e.target.value)} placeholder="optional" />
                 </div>
 
-                <button className="profileEditAddBtn" type="button" onClick={addRequiredSkill} disabled={newSkillId === ""}>
-                  + Add
-                </button>
+                {canEdit && (
+                  <button className="profileEditAddBtn" type="button" onClick={addRequiredSkill} disabled={newSkillId === ""}>
+                    + Add
+                  </button>
+                )}
               </div>
 
               {/* weight input row (keep it simple, full width) */}
@@ -374,9 +382,12 @@ export default function JobAdd() {
                         {s.required_level == null ? "Lvl —" : `Lvl ${s.required_level}`}{" "}
                         {s.importance_weight == null ? "" : `• W ${s.importance_weight}`}
                       </div>
-                      <button className="profileEditRemoveBtn" type="button" onClick={() => removeRequiredSkill(s.temp_id)}>
-                        Remove
-                      </button>
+
+                      {canEdit && (
+                        <button className="profileEditRemoveBtn" type="button" onClick={() => removeRequiredSkill(s.temp_id)}>
+                          Remove
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
@@ -388,9 +399,11 @@ export default function JobAdd() {
                 Cancel
               </button>
 
-              <button className="profileEditSaveBtn" type="button" onClick={onCreate} disabled={saving}>
-                {saving ? "Saving…" : "Create Job"}
-              </button>
+              {canEdit && (
+                <button className="profileEditSaveBtn" type="button" onClick={onCreate} disabled={saving}>
+                  {saving ? "Saving…" : "Create Job"}
+                </button>
+              )}
             </div>
           </section>
         </div>
