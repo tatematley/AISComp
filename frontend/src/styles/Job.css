@@ -8,7 +8,7 @@
 }
 
 .jobShell {
-  max-width: 1040px;
+  max-width: 1600px; /* ← Increased from 1040px to fit 5 cards */
   margin: 0 auto;
   display: grid;
   gap: 16px;
@@ -46,7 +46,9 @@
   font-weight: 700;
 
   cursor: pointer;
-  transition: color 120ms ease, transform 120ms ease;
+  transition:
+    color 120ms ease,
+    transform 120ms ease;
 }
 
 .jobBackLink:hover {
@@ -108,7 +110,10 @@
   color: rgba(255, 255, 255, 0.86);
   font-weight: 800;
   cursor: pointer;
-  transition: border-color 120ms ease, color 120ms ease, background 120ms ease,
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    background 120ms ease,
     transform 120ms ease;
 }
 
@@ -168,7 +173,7 @@
 
 .jobDivider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.1);
   margin: 16px 0;
 }
 
@@ -229,7 +234,9 @@
   color: rgba(255, 255, 255, 0.92);
   font-size: 13.5px;
   font-weight: 800;
-  transition: transform 120ms ease, background 120ms ease,
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
     border-color 120ms ease;
 }
 
@@ -253,14 +260,15 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* Recommenders placeholder */
+/* Recommendations Grid - 5 cards in a row */
 .jobPlaceholderRow {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
 }
 
+/* Old placeholder cards - can remove these if not needed */
 .jobPlaceholderCard {
   height: 92px;
   border-radius: 14px;
@@ -279,7 +287,64 @@
   color: rgba(255, 170, 170, 0.9);
 }
 
+/* AI stuff*/
+.aiToggle {
+  background: rgba(218, 245, 97, 0.08);
+  border-color: rgba(218, 245, 97, 0.22);
+  color: rgba(218, 245, 97, 0.95);
+  position: relative;
+  overflow: hidden;
+}
+
+.aiToggle:hover {
+  background: rgba(218, 245, 97, 0.14);
+  border-color: rgba(218, 245, 97, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Shimmer effect - runs once on load */
+.aiToggle::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(218, 245, 97, 0.4) 50%,
+    transparent 70%
+  );
+  animation: shimmer 1.5s ease-out forwards;
+  animation-delay: 0.3s; /* Small delay after cards appear */
+  opacity: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%) translateY(100%);
+    opacity: 0;
+  }
+}
+
 /* Responsive */
+@media (max-width: 1600px) {
+  .jobPlaceholderRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .jobPlaceholderRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 900px) {
   .jobHeaderRow {
     flex-direction: column;

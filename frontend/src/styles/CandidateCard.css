@@ -1,63 +1,231 @@
-/* Add to existing CandidateCard.css */
+.candidateCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 180ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.candidateCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(218, 245, 97, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.candidateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.candidateName {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.candidateRole {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.matchBadge {
+  background: rgba(218, 245, 97, 0.1);
+  border: 1px solid rgba(218, 245, 97, 0.25);
+  color: rgba(218, 245, 97, 0.95);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.candidateStats {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.topSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.skillTag {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 120ms ease;
+}
+
+.skillTag:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(218, 245, 97, 0.3);
+  color: rgba(218, 245, 97, 0.9);
+}
 
 .buttonRow {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   margin-top: 4px;
 }
 
 .detailsToggle,
 .aiToggle {
-  flex: 1;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.82);
-  padding: 8px;
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 10px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
-  transition:
-    background 120ms ease,
-    border-color 120ms ease;
+  transition: all 150ms ease;
+  text-align: center;
 }
 
 .detailsToggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 .aiToggle {
   background: rgba(218, 245, 97, 0.08);
-  border-color: rgba(218, 245, 97, 0.25);
+  border-color: rgba(218, 245, 97, 0.22);
   color: rgba(218, 245, 97, 0.95);
 }
 
 .aiToggle:hover {
-  background: rgba(218, 245, 97, 0.15);
-  border-color: rgba(218, 245, 97, 0.45);
+  background: rgba(218, 245, 97, 0.14);
+  border-color: rgba(218, 245, 97, 0.35);
+  transform: translateY(-1px);
 }
 
+/* Details Box - Cleaned Up */
+.detailsBox {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.detailsLabel {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.skillDetail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skillDetail:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.skillDetailName {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.skillDetailStatus {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.skillDetailStatus.met {
+  background: rgba(134, 239, 172, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  color: rgba(134, 239, 172, 1);
+}
+
+.skillDetailStatus.gap {
+  background: rgba(252, 165, 165, 0.15);
+  border: 1px solid rgba(252, 165, 165, 0.3);
+  color: rgba(252, 165, 165, 1);
+}
+
+/* AI Explanation Box */
 .explanationBox {
   background: rgba(218, 245, 97, 0.08);
-  border: 1px solid rgba(218, 245, 97, 0.25);
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 12px;
+  border: 1px solid rgba(218, 245, 97, 0.22);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 14px;
+  backdrop-filter: blur(8px);
 }
 
 .explanationLabel {
   color: rgba(218, 245, 97, 0.95);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .explanationText {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 13px;
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13.5px;
+  line-height: 1.65;
   margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .candidateCard {
+    padding: 16px;
+  }
+
+  .buttonRow {
+    grid-template-columns: 1fr;
+  }
+
+  .candidateHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .matchBadge {
+    align-self: flex-start;
+  }
 }
