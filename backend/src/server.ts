@@ -174,20 +174,31 @@ app.get(
   "/api/applicants",
   requireAuth,
   requireRole("manager", "employee"),
-  async (_req, res) => {
+  async (req, res) => {
     try {
+      const filter = String(req.query.filter ?? "all").toLowerCase();
+
+      let whereClause = "";
+      if (filter === "internal") {
+        whereClause = "WHERE internal = true";
+      } else if (filter === "external") {
+        whereClause = "WHERE internal = false";
+      }
+
       const result = await pool.query(`
-      SELECT
-        candidate_id,
-        name,
-        position,
-        email,
-        phone_number,
-        application_date
-      FROM candidate_information
-      WHERE internal = false
-      ORDER BY application_date DESC NULLS LAST, candidate_id
-    `);
+        SELECT
+          candidate_id,
+          name,
+          position,
+          email,
+          phone_number,
+          application_date,
+          internal
+        FROM candidate_information
+        ${whereClause}
+        ORDER BY application_date DESC NULLS LAST, candidate_id
+      `);
+
       res.json(result.rows);
     } catch (err) {
       console.error("GET /api/applicants failed:", err);
