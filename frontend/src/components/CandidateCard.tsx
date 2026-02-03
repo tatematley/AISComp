@@ -23,7 +23,7 @@ type Recommendation = {
 type Props = {
   recommendation: Recommendation;
   jobTitle: string;
-  jobId: number; // ← Add this
+  jobId: number;
 };
 
 export default function CandidateCard({
@@ -33,7 +33,7 @@ export default function CandidateCard({
 }: Props) {
   const [showDetails, setShowDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [explanation, setExplanation] = useState(recommendation.explanation);
+  const [explanation, setExplanation] = useState<string | null>(null);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
 
   const {
@@ -47,27 +47,34 @@ export default function CandidateCard({
   } = recommendation;
 
   const handleShowExplanation = async () => {
+    // Toggle off
     if (showExplanation) {
       setShowExplanation(false);
       return;
     }
 
+    // Show the box
     setShowExplanation(true);
 
-    // If explanation already exists, don't fetch again
+    // If we already have it, just display
     if (explanation) return;
 
-    // Fetch explanation on-demand
+    // Generate it on-demand
     setLoadingExplanation(true);
     try {
       const res = await fetch(
         `http://localhost:5050/api/jobs/${jobId}/recommendations/${candidate_id}/explanation`,
       );
+
+      if (!res.ok) {
+        throw new Error("Failed to generate explanation");
+      }
+
       const data = await res.json();
       setExplanation(data.explanation);
     } catch (error) {
       console.error("Failed to load explanation:", error);
-      setExplanation("Failed to load explanation.");
+      setExplanation("Unable to generate explanation at this time.");
     } finally {
       setLoadingExplanation(false);
     }
@@ -114,7 +121,7 @@ export default function CandidateCard({
         </button>
 
         <button className="aiToggle" onClick={handleShowExplanation}>
-          {showExplanation ? "Hide AI" : "🤖 AI Explanation"}
+          {showExplanation ? "Hide AI" : "AI Analysis"}
         </button>
       </div>
 
@@ -138,11 +145,11 @@ export default function CandidateCard({
 
       {showExplanation && (
         <div className="explanationBox">
-          <div className="explanationLabel">🤖 AI Analysis</div>
+          <div className="explanationLabel">AI Analysis</div>
           <p className="explanationText">
             {loadingExplanation
               ? "Generating explanation..."
-              : explanation || "No explanation available"}
+              : explanation || "Click to generate explanation"}
           </p>
         </div>
       )}

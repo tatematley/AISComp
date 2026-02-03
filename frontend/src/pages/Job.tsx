@@ -62,7 +62,6 @@ export default function Job() {
   const [error, setError] = useState("");
 
   const handleDelete = async () => {
-
     const ok = window.confirm("Delete this job? This can’t be undone.");
     if (!ok) return;
 
@@ -158,7 +157,11 @@ export default function Job() {
           {/* Header row */}
           <div className="jobHeaderRow">
             <div className="jobTitleBlock">
-              <button className="jobBackLink" onClick={() => navigate("/jobs")} type="button">
+              <button
+                className="jobBackLink"
+                onClick={() => navigate("/jobs")}
+                type="button"
+              >
                 ← Back to Jobs
               </button>
 
@@ -186,12 +189,15 @@ export default function Job() {
                   Edit
                 </button>
 
-                <button className="jobActionBtn danger" type="button" onClick={handleDelete}>
+                <button
+                  className="jobActionBtn danger"
+                  type="button"
+                  onClick={handleDelete}
+                >
                   Delete
                 </button>
               </div>
             )}
-
           </div>
 
           {/* Main card */}

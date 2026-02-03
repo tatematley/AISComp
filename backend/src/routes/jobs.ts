@@ -1,13 +1,10 @@
 import express from "express";
 import { runMLPipeline } from "../services/mlService";
-import {
-  generateAllExplanations,
-  generateExplanation,
-} from "../services/explanationService";
+import { generateExplanation } from "../services/explanationService";
 
 const router = express.Router();
 
-// Add this type definition
+// Type definition for recommendations
 type Recommendation = {
   candidate_id: number;
   rank: number;
@@ -18,6 +15,7 @@ type Recommendation = {
   breakdown: any[];
 };
 
+// Main recommendations endpoint - NO explanations generated upfront
 router.get("/:jobId/recommendations", async (req, res) => {
   try {
     const jobId = parseInt(req.params.jobId);
@@ -31,17 +29,9 @@ router.get("/:jobId/recommendations", async (req, res) => {
     // Run your Python ML pipeline
     const mlOutput = await runMLPipeline(jobId, 5);
 
-    // Generate AI explanations for each candidate
-    const recommendationsWithExplanations = await generateAllExplanations(
-      mlOutput.recommendations,
-      mlOutput.job,
-    );
-
-    // Return the enhanced recommendations
-    res.json({
-      ...mlOutput,
-      recommendations: recommendationsWithExplanations,
-    });
+    // Return raw ML output WITHOUT explanations
+    // This makes the page load instantly
+    res.json(mlOutput);
   } catch (error) {
     console.error("Error getting recommendations:", error);
     res.status(500).json({
@@ -51,7 +41,7 @@ router.get("/:jobId/recommendations", async (req, res) => {
   }
 });
 
-// On-demand explanation endpoint - for individual candidates
+// On-demand explanation endpoint - generates ONE explanation when clicked
 router.get(
   "/:jobId/recommendations/:candidateId/explanation",
   async (req, res) => {
