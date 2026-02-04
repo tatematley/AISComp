@@ -3,16 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import "../styles/AdminNavbar.css";
 
 type NavbarProps = {
-  userName?: string;
   userImageUrl?: string;
   onLogout?: () => void;
 };
 
-export default function Navbar({
-  userName = "Admin",
-  userImageUrl,
-  onLogout,
-}: NavbarProps) {
+export default function Navbar({ userImageUrl, onLogout }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
@@ -23,21 +18,31 @@ export default function Navbar({
     zburnsie: "/images/profiles/zach.jpeg",
   };
 
-  const getStoredUsername = () => {
+  const getStoredUser = () => {
     const raw = localStorage.getItem("user");
-    if (!raw) return "";
+    if (!raw) return null;
     try {
-      const parsed = JSON.parse(raw);
-      return typeof parsed?.username === "string" ? parsed.username : "";
+      return JSON.parse(raw);
     } catch {
-      return "";
+      return null;
     }
   };
 
+  const storedUser = getStoredUser();
+
+  const username = storedUser?.username ?? "User";
+
+  const roleLabel =
+    storedUser?.role === "manager"
+      ? "Manager"
+      : storedUser?.role === "employee"
+      ? "Employee"
+      : "User";
+
   const resolvedUserImage =
     userImageUrl ??
-    userPhotoMap[getStoredUsername()] ??
-    "/images/profiles/tate.jpeg";
+    userPhotoMap[username] ??
+    "/images/profiles/default-avatar.png";
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -107,15 +112,18 @@ export default function Navbar({
               <img
                 className="adminNavAvatar"
                 src={resolvedUserImage}
-                alt={userName}
+                alt={username}
               />
             </button>
 
             {open && (
               <div className="adminNavMenu" role="menu">
                 <div className="adminNavMenuHeader">
-                  <div className="adminNavMenuName">{userName}</div>
-                  <div className="adminNavMenuSub">Signed in</div>
+                  {/* Username on top */}
+                  <div className="adminNavMenuName">{username}</div>
+
+                  {/* Role underneath */}
+                  <div className="adminNavMenuSub">{roleLabel}</div>
                 </div>
 
                 <button

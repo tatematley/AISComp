@@ -1569,6 +1569,78 @@ app.delete(
   },
 );
 
+/* ----------------------------- Register Endpoint ----------------------------- */
+
+app.post("/api/auth/register", async (req, res) => {
+  const username = String(req.body?.username ?? "").trim().toLowerCase();
+  const password = String(req.body?.password ?? "");
+  const acceptedPolicy = Boolean(req.body?.acceptedPolicy);
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required." });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Password must be at least 8 characters." });
+  }
+
+  if (!acceptedPolicy) {
+    return res.status(400).json({ error: "You must accept the Privacy Policy." });
+  }
+
+  try {
+    // Ensure username is unique
+    const existing = await pool.query(
+      `SELECT user_id FROM app_user WHERE LOWER(username) = $1`,
+      [username],
+    );
+
+    if (existing.rowCount && existing.rowCount > 0) {
+      return res.status(409).json({ error: "That username is already taken." });
+    }
+
+    // Default role for new users
+    // If you want new users to be "employee" by default, keep this.
+    // If you want "manager" by default, change it here.
+    const roleRes = await pool.query(
+      `SELECT user_role_id, user_role FROM user_roles WHERE LOWER(user_role) = $1`,
+      [ROLES.EMPLOYEE],
+    );
+
+    if (roleRes.rowCount === 0) {
+      return res.status(500).json({ error: "Default role not configured in DB." });
+    }
+
+    const user_role_id = Number(roleRes.rows[0].user_role_id);
+    const role = String(roleRes.rows[0].user_role).trim().toLowerCase();
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const insertRes = await pool.query(
+      `
+      INSERT INTO app_user (username, password, user_role_id)
+      VALUES ($1, $2, $3)
+      RETURNING user_id, username
+      `,
+      [username, passwordHash, user_role_id],
+    );
+
+    const user = {
+      user_id: Number(insertRes.rows[0].user_id),
+      username: String(insertRes.rows[0].username),
+      role,
+    };
+
+    const token = signToken(user);
+
+    return res.status(201).json({ token, user });
+  } catch (err) {
+    console.error("POST /api/auth/register failed:", err);
+    return res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+
 app.use("/api/jobs", jobRoutes);
 
 /* ----------------------------- Start ----------------------------- */
