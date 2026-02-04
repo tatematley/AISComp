@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import CreateUser from "./pages/CreateUser";
+import Privacy from "./pages/Privacy";
 
 import Employees from "./pages/Employees";
 import Employee from "./pages/Employee";
@@ -27,6 +29,8 @@ export default function App() {
       {/* Public pages */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/create-user" element={<CreateUser />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       {/* Employees (internal candidates) */}
       <Route path="/employees" element={<Employees />} />
