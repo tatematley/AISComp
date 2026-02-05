@@ -35,7 +35,7 @@
 .employeesSubtitle {
   margin: 6px;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 /* + New Employee pill */
@@ -54,7 +54,7 @@
   background: transparent;
 
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
 
   cursor: pointer;
@@ -127,9 +127,9 @@
 
 .employeesTableHead {
   background: rgba(255, 255, 255, 0.06);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgb(255, 255, 255);
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
@@ -163,7 +163,7 @@
 
 .employeesCell {
   color: rgba(255, 255, 255, 0.78);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .employeesLink {
@@ -188,7 +188,7 @@
 
 .employeesCount {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .employeesPager {
@@ -215,13 +215,13 @@
 
 .employeesPagerInfo {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .employeesState {
   padding: 18px 16px;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .employeesState.error {

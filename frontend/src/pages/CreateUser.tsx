@@ -81,7 +81,7 @@ export default function CreateUser() {
         <div className="createUserCard">
           <h1 className="createUserTitle">Create account</h1>
           <p className="createUserSubtitle">
-            Set up your username and password. You’ll confirm the Privacy Policy before continuing.
+            Set up your username and password.
           </p>
 
           <form className="createUserForm" onSubmit={handleSubmit}>
