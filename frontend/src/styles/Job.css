@@ -42,7 +42,7 @@
   margin-bottom: 4px;
 
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
 
   cursor: pointer;
@@ -90,7 +90,7 @@
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: transparent;
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
 }
 
@@ -157,7 +157,7 @@
 }
 
 .jobLabel {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.62);
   margin-bottom: 4px;
 }
@@ -181,7 +181,7 @@
 .jobDescriptionText {
   margin: 6px 0 0;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 13.5px;
+  font-size: 14.5px;
   line-height: 1.55;
   max-width: 80ch;
 }
@@ -205,13 +205,13 @@
 
 .jobSectionMeta {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
 .jobMuted {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13.5px;
+  font-size: 14.5px;
   margin: 0;
 }
 
@@ -232,7 +232,7 @@
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(15, 23, 42, 0.4);
   color: rgba(255, 255, 255, 0.92);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
   transition:
     transform 120ms ease,
@@ -251,7 +251,7 @@
 }
 
 .jobSkillLevel {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 4px 8px;
   border-radius: 999px;
@@ -280,7 +280,7 @@
 .jobState {
   padding: 18px 16px;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .jobState.error {

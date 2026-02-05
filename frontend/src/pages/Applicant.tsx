@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/Profile.css";
 import { apiFetch } from "../lib/api";
@@ -31,7 +31,10 @@ export default function Applicant() {
   const { id } = useParams();
   const candidateId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
   const canEdit = isManager();
+  
 
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +66,7 @@ export default function Applicant() {
         if (!json) return;
 
         if (json?.candidate?.internal) {
-          navigate(`/employees/${candidateId}`, { replace: true });
+          navigate(`/employees/${candidateId}`, { replace: true, state: location.state });
           return;
         }
         setData(json);
@@ -122,7 +125,7 @@ export default function Applicant() {
             <div className="profileTitleBlock">
               <button
                 className="profileBackLink"
-                onClick={() => navigate("/applicants")}
+                onClick={() => navigate(from ?? "/applicants")}
                 type="button"
               >
                 ← Back to Applicants
@@ -132,7 +135,7 @@ export default function Applicant() {
                 <h1 className="profileTitle">
                   {candidate.name ?? `Candidate ${candidate.candidate_id}`}
                 </h1>
-                <span className="profilePill">Applicant</span>
+                <span className="profilePill">External</span>
               </div>
 
               <p className="profileRole">{candidate.position ?? "—"}</p>

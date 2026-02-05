@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import "../styles/Profile.css";
-import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
@@ -40,6 +39,8 @@ export default function Employee() {
   const { id } = useParams();
   const candidateId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
   const canEdit = isManager();
 
   const [data, setData] = useState<ProfileData | null>(null);
@@ -102,7 +103,7 @@ export default function Employee() {
         throw new Error(body.error || "Failed to delete employee");
       }
 
-      navigate("/employees");
+      navigate(from ?? "/employees");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to delete employee");
     }
@@ -120,7 +121,7 @@ export default function Employee() {
         This record is an applicant. Go to{" "}
         <button
           className="profileBackLink"
-          onClick={() => navigate(`/applicants/${candidateId}`)}
+          onClick={() => navigate(`/applicants/${candidateId}`, { state: location.state })}
         >
           Applicant page
         </button>
@@ -140,7 +141,7 @@ export default function Employee() {
             <div className="profileTitleBlock">
               <button
                 className="profileBackLink"
-                onClick={() => navigate("/employees")}
+                onClick={() => navigate(from ?? "/employees")}
                 type="button"
               >
                 ← Back to Employees

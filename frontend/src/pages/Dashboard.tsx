@@ -4,12 +4,11 @@ import "../styles/Dashboard.css";
 export default function Dashboard() {
   return (
     <>
-      <AdminNavbar userName="Admin" />
+      <AdminNavbar />
 
-      <div className="dashboardWithAdminNav">
-        {/* Page header */}
-        <div className="dashboardPageHeader">
-          <div className="dashboardPageHeaderInner">
+      <div className="dashboardPage">
+        <div className="dashboardHeader">
+          <div className="dashboardTitleBlock">
             <h1 className="dashboardTitle">Analytics Dashboard</h1>
             <div className="dashboardSubtitle">
               Hiring pipeline, applicants, and employee insights
