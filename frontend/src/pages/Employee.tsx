@@ -5,6 +5,7 @@ import "../styles/Profile.css";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
+import JobRecommendationCard from "../components/JobRecommendationCard";
 
 type Skill = {
   candidate_skill_id: number;
@@ -36,6 +37,20 @@ type ProfileData = {
   skills: Skill[];
 };
 
+type JobRecommendation = {
+  rank: number;
+  job_id: number;
+  job_title: string;
+  department: string;
+  match_score: number;
+  eligible: boolean;
+  warnings: string;
+  skills_met: number;
+  skills_required: number;
+  total_gap: number;
+  breakdown: any[];
+};
+
 export default function Employee() {
   const { id } = useParams();
   const candidateId = Number(id);
@@ -46,6 +61,12 @@ export default function Employee() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [jobRecs, setJobRecs] = useState<JobRecommendation[]>([]);
+  const [loadingJobRecs, setLoadingJobRecs] = useState(false);
+  const [jobRecsError, setJobRecsError] = useState("");
+  const [showAllJobRecs, setShowAllJobRecs] = useState(false);
+
+  // Fetch profile
   useEffect(() => {
     if (Number.isNaN(candidateId)) {
       setError("Invalid candidate ID");
@@ -75,21 +96,45 @@ export default function Employee() {
       .finally(() => setLoading(false));
   }, [candidateId, navigate]);
 
-  const toPhotoFile = (fullName: string) =>
-    `${fullName
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .slice(0, 2)
-      .join("_")}.jpeg`;
+  // Fetch job recommendations
+  useEffect(() => {
+    if (Number.isNaN(candidateId)) return;
 
-  // ✅ DELETE HANDLER (added)
+    setLoadingJobRecs(true);
+    apiFetch(`/api/candidates/${candidateId}/job-recommendations`)
+      .then(async (res) => {
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return null;
+        }
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || "Failed to load recommendations");
+        }
+        return res.json();
+      })
+      .then((json) => {
+        if (json?.recommendations) setJobRecs(json.recommendations);
+      })
+      .catch((e) => setJobRecsError(e.message))
+      .finally(() => setLoadingJobRecs(false));
+  }, [candidateId, navigate]);
+
+  const toPhotoFile = (fullName: string) =>
+    `${fullName.trim().toLowerCase().split(/\s+/).slice(0, 2).join("_")}.jpeg`;
+
+  // ✅ DELETE HANDLER
   const handleDelete = async () => {
-    const ok = window.confirm("Delete this employee? This can’t be undone.");
+    const ok = window.confirm("Delete this employee? This can't be undone.");
     if (!ok) return;
 
     try {
-      const res = await apiFetch(`/api/employees/${candidateId}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/employees/${candidateId}`, {
+        method: "DELETE",
+      });
       if (res.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -147,7 +192,9 @@ export default function Employee() {
               </button>
               <div className="profileTitleRow">
                 <h1 className="profileTitle">{candidate.name}</h1>
-                {candidate.internal && <span className="profilePill">Internal</span>}
+                {candidate.internal && (
+                  <span className="profilePill">Internal</span>
+                )}
               </div>
 
               {/* bigger role */}
@@ -193,14 +240,18 @@ export default function Employee() {
                 <div className="profileInfoGrid">
                   <div className="profileInfoItem">
                     <div className="profileLabel">Pronouns</div>
-                    <div className="profileValue">{candidate.pronouns || "—"}</div>
+                    <div className="profileValue">
+                      {candidate.pronouns || "—"}
+                    </div>
                   </div>
 
                   <div className="profileInfoItem">
                     <div className="profileLabel">Applied</div>
                     <div className="profileValue">
                       {candidate.application_date
-                        ? new Date(candidate.application_date).toLocaleDateString()
+                        ? new Date(
+                            candidate.application_date,
+                          ).toLocaleDateString()
                         : "—"}
                     </div>
                   </div>
@@ -212,7 +263,9 @@ export default function Employee() {
 
                   <div className="profileInfoItem">
                     <div className="profileLabel">Phone</div>
-                    <div className="profileValue">{candidate.phone_number || "—"}</div>
+                    <div className="profileValue">
+                      {candidate.phone_number || "—"}
+                    </div>
                   </div>
                 </div>
 
@@ -222,28 +275,38 @@ export default function Employee() {
                     <div className="profileInfoGrid profileInternalGrid">
                       <div className="profileInfoItem">
                         <div className="profileLabel">Role</div>
-                        <div className="profileValue">{internal.currentrole || "—"}</div>
+                        <div className="profileValue">
+                          {internal.currentrole || "—"}
+                        </div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Department</div>
-                        <div className="profileValue">{internal.department_name || "—"}</div>
+                        <div className="profileValue">
+                          {internal.department_name || "—"}
+                        </div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Location</div>
-                        <div className="profileValue">{internal.location_name || "—"}</div>
+                        <div className="profileValue">
+                          {internal.location_name || "—"}
+                        </div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Education</div>
-                        <div className="profileValue">{internal.education_level || "—"}</div>
+                        <div className="profileValue">
+                          {internal.education_level || "—"}
+                        </div>
                       </div>
 
                       <div className="profileInfoItem">
                         <div className="profileLabel">Experience</div>
                         <div className="profileValue">
-                          {internal.years_exp != null ? `${internal.years_exp} yrs` : "—"}
+                          {internal.years_exp != null
+                            ? `${internal.years_exp} yrs`
+                            : "—"}
                         </div>
                       </div>
 
@@ -277,7 +340,9 @@ export default function Employee() {
                   <div key={s.candidate_skill_id} className="profileSkillPill">
                     <span className="profileSkillName">{s.skill_name}</span>
                     {s.proficiency_level != null && (
-                      <span className="profileSkillLevel">Lvl {s.proficiency_level}</span>
+                      <span className="profileSkillLevel">
+                        Lvl {s.proficiency_level}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -285,18 +350,55 @@ export default function Employee() {
             )}
           </section>
 
-          {/* Recommenders placeholder */}
+          {/* Job Recommendations */}
           <section className="profileCard">
-            <h2 className="profileSectionTitle">Recommended Fits</h2>
-            <p className="profileMuted">
-              Coming soon: recommended roles, top matching jobs, and next-skill suggestions.
-            </p>
-
-            <div className="profilePlaceholderRow">
-              <div className="profilePlaceholderCard" />
-              <div className="profilePlaceholderCard" />
-              <div className="profilePlaceholderCard" />
+            <div className="profileSectionHeader">
+              <h2 className="profileSectionTitle">Recommended Fits</h2>
+              {jobRecs.length > 0 && (
+                <div className="profileSectionMeta">
+                  {jobRecs.length} matches
+                </div>
+              )}
             </div>
+
+            {loadingJobRecs && (
+              <p className="profileMuted">Loading recommendations...</p>
+            )}
+
+            {!loadingJobRecs && jobRecsError && (
+              <p className="profileMuted">{jobRecsError}</p>
+            )}
+
+            {!loadingJobRecs && !jobRecsError && jobRecs.length === 0 && (
+              <p className="profileMuted">No job recommendations available.</p>
+            )}
+
+            {!loadingJobRecs && !jobRecsError && jobRecs.length > 0 && (
+              <>
+                <div className="jobRecommendationsGrid">
+                  {(showAllJobRecs ? jobRecs : jobRecs.slice(0, 3)).map(
+                    (rec) => (
+                      <JobRecommendationCard
+                        key={rec.job_id}
+                        recommendation={rec}
+                        candidateId={candidateId}
+                      />
+                    ),
+                  )}
+                </div>
+
+                {jobRecs.length > 3 && (
+                  <button
+                    className="jobRecsShowMore"
+                    onClick={() => setShowAllJobRecs(!showAllJobRecs)}
+                  >
+                    {showAllJobRecs
+                      ? "Show Less"
+                      : `Show ${jobRecs.length - 3} More`}
+                  </button>
+                )}
+              </>
+            )}
           </section>
         </div>
       </main>

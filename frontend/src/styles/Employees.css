@@ -60,7 +60,10 @@
   cursor: pointer;
   user-select: none;
 
-  transition: border-color 120ms ease, color 120ms ease, background 120ms ease,
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    background 120ms ease,
     transform 120ms ease;
 }
 
@@ -115,6 +118,46 @@
   backdrop-filter: blur(10px);
 }
 
+/* AI grid */
+.jobRecommendationsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+@media (max-width: 1200px) {
+  .jobRecommendationsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .jobRecommendationsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.jobRecsShowMore {
+  display: block;
+  margin: 16px auto 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 150ms ease;
+}
+
+.jobRecsShowMore:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(218, 245, 97, 0.35);
+  color: rgba(218, 245, 97, 0.95);
+  transform: translateY(-1px);
+}
+
 /* Table grid */
 .employeesTableHead,
 .employeesRowLink {
@@ -130,7 +173,7 @@
   font-size: 15px;
   font-weight: 800;
   color: rgba(255, 255, 255, 0.75);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Clickable row */
@@ -139,7 +182,10 @@
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
 }
 
 .employeesRowLink:hover {
@@ -182,7 +228,7 @@
   justify-content: space-between;
   gap: 14px;
   padding: 14px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
 }
 
