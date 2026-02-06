@@ -6,6 +6,8 @@ import "../styles/Job.css";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
+/* ======================= Types ======================= */
+
 type JobSkill = {
   job_skill_id: number;
   skill_name: string;
@@ -32,6 +34,7 @@ type Recommendation = {
   skills_required: number;
   total_gap: number;
   breakdown: SkillBreakdown[];
+  internal: boolean;
 };
 
 type JobData = {
@@ -50,6 +53,8 @@ type JobData = {
   recommendations?: Recommendation[];
 };
 
+/* ======================= Component ======================= */
+
 export default function Job() {
   const { id } = useParams();
   const jobId = Number(id);
@@ -61,16 +66,24 @@ export default function Job() {
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [error, setError] = useState("");
 
+  const [recFilter, setRecFilter] = useState<"all" | "internal" | "external">(
+    "all",
+  );
+
+  const job = data?.job;
+  const skills = data?.skills ?? [];
+  const recommendations = data?.recommendations ?? [];
+
+  /* ======================= Delete ======================= */
+
   const handleDelete = async () => {
-    const ok = window.confirm("Delete this job? This can’t be undone.");
-    if (!ok) return;
+    if (!window.confirm("Delete this job? This can’t be undone.")) return;
 
     try {
       const res = await apiFetch(`/api/jobs/${jobId}`, { method: "DELETE" });
 
       if (res.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.clear();
         navigate("/login");
         return;
       }
@@ -86,7 +99,8 @@ export default function Job() {
     }
   };
 
-  // Fetch job details
+  /* ======================= Fetch Job ======================= */
+
   useEffect(() => {
     if (Number.isNaN(jobId)) {
       setError("Invalid job ID");
@@ -97,8 +111,7 @@ export default function Job() {
     apiFetch(`/api/jobs/${jobId}`)
       .then(async (res) => {
         if (res.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          localStorage.clear();
           navigate("/login");
           return null;
         }
@@ -110,29 +123,22 @@ export default function Job() {
 
         return res.json();
       })
-      .then((json) => {
-        if (json) setData(json);
-      })
+      .then((json) => json && setData(json))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [jobId, navigate]);
 
-  // Fetch recommendations separately
+  /* ======================= Fetch Recommendations ======================= */
+
   useEffect(() => {
-    if (Number.isNaN(jobId) || !data) return;
+    if (!job) return;
 
     setLoadingRecs(true);
 
-    fetch(`http://localhost:5050/api/jobs/${jobId}/recommendations`)
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("Failed to load recommendations");
-          return null;
-        }
-        return res.json();
-      })
+    apiFetch(`/api/jobs/${jobId}/recommendations?origin=${recFilter}`)
+      .then((res) => (res.ok ? res.json() : null))
       .then((mlData) => {
-        if (mlData && mlData.recommendations) {
+        if (mlData?.recommendations) {
           setData((prev) =>
             prev ? { ...prev, recommendations: mlData.recommendations } : prev,
           );
@@ -140,13 +146,15 @@ export default function Job() {
       })
       .catch((e) => console.error("Error loading recommendations:", e))
       .finally(() => setLoadingRecs(false));
-  }, [jobId, data?.job.job_id]);
+  }, [jobId, job, recFilter]);
+
+  /* ======================= Early exits ======================= */
 
   if (loading) return <div className="jobState">Loading…</div>;
   if (error) return <div className="jobState error">{error}</div>;
-  if (!data) return null;
+  if (!job) return null;
 
-  const { job, skills, recommendations } = data;
+  /* ======================= Render ======================= */
 
   return (
     <>
@@ -154,14 +162,10 @@ export default function Job() {
 
       <main className="jobPage">
         <div className="jobShell">
-          {/* Header row */}
+          {/* Header */}
           <div className="jobHeaderRow">
             <div className="jobTitleBlock">
-              <button
-                className="jobBackLink"
-                onClick={() => navigate("/jobs")}
-                type="button"
-              >
+              <button className="jobBackLink" onClick={() => navigate("/jobs")}>
                 ← Back to Jobs
               </button>
 
@@ -173,9 +177,9 @@ export default function Job() {
               </div>
 
               <p className="jobRole">
-                {job.department || "—"}
-                {job.job_location ? ` • ${job.job_location}` : ""}
-                {job.work_status ? ` • ${job.work_status}` : ""}
+                {job.department}
+                {job.job_location && ` • ${job.job_location}`}
+                {job.work_status && ` • ${job.work_status}`}
               </p>
             </div>
 
@@ -183,100 +187,70 @@ export default function Job() {
               <div className="jobActionsRow">
                 <button
                   className="profileActionBtn"
-                  type="button"
                   onClick={() => navigate(`/jobs/${jobId}/edit`)}
                 >
                   Edit
                 </button>
-
-                <button
-                  className="jobActionBtn danger"
-                  type="button"
-                  onClick={handleDelete}
-                >
+                <button className="jobActionBtn danger" onClick={handleDelete}>
                   Delete
                 </button>
               </div>
             )}
           </div>
 
-          {/* Main card */}
+          {/* Required Skills */}
           <section className="jobCard">
-            <div className="jobInfoGrid">
-              <div className="jobInfoItem">
-                <div className="jobLabel">Category</div>
-                <div className="jobValue">{job.job_category || "—"}</div>
-              </div>
-
-              <div className="jobInfoItem">
-                <div className="jobLabel">Status</div>
-                <div className="jobValue">{job.job_status || "—"}</div>
-              </div>
-
-              <div className="jobInfoItem">
-                <div className="jobLabel">Department</div>
-                <div className="jobValue">{job.department || "—"}</div>
-              </div>
-
-              <div className="jobInfoItem">
-                <div className="jobLabel">Location</div>
-                <div className="jobValue">{job.job_location || "—"}</div>
-              </div>
-            </div>
-
-            {job.job_description && (
-              <>
-                <div className="jobDivider" />
-                <div className="jobDescription">
-                  <div className="jobLabel">Description</div>
-                  <p className="jobDescriptionText">{job.job_description}</p>
-                </div>
-              </>
-            )}
-
-            {/* Skills */}
-            <div className="jobDivider" />
-
             <div className="jobSectionHeader">
               <h2 className="jobSectionTitle">Required Skills</h2>
               <div className="jobSectionMeta">{skills.length} total</div>
             </div>
 
-            {skills.length === 0 ? (
-              <div className="jobMuted">No required skills listed.</div>
-            ) : (
-              <div className="jobSkillsWrap">
-                {skills.map((s) => (
-                  <div key={s.job_skill_id} className="jobSkillPill">
-                    <span className="jobSkillName">{s.skill_name}</span>
-                    {s.proficiency_level != null && (
-                      <span className="jobSkillLevel">
-                        Lvl {s.proficiency_level}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="jobSkillsWrap">
+              {skills.map((s) => (
+                <div key={s.job_skill_id} className="jobSkillPill">
+                  <span>{s.skill_name}</span>
+                  {s.proficiency_level != null && (
+                    <span className="jobSkillLevel">
+                      Lvl {s.proficiency_level}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </section>
 
           {/* Recommended Candidates */}
           <section className="jobCard">
             <div className="jobSectionHeader">
               <h2 className="jobSectionTitle">Recommended Candidates</h2>
-              {recommendations && recommendations.length > 0 && (
-                <div className="jobSectionMeta">
-                  {recommendations.length} matches
-                </div>
-              )}
+              <div className="jobSectionMeta">
+                {recommendations.length} matches
+              </div>
+            </div>
+
+            {/* Filter */}
+            <div className="applicantSegmented">
+              {["all", "internal", "external"].map((f) => (
+                <button
+                  key={f}
+                  className={`segment ${recFilter === f ? "active" : ""}`}
+                  onClick={() =>
+                    setRecFilter(f as "all" | "internal" | "external")
+                  }
+                >
+                  {f[0].toUpperCase() + f.slice(1)}
+                </button>
+              ))}
             </div>
 
             {loadingRecs ? (
-              <p className="jobMuted">Loading recommendations...</p>
-            ) : !recommendations || recommendations.length === 0 ? (
-              <p className="jobMuted">
-                No recommendations available for this position.
-              </p>
+              <div className="jobPlaceholderRow">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="candidateSkeleton" />
+                ))}
+              </div>
+            ) : recommendations.length === 0 ? (
+              <p className="jobMuted">No matching candidates.</p>
             ) : (
               <div className="jobPlaceholderRow">
                 {recommendations.map((rec) => (
@@ -284,7 +258,7 @@ export default function Job() {
                     key={rec.candidate_id}
                     recommendation={rec}
                     jobTitle={job.job_title}
-                    jobId={jobId} // ← Add this
+                    jobId={jobId}
                   />
                 ))}
               </div>

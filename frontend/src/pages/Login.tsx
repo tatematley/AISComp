@@ -15,7 +15,7 @@ export default function Login() {
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
- 
+
     const username = String(form.get("username") ?? "").trim();
     const password = String(form.get("password") ?? "");
 
@@ -36,7 +36,7 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // send them to your internal landing page
-      navigate("/employees"); // change if your app starts elsewhere
+      navigate("/employees");
     } catch (err: any) {
       setError(err?.message ?? "Login failed");
     } finally {
@@ -90,6 +90,18 @@ export default function Login() {
             <button className="loginBtnPrimary" type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Continue"}
             </button>
+
+            {/* Create account link */}
+            <div className="loginLinks">
+              <span className="loginLinkText">Don’t have an account?</span>
+              <button
+                type="button"
+                className="loginLinkBtn"
+                onClick={() => navigate("/create-user")}
+              >
+                Create an account
+              </button>
+            </div>
           </form>
         </div>
       </div>

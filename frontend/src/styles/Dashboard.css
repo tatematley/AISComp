@@ -1,30 +1,40 @@
 /* ===== Page wrapper (accounts for AdminNavbar) ===== */
-.dashboardWithAdminNav {
+.dashboardPage {
   min-height: 100vh;
+  width: 100%;
+  padding: 60px;
+  box-sizing: border-box;
   background: var(--midnight);
-
-  /* TEMP FIX: prevent Tableau from switching to Phone layout */
-  min-width: 1200px;
-  overflow-x: auto;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 /* ===== Page header under navbar ===== */
-.dashboardPageHeader {
-  margin-bottom: 24px;
+.dashboardHeader {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
-.dashboardPageHeaderInner {
-  max-width: 1400px; /* MATCH dashboard card width */
-  margin: 0 auto;
-  padding: 0 30px; /* MATCH page padding */
+.dashboardTitleBlock {
+  display: grid;
+  gap: 6px;
 }
 
 /* ===== Title styles (FORCED so it never goes black) ===== */
 .dashboardTitle {
   margin: 0;
-  font-size: 36px;
-  letter-spacing: -0.015em;
-  color: rgba(255, 255, 255, 0.92);
+  font-size: 40px;
+  letter-spacing: -0.02em;
+}
+
+.employeesHeader {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 .dashboardSubtitle {

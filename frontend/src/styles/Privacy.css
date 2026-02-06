@@ -1,0 +1,155 @@
+.privacyPage {
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+
+  /* Same vibe as CreateUser/Login */
+  background: radial-gradient(
+      1000px 600px at 20% 10%,
+      rgba(218, 245, 97, 0.12),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 700px at 80% 0%,
+      rgba(135, 187, 215, 0.18),
+      transparent 62%
+    ),
+    var(--midnight);
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: 120px 24px 80px;
+  box-sizing: border-box;
+}
+
+/* Logo like CreateUser/Login */
+.privacyLogoLink {
+  position: absolute;
+  top: 22px;
+  left: 60px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+}
+
+.privacyLogo {
+  height: 100px; /* slightly larger */
+  width: auto;
+  opacity: 0.95;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.privacyLogoLink:hover .privacyLogo {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* The “card” behind title + content + footer */
+.privacyShell {
+  width: 100%;
+  max-width: 860px; /* a bit wider */
+}
+
+.privacySurface {
+  padding: 36px 40px 44px;
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* Force ALL text white */
+.privacySurface,
+.privacySurface * {
+  color: #ffffff;
+}
+
+/* Header */
+.privacyHeader {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.privacyTitle {
+  margin: 0;
+  font-size: 40px;
+  letter-spacing: -0.02em;
+}
+
+.privacySubtitle {
+  margin: 0 auto;
+  font-size: 15px;
+  max-width: 60ch;
+  line-height: 1.55;
+}
+
+/* Content */
+.privacyContent {
+  display: grid;
+  gap: 18px;
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.privacyContent h2 {
+  margin-top: 18px;
+  margin-bottom: 4px;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+.privacyContent p {
+  margin: 0;
+}
+
+.privacyContent ul {
+  margin: 6px 0 6px 18px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.privacyContent li {
+  list-style: disc;
+}
+
+/* Footer + PDF link */
+.privacyFooter {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+  text-align: center;
+  display: grid;
+  gap: 8px;
+}
+
+.privacyFooterText {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.privacyDownloadLink {
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  opacity: 0.9;
+
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.privacyDownloadLink:hover {
+  opacity: 1;
+}

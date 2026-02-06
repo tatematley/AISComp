@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/Employees.css";
 import AdminNavbar from "../components/AdminNavbar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
@@ -21,6 +21,7 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const canEdit = isManager();
 
   const [query, setQuery] = useState("");
@@ -145,6 +146,7 @@ export default function Employees() {
             pageRows.map((e) => (
                 <Link
                 to={`/employees/${e.candidate_id}`}
+                state={{ from: location.pathname + location.search }}
                 className="employeesRowLink"
                 key={e.candidate_id}
                 aria-label={`Open employee ${e.name ?? e.candidate_id}`}

@@ -253,7 +253,7 @@ export default function HomePage() {
           </p>
 
           <div className="ctaButtons">
-            <a className="btn btnPrimary" href="/signup">
+            <a className="btn btnPrimary" href="/create-user">
               Create Account
             </a>
             <a className="btn btnSecondary" href="/login">

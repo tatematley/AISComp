@@ -29,7 +29,7 @@
 .applicantsSubtitle {
   margin: 6px;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 /* + New Applicant pill */
@@ -48,13 +48,16 @@
   background: transparent;
 
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
 
   cursor: pointer;
   user-select: none;
 
-  transition: border-color 120ms ease, color 120ms ease, background 120ms ease,
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    background 120ms ease,
     transform 120ms ease;
 }
 
@@ -119,13 +122,12 @@
   padding: 14px 16px;
 }
 
-
 .applicantsTableHead {
   background: rgba(255, 255, 255, 0.06);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.75);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgb(255, 255, 255);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Clickable row */
@@ -134,7 +136,10 @@
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
 }
 
 .applicantsRowLink:hover {
@@ -158,7 +163,7 @@
 
 .applicantsCell {
   color: rgba(255, 255, 255, 0.78);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .applicantsLink {
@@ -177,13 +182,13 @@
   justify-content: space-between;
   gap: 14px;
   padding: 14px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
 }
 
 .applicantsCount {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .applicantsPager {
@@ -210,13 +215,13 @@
 
 .applicantsPagerInfo {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .applicantsState {
   padding: 18px 16px;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .applicantsState.error {
@@ -242,4 +247,36 @@
   .applicantsRowLink > div:nth-child(5) {
     display: none;
   }
+}
+
+.applicantSegmented {
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px;
+  border-radius: 999px;
+  margin-top: 10px;
+}
+
+.segment {
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.segment:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.segment.active {
+  background: #e4f57a;
+  color: #0f172a;
 }

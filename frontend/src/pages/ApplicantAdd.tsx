@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
+import ResumeUpload, { type ParsedResume } from "../components/ResumeUpload";
 import "../styles/EmployeeEdit.css";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
@@ -25,7 +26,7 @@ export default function ApplicantAdd() {
   const [position, setPosition] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [applicationDate, setApplicationDate] = useState<string>(""); // yyyy-mm-dd
+  const [applicationDate, setApplicationDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [pronounsId, setPronounsId] = useState<number | "">("");
 
   // skills editor (same pattern as edit)
@@ -118,6 +119,36 @@ export default function ApplicantAdd() {
 
     setNewSkillId("");
     setNewSkillLevel("");
+  };
+
+  const handleResumeParsed = (data: ParsedResume) => {
+    if (data.name) setName(data.name);
+    if (data.position) setPosition(data.position);
+    if (data.email) setEmail(data.email);
+    if (data.phone) setPhone(data.phone);
+
+    if (data.skills.length > 0) {
+      const existingNames = new Set(skillEdits.map((s) => s.skill_name.toLowerCase()));
+      const newSkills: typeof skillEdits = [];
+
+      for (const s of data.skills) {
+        const catalogSkill = skillsCatalog.find(
+          (c) => c.name.toLowerCase() === s.skill_name.toLowerCase(),
+        );
+        if (catalogSkill && !existingNames.has(catalogSkill.name.toLowerCase())) {
+          existingNames.add(catalogSkill.name.toLowerCase());
+          newSkills.push({
+            candidate_skill_id: -Math.floor(Math.random() * 1_000_000),
+            skill_name: catalogSkill.name,
+            proficiency_level: s.proficiency_level ?? null,
+          });
+        }
+      }
+
+      if (newSkills.length > 0) {
+        setSkillEdits((prev) => [...prev, ...newSkills]);
+      }
+    }
   };
 
   const onCreate = async () => {
@@ -213,6 +244,8 @@ export default function ApplicantAdd() {
           {/* form card */}
           <section className="profileEditCard">
             <div className="profileEditGrid">
+              <ResumeUpload onParsed={handleResumeParsed} />
+
               <div className="profileEditField">
                 <div className="profileEditLabel">Name</div>
                 <input

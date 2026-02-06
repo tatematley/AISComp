@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/Applicants.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
-
 
 type ApplicantRow = {
   candidate_id: number;
@@ -13,7 +12,10 @@ type ApplicantRow = {
   email: string | null;
   phone_number: string | null;
   application_date: string | null;
+  internal: boolean; // still needed for filtering, not displayed
 };
+
+type ApplicantFilter = "all" | "internal" | "external";
 
 const PAGE_SIZE = 20;
 
@@ -33,29 +35,32 @@ export default function Applicants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
-  const canEdit = isManager();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<ApplicantFilter>("all");
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const canEdit = isManager();
+
+  /* ----------------------------- Fetch applicants ----------------------------- */
   useEffect(() => {
     const fetchApplicants = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const res = await apiFetch("/api/applicants");
+        const res = await apiFetch(`/api/applicants?filter=${filter}`);
 
-          if (res.status === 401) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            navigate("/login");
-            return;
-          }
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return;
+        }
 
-          if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
         const data = (await res.json()) as ApplicantRow[];
         setApplicants(data);
@@ -67,8 +72,9 @@ export default function Applicants() {
     };
 
     fetchApplicants();
-  }, []);
+  }, [filter, navigate]);
 
+  /* ----------------------------- Search filtering ----------------------------- */
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return applicants;
@@ -88,6 +94,7 @@ export default function Applicants() {
     });
   }, [applicants, query]);
 
+  /* ----------------------------- Pagination ----------------------------- */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
   const pageRows = useMemo(() => {
@@ -95,14 +102,16 @@ export default function Applicants() {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, page]);
 
-  useEffect(() => setPage(1), [query]);
+  useEffect(() => setPage(1), [query, filter]);
 
   const goPrev = () => setPage((p) => Math.max(1, p - 1));
   const goNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
+  /* ----------------------------- Render ----------------------------- */
   return (
     <>
       <AdminNavbar />
+
       <main className="applicantsPage">
         <header className="applicantsHeader">
           <div className="applicantsTitleBlock">
@@ -126,10 +135,33 @@ export default function Applicants() {
               </span>
             )}
 
+            <p className="applicantsSubtitle">Search and manage applicants.</p>
 
-            <p className="applicantsSubtitle">
-              Search and manage external applicants.
-            </p>
+            <div className="applicantSegmented">
+              <button
+                type="button"
+                className={`segment ${filter === "all" ? "active" : ""}`}
+                onClick={() => setFilter("all")}
+              >
+                All
+              </button>
+
+              <button
+                type="button"
+                className={`segment ${filter === "internal" ? "active" : ""}`}
+                onClick={() => setFilter("internal")}
+              >
+                Internal
+              </button>
+
+              <button
+                type="button"
+                className={`segment ${filter === "external" ? "active" : ""}`}
+                onClick={() => setFilter("external")}
+              >
+                External
+              </button>
+            </div>
           </div>
 
           <div className="applicantsSearchWrap">
@@ -164,9 +196,9 @@ export default function Applicants() {
             pageRows.map((a) => (
               <Link
                 to={`/applicants/${a.candidate_id}`}
+                state={{ from: location.pathname + location.search }}
                 className="applicantsRowLink"
                 key={a.candidate_id}
-                aria-label={`Open applicant ${a.name ?? a.candidate_id}`}
               >
                 <div className="applicantsName">
                   {a.name ?? `Candidate ${a.candidate_id}`}
