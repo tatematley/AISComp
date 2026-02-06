@@ -8,9 +8,6 @@ import bcrypt from "bcrypt";
 import type { Request, Response, NextFunction } from "express";
 import jobRoutes from "./routes/jobs";
 import candidateRoutes from "./routes/candidates";
-import multer from "multer";
-import { PDFParse, VerbosityLevel } from "pdf-parse";
-import Anthropic from "@anthropic-ai/sdk";
 
 dotenv.config();
 
@@ -38,12 +35,6 @@ const ROLES = {
   MANAGER: "manager",
   EMPLOYEE: "employee",
 } as const;
-
-const upload = multer();
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 type AuthedRequest = Request & { user?: AuthedUser };
 
@@ -183,31 +174,20 @@ app.get(
   "/api/applicants",
   requireAuth,
   requireRole("manager", "employee"),
-  async (req, res) => {
+  async (_req, res) => {
     try {
-      const filter = String(req.query.filter ?? "all").toLowerCase();
-
-      let whereClause = "";
-      if (filter === "internal") {
-        whereClause = "WHERE internal = true";
-      } else if (filter === "external") {
-        whereClause = "WHERE internal = false";
-      }
-
       const result = await pool.query(`
-        SELECT
-          candidate_id,
-          name,
-          position,
-          email,
-          phone_number,
-          application_date,
-          internal
-        FROM candidate_information
-        ${whereClause}
-        ORDER BY application_date DESC NULLS LAST, candidate_id
-      `);
-
+      SELECT
+        candidate_id,
+        name,
+        position,
+        email,
+        phone_number,
+        application_date
+      FROM candidate_information
+      WHERE internal = false
+      ORDER BY application_date DESC NULLS LAST, candidate_id
+    `);
       res.json(result.rows);
     } catch (err) {
       console.error("GET /api/applicants failed:", err);
@@ -313,132 +293,7 @@ app.post(
   },
 );
 
-// Parse uploaded PDF resume → extract structured applicant info via AI
-app.post(
-  "/api/resume/parse",
-  requireAuth,
-  requireRole("manager"),
-  upload.single("file"),
-  async (req, res) => {
-    try {
-      if (!req.file || req.file.mimetype !== "application/pdf") {
-        return res.status(400).json({ error: "A PDF file is required." });
-      }
-
-      const parser = new PDFParse({
-        data: req.file.buffer,
-        verbosity: VerbosityLevel.ERRORS,
-      });
-      const { text } = await parser.getText();
-      await parser.destroy();
-
-      if (!text.trim()) {
-        return res
-          .status(400)
-          .json({ error: "Could not extract text from this PDF." });
-      }
-
-      const skillsRes = await pool.query(
-        `SELECT skill_name FROM skill ORDER BY skill_name`,
-      );
-      const availableSkills: string[] = skillsRes.rows.map(
-        (r: any) => r.skill_name,
-      );
-
-      const prompt = `Extract information from this resume. Return ONLY a valid JSON object — no markdown, no code fences, no other text.
-
-Available skills in our system (use ONLY these exact names):
-${availableSkills.join(", ")}
-
-Resume:
----
-${text}
----
-
-Proficiency scale (0–5):
-0 = No experience
-1 = Beginner – aware of the concept, minimal hands-on use
-2 = Novice – some hands-on experience, can work with guidance
-3 = Intermediate – comfortable working independently
-4 = Proficient – strong, regular use in professional work
-5 = Expert – deep mastery, can teach others
-
-Return this exact JSON shape:
-{
-  "name": "full name or null",
-  "email": "email or null",
-  "phone": "phone number or null",
-  "position": "desired or most recent title or null",
-  "skills": [{ "skill_name": "exact name from the list above", "proficiency_level": 3 }]
-}
-
-Rules:
-- Only include skills present in the available skills list, matched exactly (case-sensitive).
-- Set any missing field to null.
-- Return an empty array for skills if none match.
-- Estimate proficiency_level (0–5) for each skill based on context clues (years of experience, role seniority, keywords like "proficient", "expert", "managed", etc.). Default to 2 if unclear.
-- Output ONLY the JSON.`;
-
-      const message = await anthropic.messages.create({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 1500,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const textBlock = message.content.find((b) => b.type === "text");
-      let raw = textBlock?.type === "text" ? textBlock.text.trim() : "";
-
-      // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
-      const fenceMatch = raw.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/);
-      if (fenceMatch) raw = fenceMatch[1].trim();
-
-      let parsed: any;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        console.error("Raw AI response was:", raw);
-        return res
-          .status(500)
-          .json({ error: "Failed to parse AI response as JSON." });
-      }
-
-      const validSkillSet = new Set(availableSkills);
-      const seen = new Set<string>();
-      const result = {
-        name: typeof parsed.name === "string" ? parsed.name.trim() || null : null,
-        email: typeof parsed.email === "string" ? parsed.email.trim() || null : null,
-        phone: typeof parsed.phone === "string" ? parsed.phone.trim() || null : null,
-        position: typeof parsed.position === "string" ? parsed.position.trim() || null : null,
-        skills: Array.isArray(parsed.skills)
-          ? parsed.skills
-              .filter(
-                (s: any) =>
-                  typeof s?.skill_name === "string" &&
-                  validSkillSet.has(s.skill_name) &&
-                  !seen.has(s.skill_name) &&
-                  seen.add(s.skill_name),
-              )
-              .map((s: any) => ({
-                skill_name: s.skill_name,
-                proficiency_level:
-                  typeof s.proficiency_level === "number" &&
-                  s.proficiency_level >= 0 &&
-                  s.proficiency_level <= 5
-                    ? Math.round(s.proficiency_level)
-                    : null,
-              }))
-          : [],
-      };
-
-      return res.json(result);
-    } catch (err) {
-      console.error("POST /api/resume/parse failed:", err);
-      return res.status(500).json({ error: "Failed to parse resume." });
-    }
-  },
-);
-
-// Shared "detail" endpoint used by Employee.tsx / Applicant.tsx
+// Shared “detail” endpoint used by Employee.tsx / Applicant.tsx
 app.get(
   "/api/candidates/:id/profile",
   requireAuth,
@@ -1568,77 +1423,6 @@ app.delete(
     }
   },
 );
-
-/* ----------------------------- Register Endpoint ----------------------------- */
-
-app.post("/api/auth/register", async (req, res) => {
-  const username = String(req.body?.username ?? "").trim().toLowerCase();
-  const password = String(req.body?.password ?? "");
-  const acceptedPolicy = Boolean(req.body?.acceptedPolicy);
-
-  if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required." });
-  }
-
-  if (password.length < 8) {
-    return res.status(400).json({ error: "Password must be at least 8 characters." });
-  }
-
-  if (!acceptedPolicy) {
-    return res.status(400).json({ error: "You must accept the Privacy Policy." });
-  }
-
-  try {
-    // Ensure username is unique
-    const existing = await pool.query(
-      `SELECT user_id FROM app_user WHERE LOWER(username) = $1`,
-      [username],
-    );
-
-    if (existing.rowCount && existing.rowCount > 0) {
-      return res.status(409).json({ error: "That username is already taken." });
-    }
-
-    // Default role for new users
-    // If you want new users to be "employee" by default, keep this.
-    // If you want "manager" by default, change it here.
-    const roleRes = await pool.query(
-      `SELECT user_role_id, user_role FROM user_roles WHERE LOWER(user_role) = $1`,
-      [ROLES.EMPLOYEE],
-    );
-
-    if (roleRes.rowCount === 0) {
-      return res.status(500).json({ error: "Default role not configured in DB." });
-    }
-
-    const user_role_id = Number(roleRes.rows[0].user_role_id);
-    const role = String(roleRes.rows[0].user_role).trim().toLowerCase();
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const insertRes = await pool.query(
-      `
-      INSERT INTO app_user (username, password, user_role_id)
-      VALUES ($1, $2, $3)
-      RETURNING user_id, username
-      `,
-      [username, passwordHash, user_role_id],
-    );
-
-    const user = {
-      user_id: Number(insertRes.rows[0].user_id),
-      username: String(insertRes.rows[0].username),
-      role,
-    };
-
-    const token = signToken(user);
-
-    return res.status(201).json({ token, user });
-  } catch (err) {
-    console.error("POST /api/auth/register failed:", err);
-    return res.status(500).json({ error: "Registration failed" });
-  }
-});
 
 
 app.use("/api/jobs", jobRoutes);

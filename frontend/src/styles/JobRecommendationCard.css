@@ -1,0 +1,397 @@
+.jobRecCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 180ms ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.jobRecCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(218, 245, 97, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.jobRecHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.jobRecTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.jobRecDept {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.jobRecBadge {
+  background: rgba(218, 245, 97, 0.1);
+  border: 1px solid rgba(218, 245, 97, 0.25);
+  color: rgba(218, 245, 97, 0.95);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.jobRecStats {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* AI format */
+
+.jobRecAnalysis {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jobRecAnalysisHeader {
+  color: rgba(218, 245, 97, 0.95);
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.jobRecAnalysisItem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.jobRecAnalysisNumber {
+  color: rgba(218, 245, 97, 0.9);
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+  min-width: 18px;
+}
+
+.jobRecAnalysisBullet {
+  display: flex;
+  align-items: flex-start;
+  padding-left: 18px;
+}
+
+.jobRecAnalysisText {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Strengths preview */
+.jobRecStrengths {
+  margin-bottom: 14px;
+}
+
+.jobRecStrengthLabel {
+  color: rgba(134, 239, 172, 0.9);
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.jobRecSkillTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.jobRecSkillTag {
+  background: rgba(134, 239, 172, 0.12);
+  border: 1px solid rgba(134, 239, 172, 0.25);
+  color: rgba(134, 239, 172, 1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Toggle button */
+.jobRecToggle {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 150ms ease;
+  text-align: center;
+}
+
+.jobRecToggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Skills breakdown box */
+.jobRecSkillsBox {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 14px;
+  backdrop-filter: blur(8px);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.jobRecSkillsBox::-webkit-scrollbar {
+  width: 6px;
+}
+
+.jobRecSkillsBox::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+}
+
+.jobRecSkillsBox::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.jobRecSkillsBox::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.jobRecSection {
+  margin-bottom: 20px;
+}
+
+.jobRecSection:last-child {
+  margin-bottom: 0;
+}
+
+.jobRecSectionLabel {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jobRecSkillRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.jobRecSkillRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.jobRecSkillName {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.jobRecSkillLevel {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.jobRecSkillLevel.met {
+  background: rgba(134, 239, 172, 0.15);
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  color: rgba(134, 239, 172, 1);
+}
+
+.jobRecSkillLevel.gap {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: rgba(251, 191, 36, 1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .jobRecCard {
+    padding: 16px;
+  }
+
+  .jobRecHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .jobRecBadge {
+    align-self: flex-start;
+  }
+
+  .jobRecSkillRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .jobRecSkillLevel {
+    align-self: flex-start;
+  }
+}
+
+/* AI CSS */
+
+/* Button row - two buttons side by side */
+.jobRecButtonRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Make the old single toggle match */
+.jobRecToggle {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 150ms ease;
+  text-align: center;
+}
+
+.jobRecToggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* AI button - green accent */
+.jobRecAiToggle {
+  width: 100%;
+  background: rgba(218, 245, 97, 0.08);
+  border: 1px solid rgba(218, 245, 97, 0.22);
+  color: rgba(218, 245, 97, 0.95);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 150ms ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.jobRecAiToggle:hover {
+  background: rgba(218, 245, 97, 0.14);
+  border-color: rgba(218, 245, 97, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Shimmer - runs once on load */
+.jobRecAiToggle::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(218, 245, 97, 0.4) 50%,
+    transparent 70%
+  );
+  animation: jobRecShimmer 1.5s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+@keyframes jobRecShimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%) translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* AI Explanation Box */
+.jobRecExplanationBox {
+  background: rgba(218, 245, 97, 0.08);
+  border: 1px solid rgba(218, 245, 97, 0.22);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 14px;
+  backdrop-filter: blur(8px);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.jobRecExplanationBox::-webkit-scrollbar {
+  width: 6px;
+}
+
+.jobRecExplanationBox::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+}
+
+.jobRecExplanationBox::-webkit-scrollbar-thumb {
+  background: rgba(218, 245, 97, 0.3);
+  border-radius: 3px;
+}
+
+.jobRecExplanationBox::-webkit-scrollbar-thumb:hover {
+  background: rgba(218, 245, 97, 0.5);
+}
+
+.jobRecExplanationLabel {
+  color: rgba(218, 245, 97, 0.95);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jobRecExplanationText {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13.5px;
+  line-height: 1.65;
+  margin: 0;
+}
