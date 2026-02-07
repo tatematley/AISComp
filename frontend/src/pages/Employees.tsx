@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/Employees.css";
 import AdminNavbar from "../components/AdminNavbar";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
@@ -144,36 +144,50 @@ export default function Employees() {
         {!loading &&
             !error &&
             pageRows.map((e) => (
-                <Link
-                to={`/employees/${e.candidate_id}`}
-                state={{ from: location.pathname + location.search }}
-                className="employeesRowLink"
+              <div
                 key={e.candidate_id}
+                className="employeesRowLink"
+                role="link"
+                tabIndex={0}
                 aria-label={`Open employee ${e.name ?? e.candidate_id}`}
-                >
+                onClick={() =>
+                  navigate(`/employees/${e.candidate_id}`, {
+                    state: { from: location.pathname + location.search },
+                  })
+                }
+                onKeyDown={(evt) => {
+                  if (evt.key === "Enter" || evt.key === " ") {
+                    evt.preventDefault();
+                    navigate(`/employees/${e.candidate_id}`, {
+                      state: { from: location.pathname + location.search },
+                    });
+                  }
+                }}
+              >
                 <div className="employeesName">
-                    {e.name ?? `Candidate ${e.candidate_id}`}
+                  {e.name ?? `Candidate ${e.candidate_id}`}
                 </div>
 
                 <div className="employeesCell">{e.position ?? "—"}</div>
 
                 <div className="employeesCell">
-                    {e.email ? (
+                  {e.email ? (
                     <a
-                        className="employeesLink"
-                        href={`mailto:${e.email}`}
-                        onClick={(evt) => evt.stopPropagation()}
+                      className="employeesLink"
+                      href={`mailto:${e.email}`}
+                      onClick={(evt) => evt.stopPropagation()}
                     >
-                        {e.email}
+                      {e.email}
                     </a>
-                    ) : (
+                  ) : (
                     "—"
-                    )}
+                  )}
                 </div>
 
                 <div className="employeesCell">{e.phone_number ?? "—"}</div>
-                </Link>
-            ))}
+              </div>
+            ))
+          }
 
 
         <footer className="employeesFooter">

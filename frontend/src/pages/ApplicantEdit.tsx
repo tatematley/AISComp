@@ -23,6 +23,10 @@ type ProfileData = {
     application_date: string | null;
     pronouns: string | null;
     pronouns_id: number | null;
+
+    // ✅ add these (comes from GET /api/candidates/:id/profile)
+    candidate_status: number | null;
+    candidate_status_description: string | null;
   };
   internal: null; // applicants won't use internal section
   skills: SkillRow[];
@@ -30,6 +34,7 @@ type ProfileData = {
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
+type StatusOption = { id: number; name: string }; // from /api/meta/profile-edit (candidate_statuses)
 
 export default function ApplicantEdit() {
   const { id } = useParams();
@@ -46,6 +51,7 @@ export default function ApplicantEdit() {
   // dropdowns
   const [pronouns, setPronouns] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
+  const [statuses, setStatuses] = useState<StatusOption[]>([]);
 
   // form state (candidate_information)
   const [position, setPosition] = useState("");
@@ -53,6 +59,9 @@ export default function ApplicantEdit() {
   const [phone, setPhone] = useState("");
   const [applicationDate, setApplicationDate] = useState<string>("");
   const [pronounsId, setPronounsId] = useState<number | "">("");
+
+  // ✅ NEW: candidate_status (lives on candidate table)
+  const [candidateStatus, setCandidateStatus] = useState<number | "">("");
 
   // skills editor
   const [skillEdits, setSkillEdits] = useState<
@@ -95,9 +104,11 @@ export default function ApplicantEdit() {
         }
 
         const profileJson = (await profileRes.json()) as ProfileData;
+
         const metaJson = (await metaRes.json()) as {
           pronouns: Option[];
           skills: SkillOption[];
+          candidate_statuses: StatusOption[]; // ✅ IMPORTANT: matches backend key
         };
 
         // must be applicant for this edit page
@@ -108,8 +119,9 @@ export default function ApplicantEdit() {
 
         setProfile(profileJson);
 
-        setPronouns(metaJson.pronouns);
-        setSkillsCatalog(metaJson.skills);
+        setPronouns(metaJson.pronouns ?? []);
+        setSkillsCatalog(metaJson.skills ?? []);
+        setStatuses(metaJson.candidate_statuses ?? []);
 
         // seed form fields
         setPosition(profileJson.candidate.position ?? "");
@@ -119,17 +131,20 @@ export default function ApplicantEdit() {
         setApplicationDate(
           profileJson.candidate.application_date
             ? profileJson.candidate.application_date.slice(0, 10)
-            : ""
+            : "",
         );
 
         setPronounsId(profileJson.candidate.pronouns_id ?? "");
+
+        // ✅ seed candidate_status
+        setCandidateStatus(profileJson.candidate.candidate_status ?? "");
 
         setSkillEdits(
           (profileJson.skills ?? []).map((s) => ({
             candidate_skill_id: s.candidate_skill_id,
             skill_name: s.skill_name,
             proficiency_level: s.proficiency_level,
-          }))
+          })),
         );
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load edit page");
@@ -139,7 +154,7 @@ export default function ApplicantEdit() {
     };
 
     run();
-  }, [candidateId]);
+  }, [candidateId, navigate]);
 
   const skillOptionsFiltered = useMemo(() => {
     const existing = new Set(skillEdits.map((s) => s.skill_name.toLowerCase()));
@@ -151,13 +166,15 @@ export default function ApplicantEdit() {
       prev.map((s) =>
         s.candidate_skill_id === candidate_skill_id
           ? { ...s, proficiency_level: level }
-          : s
-      )
+          : s,
+      ),
     );
   };
 
   const removeSkill = (candidate_skill_id: number) => {
-    setSkillEdits((prev) => prev.filter((s) => s.candidate_skill_id !== candidate_skill_id));
+    setSkillEdits((prev) =>
+      prev.filter((s) => s.candidate_skill_id !== candidate_skill_id),
+    );
   };
 
   const addSkill = () => {
@@ -204,6 +221,9 @@ export default function ApplicantEdit() {
           phone_number: phone,
           application_date: applicationDate || null,
           pronouns_id: pronounsId === "" ? null : pronounsId,
+
+          // ✅ NEW: send candidate_status to the applicant PUT route (updates candidate table)
+          candidate_status: candidateStatus === "" ? null : candidateStatus,
         },
         skills: skillEdits.map((s) => ({
           candidate_skill_id: s.candidate_skill_id, // negative means "new"
@@ -212,8 +232,6 @@ export default function ApplicantEdit() {
         })),
       };
 
-      // IMPORTANT: this should be a separate endpoint for applicants,
-      // because your current PUT /profile blocks non-internal users.
       const res = await apiFetch(`/api/candidates/${candidateId}/applicant`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -263,7 +281,8 @@ export default function ApplicantEdit() {
 
               <h1 className="profileEditTitle">Edit Applicant</h1>
               <p className="profileEditSubtitle">
-                <strong>{profile.candidate.name}</strong> • ID {profile.candidate.candidate_id}
+                <strong>{profile.candidate.name}</strong> • ID{" "}
+                {profile.candidate.candidate_id}
               </p>
             </div>
 
@@ -285,7 +304,11 @@ export default function ApplicantEdit() {
               {/* Locked */}
               <div className="profileEditField">
                 <div className="profileEditLabel">Name (locked)</div>
-                <input className="profileEditInput" value={profile.candidate.name} disabled />
+                <input
+                  className="profileEditInput"
+                  value={profile.candidate.name}
+                  disabled
+                />
               </div>
 
               <div className="profileEditField">
@@ -314,7 +337,9 @@ export default function ApplicantEdit() {
                 <select
                   className="profileEditSelect"
                   value={pronounsId}
-                  onChange={(e) => setPronounsId(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setPronounsId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                   disabled={!canEdit}
                 >
                   <option value="">—</option>
@@ -359,6 +384,26 @@ export default function ApplicantEdit() {
                 />
               </div>
 
+              {/* ✅ NEW: Status dropdown */}
+              <div className="profileEditField">
+                <div className="profileEditLabel">Status</div>
+                <select
+                  className="profileEditSelect"
+                  value={candidateStatus}
+                  onChange={(e) =>
+                    setCandidateStatus(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                  disabled={!canEdit}
+                >
+                  <option value="">—</option>
+                  {statuses.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Skills section */}
               <div className="profileEditSectionHeader">Skills</div>
 
@@ -368,13 +413,16 @@ export default function ApplicantEdit() {
                   <select
                     className="profileEditSelect"
                     value={newSkillId}
-                    onChange={(e) => setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))}
+                    onChange={(e) =>
+                      setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))
+                    }
                     disabled={!canEdit}
                   >
                     <option value="">Select a skill…</option>
                     {skillOptionsFiltered.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.category ? `${s.category} — ` : ""}{s.name}
+                        {s.category ? `${s.category} — ` : ""}
+                        {s.name}
                       </option>
                     ))}
                   </select>

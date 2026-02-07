@@ -8,6 +8,9 @@ import { isManager } from "../lib/auth";
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
 
+// ✅ NEW
+type JobGroupOption = { id: number; name: string };
+
 export default function JobAdd() {
   const navigate = useNavigate();
   const canEdit = isManager();
@@ -22,6 +25,10 @@ export default function JobAdd() {
   const [locations, setLocations] = useState<Option[]>([]);
   const [education, setEducation] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
+
+  // ✅ NEW: job groups
+  const [jobGroups, setJobGroups] = useState<JobGroupOption[]>([]);
+  const [jobGroupId, setJobGroupId] = useState<number | "">("");
 
   // job fields
   const [jobTitle, setJobTitle] = useState("");
@@ -38,7 +45,13 @@ export default function JobAdd() {
 
   // required skills editor
   const [jobSkillEdits, setJobSkillEdits] = useState<
-    { temp_id: number; skill_id: number; skill_name: string; required_level: number | null; importance_weight: number | null }[]
+    {
+      temp_id: number;
+      skill_id: number;
+      skill_name: string;
+      required_level: number | null;
+      importance_weight: number | null;
+    }[]
   >([]);
   const [newSkillId, setNewSkillId] = useState<number | "">("");
   const [newReqLevel, setNewReqLevel] = useState<string>("");
@@ -50,10 +63,8 @@ export default function JobAdd() {
         setLoading(true);
         setError(null);
 
-        // ✅ token-aware request
         const metaRes = await apiFetch("/api/meta/job-edit");
 
-        // ✅ same 401 handling as EmployeeAdd
         if (metaRes.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
@@ -72,6 +83,9 @@ export default function JobAdd() {
           locations: Option[];
           education: Option[];
           skills: SkillOption[];
+
+          // ✅ NEW
+          job_groups: JobGroupOption[];
         };
 
         setJobStatuses(meta.job_statuses);
@@ -79,6 +93,9 @@ export default function JobAdd() {
         setLocations(meta.locations);
         setEducation(meta.education);
         setSkillsCatalog(meta.skills);
+
+        // ✅ NEW
+        setJobGroups(meta.job_groups ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load page");
       } finally {
@@ -164,7 +181,12 @@ export default function JobAdd() {
           department: departmentName || null,
           job_location: locationName || null,
           job_status_id: jobStatusId === "" ? null : jobStatusId,
-          min_years_experience: minYearsExperience.trim() === "" ? null : Number(minYearsExperience),
+
+          // ✅ NEW
+          job_group_id: jobGroupId === "" ? null : jobGroupId,
+
+          min_years_experience:
+            minYearsExperience.trim() === "" ? null : Number(minYearsExperience),
           education_req: educationReq || null,
           job_salary: jobSalary.trim() === "" ? null : Number(jobSalary),
           start_date: startDate || null,
@@ -176,22 +198,22 @@ export default function JobAdd() {
         })),
       };
 
-      // basic numeric validation (same rules as backend)
-      if (payload.job.min_years_experience !== null && Number.isNaN(payload.job.min_years_experience)) {
+      if (
+        payload.job.min_years_experience !== null &&
+        Number.isNaN(payload.job.min_years_experience)
+      ) {
         throw new Error("Min years experience must be a number.");
       }
       if (payload.job.job_salary !== null && Number.isNaN(payload.job.job_salary)) {
         throw new Error("Salary must be a number.");
       }
 
-      // ✅ token-aware request
       const res = await apiFetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      // ✅ same 401 handling as EmployeeAdd
       if (res.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -224,7 +246,11 @@ export default function JobAdd() {
         <div className="profileEditShell">
           <div className="profileEditHeaderRow">
             <div className="profileEditTitleBlock">
-              <button className="profileEditBackLink" onClick={() => navigate("/jobs")} type="button">
+              <button
+                className="profileEditBackLink"
+                onClick={() => navigate("/jobs")}
+                type="button"
+              >
                 ← Cancel
               </button>
 
@@ -233,7 +259,12 @@ export default function JobAdd() {
             </div>
 
             {canEdit && (
-              <button className="profileEditSaveTopBtn" type="button" onClick={onCreate} disabled={saving}>
+              <button
+                className="profileEditSaveTopBtn"
+                type="button"
+                onClick={onCreate}
+                disabled={saving}
+              >
                 {saving ? "Saving…" : "Create"}
               </button>
             )}
@@ -243,17 +274,49 @@ export default function JobAdd() {
             <div className="profileEditGrid">
               <div className="profileEditField">
                 <div className="profileEditLabel">Job Title</div>
-                <input className="profileEditInput" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+                <input
+                  className="profileEditInput"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                />
               </div>
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Job Category</div>
-                <input className="profileEditInput" value={jobCategory} onChange={(e) => setJobCategory(e.target.value)} />
+                <input
+                  className="profileEditInput"
+                  value={jobCategory}
+                  onChange={(e) => setJobCategory(e.target.value)}
+                />
               </div>
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Work Status</div>
-                <input className="profileEditInput" value={workStatus} onChange={(e) => setWorkStatus(e.target.value)} placeholder="e.g., Remote / Hybrid / In-office" />
+                <input
+                  className="profileEditInput"
+                  value={workStatus}
+                  onChange={(e) => setWorkStatus(e.target.value)}
+                  placeholder="e.g., Remote / Hybrid / In-office"
+                />
+              </div>
+
+              {/* ✅ NEW: Job Group */}
+              <div className="profileEditField">
+                <div className="profileEditLabel">Job Group</div>
+                <select
+                  className="profileEditSelect"
+                  value={jobGroupId}
+                  onChange={(e) =>
+                    setJobGroupId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                >
+                  <option value="">—</option>
+                  {jobGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="profileEditField">
@@ -261,7 +324,9 @@ export default function JobAdd() {
                 <select
                   className="profileEditSelect"
                   value={jobStatusId}
-                  onChange={(e) => setJobStatusId(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setJobStatusId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 >
                   <option value="">—</option>
                   {jobStatuses.map((s) => (
@@ -274,7 +339,11 @@ export default function JobAdd() {
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Department</div>
-                <select className="profileEditSelect" value={departmentName} onChange={(e) => setDepartmentName(e.target.value)}>
+                <select
+                  className="profileEditSelect"
+                  value={departmentName}
+                  onChange={(e) => setDepartmentName(e.target.value)}
+                >
                   <option value="">—</option>
                   {departments.map((d) => (
                     <option key={d.id} value={d.name}>
@@ -286,7 +355,11 @@ export default function JobAdd() {
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Location</div>
-                <select className="profileEditSelect" value={locationName} onChange={(e) => setLocationName(e.target.value)}>
+                <select
+                  className="profileEditSelect"
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                >
                   <option value="">—</option>
                   {locations.map((l) => (
                     <option key={l.id} value={l.name}>
@@ -298,12 +371,21 @@ export default function JobAdd() {
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Min Years Experience</div>
-                <input className="profileEditInput" value={minYearsExperience} onChange={(e) => setMinYearsExperience(e.target.value)} placeholder="e.g., 2" />
+                <input
+                  className="profileEditInput"
+                  value={minYearsExperience}
+                  onChange={(e) => setMinYearsExperience(e.target.value)}
+                  placeholder="e.g., 2"
+                />
               </div>
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Education Requirement</div>
-                <select className="profileEditSelect" value={educationReq} onChange={(e) => setEducationReq(e.target.value)}>
+                <select
+                  className="profileEditSelect"
+                  value={educationReq}
+                  onChange={(e) => setEducationReq(e.target.value)}
+                >
                   <option value="">—</option>
                   {education.map((ed) => (
                     <option key={ed.id} value={ed.name}>
@@ -315,12 +397,22 @@ export default function JobAdd() {
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Salary</div>
-                <input className="profileEditInput" value={jobSalary} onChange={(e) => setJobSalary(e.target.value)} placeholder="number only" />
+                <input
+                  className="profileEditInput"
+                  value={jobSalary}
+                  onChange={(e) => setJobSalary(e.target.value)}
+                  placeholder="number only"
+                />
               </div>
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Start Date</div>
-                <input className="profileEditInput" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <input
+                  className="profileEditInput"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
               </div>
 
               <div className="profileEditField" style={{ gridColumn: "1 / -1" }}>
@@ -341,7 +433,9 @@ export default function JobAdd() {
                   <select
                     className="profileEditSelect"
                     value={newSkillId}
-                    onChange={(e) => setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))}
+                    onChange={(e) =>
+                      setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))
+                    }
                   >
                     <option value="">Select a skill…</option>
                     {availableSkillOptions.map((s) => (
@@ -355,20 +449,34 @@ export default function JobAdd() {
 
                 <div className="profileEditField">
                   <div className="profileEditLabel">Required Level (0–5)</div>
-                  <input className="profileEditInput" value={newReqLevel} onChange={(e) => setNewReqLevel(e.target.value)} placeholder="optional" />
+                  <input
+                    className="profileEditInput"
+                    value={newReqLevel}
+                    onChange={(e) => setNewReqLevel(e.target.value)}
+                    placeholder="optional"
+                  />
                 </div>
 
                 {canEdit && (
-                  <button className="profileEditAddBtn" type="button" onClick={addRequiredSkill} disabled={newSkillId === ""}>
+                  <button
+                    className="profileEditAddBtn"
+                    type="button"
+                    onClick={addRequiredSkill}
+                    disabled={newSkillId === ""}
+                  >
                     + Add
                   </button>
                 )}
               </div>
 
-              {/* weight input row (keep it simple, full width) */}
               <div className="profileEditField" style={{ gridColumn: "1 / -1" }}>
                 <div className="profileEditLabel">Importance Weight (optional)</div>
-                <input className="profileEditInput" value={newWeight} onChange={(e) => setNewWeight(e.target.value)} placeholder="number (optional)" />
+                <input
+                  className="profileEditInput"
+                  value={newWeight}
+                  onChange={(e) => setNewWeight(e.target.value)}
+                  placeholder="number (optional)"
+                />
               </div>
 
               <div className="profileEditSkillsList">
@@ -384,7 +492,11 @@ export default function JobAdd() {
                       </div>
 
                       {canEdit && (
-                        <button className="profileEditRemoveBtn" type="button" onClick={() => removeRequiredSkill(s.temp_id)}>
+                        <button
+                          className="profileEditRemoveBtn"
+                          type="button"
+                          onClick={() => removeRequiredSkill(s.temp_id)}
+                        >
                           Remove
                         </button>
                       )}
@@ -395,12 +507,22 @@ export default function JobAdd() {
             </div>
 
             <div className="profileEditBottomRow">
-              <button className="profileEditCancelBtn" type="button" onClick={() => navigate("/jobs")} disabled={saving}>
+              <button
+                className="profileEditCancelBtn"
+                type="button"
+                onClick={() => navigate("/jobs")}
+                disabled={saving}
+              >
                 Cancel
               </button>
 
               {canEdit && (
-                <button className="profileEditSaveBtn" type="button" onClick={onCreate} disabled={saving}>
+                <button
+                  className="profileEditSaveBtn"
+                  type="button"
+                  onClick={onCreate}
+                  disabled={saving}
+                >
                   {saving ? "Saving…" : "Create Job"}
                 </button>
               )}

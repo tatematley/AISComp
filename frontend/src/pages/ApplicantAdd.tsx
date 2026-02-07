@@ -8,6 +8,7 @@ import { isManager } from "../lib/auth";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
+type StatusOption = { id: string | number; name: string }; 
 
 export default function ApplicantAdd() {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ export default function ApplicantAdd() {
   // dropdowns
   const [pronouns, setPronouns] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
+  const [statuses, setStatuses] = useState<StatusOption[]>([]);
+  const [candidateStatus, setCandidateStatus] = useState<string | number | "">("");
 
   // form state (candidate_information)
   const [name, setName] = useState("");
@@ -59,10 +62,12 @@ export default function ApplicantAdd() {
         const metaJson = (await metaRes.json()) as {
           pronouns: Option[];
           skills: SkillOption[];
+          candidate_statuses: StatusOption[];
         };
 
         setPronouns(metaJson.pronouns ?? []);
         setSkillsCatalog(metaJson.skills ?? []);
+        setStatuses(metaJson.candidate_statuses ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load add page");
       } finally {
@@ -170,6 +175,7 @@ export default function ApplicantAdd() {
           phone_number: phone.trim() || null,
           application_date: applicationDate || null,
           pronouns_id: pronounsId === "" ? null : pronounsId,
+          candidate_status: candidateStatus === "" ? null : candidateStatus,
         },
         skills: skillEdits.map((s) => ({
           candidate_skill_id: s.candidate_skill_id, // temp ids ok; server ignores
@@ -290,6 +296,22 @@ export default function ApplicantAdd() {
                   value={applicationDate}
                   onChange={(e) => setApplicationDate(e.target.value)}
                 />
+              </div>
+
+              <div className="profileEditField">
+                <div className="profileEditLabel">Status</div>
+                <select
+                  className="profileEditSelect"
+                  value={candidateStatus}
+                  onChange={(e) => setCandidateStatus(e.target.value === "" ? "" : e.target.value)}
+                >
+                  <option value="">—</option>
+                  {statuses.map((s) => (
+                    <option key={String(s.id)} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="profileEditField">
