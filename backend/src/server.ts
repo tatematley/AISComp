@@ -39,12 +39,6 @@ const ROLES = {
   EMPLOYEE: "employee",
 } as const;
 
-const upload = multer();
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 type AuthedRequest = Request & { user?: AuthedUser };
 
 function signToken(user: AuthedUser) {
@@ -183,8 +177,9 @@ app.get(
   "/api/applicants",
   requireAuth,
   requireRole("manager", "employee"),
-  async (req, res) => {
+  async (_req, res) => {
     try {
+
       const filter = String(req.query.filter ?? "all").toLowerCase();
 
       let whereClause = "";
