@@ -22,6 +22,7 @@ type ProfileData = {
     internal: boolean;
     application_date: string | null;
     pronouns: string | null;
+    candidate_status_description: string | null;
   };
   internal: null;
   skills: Skill[];
@@ -193,6 +194,11 @@ export default function Applicant() {
                   <div className="profileInfoItem">
                     <div className="profileLabel">Email</div>
                     <div className="profileValue">{candidate.email || "—"}</div>
+                  </div>
+                  
+                  <div className="profileInfoItem">
+                    <div className="profileLabel">Status</div>
+                    <div className="profileValue">{candidate.candidate_status_description || "—"}</div>
                   </div>
 
                   <div className="profileInfoItem">

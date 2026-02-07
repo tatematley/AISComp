@@ -6,11 +6,11 @@ import { pool } from "./db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import type { Request, Response, NextFunction } from "express";
-import jobRoutes from "./routes/jobs";
 import candidateRoutes from "./routes/candidates";
 import multer from "multer";
 import { PDFParse, VerbosityLevel } from "pdf-parse";
 import Anthropic from "@anthropic-ai/sdk";
+import jobRoutes from "./routes/jobs";
 
 dotenv.config();
 
@@ -189,24 +189,33 @@ app.get(
 
       let whereClause = "";
       if (filter === "internal") {
-        whereClause = "WHERE internal = true";
+        // internal applicants only
+        whereClause = "WHERE ci.internal = true AND c.current_candidate = true";
       } else if (filter === "external") {
-        whereClause = "WHERE internal = false";
+        // external applicants only
+        whereClause = "WHERE ci.internal = false";
+      } else {
+        // all applicants
+        whereClause =
+          "WHERE (ci.internal = false OR (ci.internal = true AND c.current_candidate = true))";
       }
 
-      const result = await pool.query(`
+      const result = await pool.query(
+        `
         SELECT
-          candidate_id,
-          name,
-          position,
-          email,
-          phone_number,
-          application_date,
-          internal
-        FROM candidate_information
+          ci.candidate_id,
+          ci.name,
+          ci.position,
+          ci.email,
+          ci.phone_number,
+          ci.application_date,
+          ci.internal
+        FROM candidate_information ci
+        JOIN candidate c ON c.candidate_id = ci.candidate_id
         ${whereClause}
-        ORDER BY application_date DESC NULLS LAST, candidate_id
-      `);
+        ORDER BY ci.application_date DESC NULLS LAST, ci.candidate_id
+      `,
+      );
 
       res.json(result.rows);
     } catch (err) {
@@ -215,6 +224,7 @@ app.get(
     }
   },
 );
+
 
 // CREATE applicant (non-internal candidate_information + optional candidate_skill)
 app.post(
@@ -240,14 +250,24 @@ app.post(
       );
       const candidateId = Number(candRes.rows[0].candidate_id);
 
+      // ✅ NEW: save candidate_status onto candidate row
+      await client.query(
+        `
+        UPDATE candidate
+        SET candidate_status = $2
+        WHERE candidate_id = $1
+        `,
+        [candidateId, candidate?.candidate_status ?? null],
+      );
+
       // 2) Insert candidate_information using that candidate_id
       await client.query(
         `
-      INSERT INTO candidate_information
-        (candidate_id, name, position, email, phone_number, internal, application_date, pronouns_id)
-      VALUES
-        ($1, $2, $3, $4, $5, false, $6, $7)
-      `,
+        INSERT INTO candidate_information
+          (candidate_id, name, position, email, phone_number, internal, application_date, pronouns_id)
+        VALUES
+          ($1, $2, $3, $4, $5, false, $6, $7)
+        `,
         [
           candidateId,
           name,
@@ -291,9 +311,9 @@ app.post(
 
           await client.query(
             `
-          INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
-          VALUES ($1, $2, $3)
-          `,
+            INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
+            VALUES ($1, $2, $3)
+            `,
             [candidateId, skillId, lvl],
           );
         }
@@ -312,6 +332,7 @@ app.post(
     }
   },
 );
+
 
 // Parse uploaded PDF resume → extract structured applicant info via AI
 app.post(
@@ -460,9 +481,12 @@ app.get(
         ci.phone_number,
         ci.internal,
         ci.application_date,
-        p.pronouns
+        p.pronouns,
+        cs.candidate_status_description
       FROM candidate_information ci
       LEFT JOIN pronoun p ON p.pronoun_id = ci.pronouns_id
+      LEFT JOIN candidate c ON c.candidate_id = ci.candidate_id
+      LEFT JOIN candidate_status cs ON cs.candidate_status = c.candidate_status
       WHERE ci.candidate_id = $1
       `,
         [candidateId],
@@ -481,11 +505,15 @@ app.get(
         c.start_date,
         d.department_name,
         l.location_name,
-        e.education_level
+        e.education_level,
+        c.current_candidate,
+        c.candidate_status,
+        cs.candidate_status_description
       FROM candidate c
       LEFT JOIN department d ON d.department_id = c.department_id
       LEFT JOIN location l ON l.location_id = c.location_id
       LEFT JOIN education e ON e.education_id = c.education_level_id
+      LEFT JOIN candidate_status cs ON cs.candidate_status = c.candidate_status
       WHERE c.candidate_id = $1
       `,
         [candidateId],
@@ -529,7 +557,7 @@ app.get(
   requireRole("manager"),
   async (_req, res) => {
     try {
-      const [pronouns, departments, locations, education, skills] =
+      const [pronouns, departments, locations, education, skills, candidateStatuses] =
         await Promise.all([
           pool.query(
             `SELECT pronoun_id AS id, pronouns AS name FROM pronoun ORDER BY pronoun_id`,
@@ -544,14 +572,19 @@ app.get(
             `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
           ),
           pool.query(`
-        SELECT
-          s.skill_id AS id,
-          s.skill_name AS name,
-          sc.skill_category AS category
-        FROM skill s
-        LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
-        ORDER BY sc.skill_category NULLS LAST, s.skill_name
-      `),
+            SELECT
+              s.skill_id AS id,
+              s.skill_name AS name,
+              sc.skill_category AS category
+            FROM skill s
+            LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
+            ORDER BY sc.skill_category NULLS LAST, s.skill_name
+          `),
+          pool.query(
+            `SELECT candidate_status AS id, candidate_status_description AS name
+             FROM candidate_status
+             ORDER BY candidate_status`,
+          ),
         ]);
 
       res.json({
@@ -560,6 +593,7 @@ app.get(
         locations: locations.rows,
         education: education.rows,
         skills: skills.rows,
+        candidate_statuses: candidateStatuses.rows,
       });
     } catch (err) {
       console.error("GET /api/meta/profile-edit failed:", err);
@@ -567,6 +601,7 @@ app.get(
     }
   },
 );
+
 
 /* ----------------------------- Employee Edit (internal only) ----------------------------- */
 
@@ -605,15 +640,15 @@ app.put(
 
       await client.query(
         `
-      UPDATE candidate_information
-      SET
-        position = $2,
-        email = $3,
-        phone_number = $4,
-        application_date = $5,
-        pronouns_id = $6
-      WHERE candidate_id = $1
-      `,
+        UPDATE candidate_information
+        SET
+          position = $2,
+          email = $3,
+          phone_number = $4,
+          application_date = $5,
+          pronouns_id = $6
+        WHERE candidate_id = $1
+        `,
         [
           candidateId,
           candidate?.position ?? null,
@@ -626,17 +661,19 @@ app.put(
 
       await client.query(
         `
-      UPDATE candidate
-      SET
-        currentrole = $2,
-        years_exp = $3,
-        availability_hours = $4,
-        start_date = $5,
-        department_id = $6,
-        location_id = $7,
-        education_level_id = $8
-      WHERE candidate_id = $1
-      `,
+        UPDATE candidate
+        SET
+          currentrole = $2,
+          years_exp = $3,
+          availability_hours = $4,
+          start_date = $5,
+          department_id = $6,
+          location_id = $7,
+          education_level_id = $8,
+          current_candidate = $9,
+          candidate_status = $10
+        WHERE candidate_id = $1
+        `,
         [
           candidateId,
           internal?.currentrole ?? null,
@@ -646,13 +683,34 @@ app.put(
           internal?.department_id ?? null,
           internal?.location_id ?? null,
           internal?.education_level_id ?? null,
+          internal?.current_candidate ?? null,
+          internal?.candidate_status ?? null,
         ],
       );
 
+      // ✅ upsert internal_candidates ONCE (moved out of skills loop)
       await client.query(
-        `DELETE FROM candidate_skill WHERE candidate_id = $1`,
-        [candidateId],
+        `
+        INSERT INTO internal_candidates (candidate_id, pip, tenure, performance_rating)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (candidate_id)
+        DO UPDATE SET
+          pip = EXCLUDED.pip,
+          tenure = EXCLUDED.tenure,
+          performance_rating = EXCLUDED.performance_rating
+        `,
+        [
+          candidateId,
+          internal?.pip ?? null,
+          internal?.tenure ?? null,
+          internal?.performance_rating ?? null,
+        ],
       );
+
+      // ✅ replace skills: delete then re-insert
+      await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [
+        candidateId,
+      ]);
 
       if (Array.isArray(skills) && skills.length > 0) {
         const insertedSkillIds = new Set<number>();
@@ -673,9 +731,9 @@ app.put(
 
           await client.query(
             `
-          INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
-          VALUES ($1, $2, $3)
-          `,
+            INSERT INTO candidate_skill (candidate_id, skill_id, proficiency_level)
+            VALUES ($1, $2, $3)
+            `,
             [candidateId, skillId, s?.proficiency_level ?? null],
           );
         }
@@ -695,6 +753,7 @@ app.put(
     }
   },
 );
+
 
 /* ----------------------------- Applicant Edit (non-internal only) ----------------------------- */
 
@@ -733,15 +792,15 @@ app.put(
 
       await client.query(
         `
-      UPDATE candidate_information
-      SET
-        position = $2,
-        email = $3,
-        phone_number = $4,
-        application_date = $5,
-        pronouns_id = $6
-      WHERE candidate_id = $1
-      `,
+        UPDATE candidate_information
+        SET
+          position = $2,
+          email = $3,
+          phone_number = $4,
+          application_date = $5,
+          pronouns_id = $6
+        WHERE candidate_id = $1
+        `,
         [
           candidateId,
           candidate?.position ?? null,
@@ -749,6 +808,21 @@ app.put(
           candidate?.phone_number ?? null,
           candidate?.application_date ?? null,
           candidate?.pronouns_id ?? null,
+        ],
+      );
+
+      await client.query(
+        `
+        UPDATE candidate
+        SET
+          current_candidate = $2,
+          candidate_status = $3
+        WHERE candidate_id = $1
+        `,
+        [
+          candidateId,
+          candidate?.current_candidate ?? null,
+          candidate?.candidate_status ?? null,
         ],
       );
 
@@ -815,6 +889,7 @@ app.get(
         j.job_id,
         j.job_title,
         j.job_category,
+        j.job_group,
         j.job_description,
         j.work_status,
         d.department_name AS department,
@@ -852,6 +927,7 @@ app.get(
         j.job_id,
         j.job_title,
         j.job_category,
+        j.job_group,
         j.job_description,
         j.work_status,
         d.department_name AS department,
@@ -917,9 +993,9 @@ app.post(
       const candRes = await client.query(
         `
       INSERT INTO candidate
-        (currentrole, years_exp, availability_hours, start_date, department_id, location_id, education_level_id)
+        (currentrole, years_exp, availability_hours, start_date, department_id, location_id, education_level_id, current_candidate, candidate_status)
       VALUES
-        ($1, $2, $3, $4, $5, $6, $7)
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING candidate_id
       `,
         [
@@ -930,6 +1006,8 @@ app.post(
           internal?.department_id ?? null,
           internal?.location_id ?? null,
           internal?.education_level_id ?? null,
+          internal?.current_candidate ?? true,  
+          internal?.candidate_status ?? null,
         ],
       );
 
@@ -951,6 +1029,21 @@ app.post(
           candidate?.phone_number ?? null,
           candidate?.application_date ?? null,
           candidate?.pronouns_id ?? null,
+        ],
+      );
+
+      await client.query(
+        `
+        INSERT INTO internal_candidates
+          (candidate_id, pip, tenure, performance_rating)
+        VALUES
+          ($1, $2, $3, $4)
+        `,
+        [
+          candidateId,
+          internal?.pip ?? null,
+          internal?.tenure ?? null,
+          internal?.performance_rating ?? null,
         ],
       );
 
@@ -1015,30 +1108,35 @@ app.get(
   requireRole("manager"),
   async (_req, res) => {
     try {
-      const [jobStatuses, departments, locations, education, skills] =
-        await Promise.all([
-          pool.query(
-            `SELECT job_status_id AS id, job_status AS name FROM job_status ORDER BY job_status`,
-          ),
-          pool.query(
-            `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
-          ),
-          pool.query(
-            `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
-          ),
-          pool.query(
-            `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
-          ),
-          pool.query(`
-        SELECT
-          s.skill_id AS id,
-          s.skill_name AS name,
-          sc.skill_category AS category
-        FROM skill s
-        LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
-        ORDER BY sc.skill_category NULLS LAST, s.skill_name
-      `),
-        ]);
+      const [jobStatuses, departments, locations, education, skills] = await Promise.all([
+        pool.query(
+          `SELECT job_status_id AS id, job_status AS name FROM job_status ORDER BY job_status`,
+        ),
+        pool.query(
+          `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
+        ),
+        pool.query(
+          `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
+        ),
+        pool.query(
+          `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
+        ),
+        pool.query(`
+          SELECT
+            s.skill_id AS id,
+            s.skill_name AS name,
+            sc.skill_category AS category
+          FROM skill s
+          LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
+          ORDER BY sc.skill_category NULLS LAST, s.skill_name
+        `),
+      ]);
+
+      const jobGroups = [
+        { id: "P", name: "Professional" },
+        { id: "M", name: "Management" },
+        { id: "S", name: "Support" },
+      ];
 
       res.json({
         job_statuses: jobStatuses.rows,
@@ -1046,15 +1144,15 @@ app.get(
         locations: locations.rows,
         education: education.rows,
         skills: skills.rows,
+        job_groups: jobGroups,
       });
-    } catch (err: any) {
-      console.error("GET /api/meta/job-edit failed:", err?.message ?? err);
-      res
-        .status(500)
-        .json({ error: err?.message ?? "Failed to load dropdowns" });
+    } catch (err) {
+      console.error("GET /api/meta/job-edit failed:", err);
+      res.status(500).json({ error: "Failed to load dropdowns" });
     }
   },
 );
+
 
 // JobEdit page data
 app.get(
@@ -1063,60 +1161,65 @@ app.get(
   requireRole("manager"),
   async (req, res) => {
     const jobId = Number(req.params.id);
-    if (Number.isNaN(jobId))
+    if (Number.isNaN(jobId)) {
       return res.status(400).json({ error: "Invalid job id" });
+    }
 
     try {
       const jobRes = await pool.query(
         `
-      SELECT
-        j.job_id,
-        j.job_title,
-        j.job_category,
-        j.job_description,
-        d.department_name AS department,
-        js.job_status_id,
-        j.min_years_experience,
-        j.education_req,
-        j.job_salary,
-        l.location_name AS job_location,
-        j.work_status,
-        j.start_date
-      FROM job j
-      LEFT JOIN department d ON d.department_id = j.department
-      LEFT JOIN location l ON l.location_id = j.job_location
-      LEFT JOIN job_status js ON js.job_status_id = j.job_status_id
-      WHERE j.job_id = $1
-      `,
+        SELECT
+          j.job_id,
+          j.job_title,
+          j.job_category,
+          j.job_group,
+          j.job_description,
+          d.department_name AS department,
+          js.job_status_id,
+          j.min_years_experience,
+          e.education_level AS education_req,   -- ✅ return the NAME for the dropdown
+          j.job_salary,
+          l.location_name AS job_location,
+          j.work_status,
+          j.start_date
+        FROM job j
+        LEFT JOIN department d ON d.department_id = j.department
+        LEFT JOIN location l ON l.location_id = j.job_location
+        LEFT JOIN job_status js ON js.job_status_id = j.job_status_id
+        LEFT JOIN education e ON e.education_id = j.education_req  -- ✅ join by id
+        WHERE j.job_id = $1
+        `,
         [jobId],
       );
 
-      if (jobRes.rowCount === 0)
+      if (jobRes.rowCount === 0) {
         return res.status(404).json({ error: "Job not found" });
+      }
 
       const skillsRes = await pool.query(
         `
-      SELECT
-        jsk.jobskill_id,
-        jsk.skill_id,
-        s.skill_name,
-        jsk.required_level,
-        jsk.importance_weight
-      FROM job_skill jsk
-      JOIN skill s ON s.skill_id = jsk.skill_id
-      WHERE jsk.job_id = $1
-      ORDER BY s.skill_name
-      `,
+        SELECT
+          jsk.jobskill_id,
+          jsk.skill_id,
+          s.skill_name,
+          jsk.required_level,
+          jsk.importance_weight
+        FROM job_skill jsk
+        JOIN skill s ON s.skill_id = jsk.skill_id
+        WHERE jsk.job_id = $1
+        ORDER BY s.skill_name
+        `,
         [jobId],
       );
 
-      res.json({ job: jobRes.rows[0], skills: skillsRes.rows });
+      return res.json({ job: jobRes.rows[0], skills: skillsRes.rows });
     } catch (err: any) {
       console.error("GET /api/jobs/:id/edit failed:", err?.message ?? err);
-      res.status(500).json({ error: err?.message ?? "Failed to load job" });
+      return res.status(500).json({ error: err?.message ?? "Failed to load job" });
     }
   },
 );
+
 
 // CREATE job + required skills
 // CREATE job + required skills
@@ -1169,15 +1272,26 @@ app.post("/api/jobs", requireAuth, requireRole("manager"), async (req, res) => {
     const insertRes = await client.query(
       `
       INSERT INTO job
-        (job_title, job_category, job_description, work_status, department, job_location,
-         job_status_id, min_years_experience, education_req, job_salary, start_date)
+        (job_title, 
+        job_category, 
+        job_group,
+        job_description, 
+        work_status, 
+        department, 
+        job_location,
+        job_status_id, 
+        min_years_experience, 
+        education_req, 
+        job_salary, 
+        start_date)
       VALUES
-        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       RETURNING job_id
       `,
       [
         job?.job_title ?? null,
         job?.job_category ?? null,
+        job?.job_group ?? null,
         job?.job_description ?? null,
         job?.work_status ?? null,
         departmentId,
@@ -1259,8 +1373,9 @@ app.put(
   requireRole("manager"),
   async (req, res) => {
     const jobId = Number(req.params.id);
-    if (Number.isNaN(jobId))
+    if (Number.isNaN(jobId)) {
       return res.status(400).json({ error: "Invalid job id" });
+    }
 
     const { job, skills } = req.body ?? {};
     const client = await pool.connect();
@@ -1268,29 +1383,27 @@ app.put(
     try {
       await client.query("BEGIN");
 
-      const check = await client.query(
-        `SELECT job_id FROM job WHERE job_id = $1`,
-        [jobId],
-      );
+      const check = await client.query(`SELECT job_id FROM job WHERE job_id = $1`, [jobId]);
       if (check.rowCount === 0) {
         await client.query("ROLLBACK");
         return res.status(404).json({ error: "Job not found" });
       }
 
+      // Look up department/location/education IDs from names (same as POST)
       const depName = job?.department ?? null;
       const locName = job?.job_location ?? null;
+      const eduName = job?.education_req ?? null; // frontend sends education NAME
 
       let departmentId: number | null = null;
       let locationId: number | null = null;
+      let educationId: number | null = null;
 
       if (depName) {
         const depRes = await client.query(
           `SELECT department_id FROM department WHERE department_name = $1`,
           [depName],
         );
-        departmentId = depRes.rowCount
-          ? Number(depRes.rows[0].department_id)
-          : null;
+        departmentId = depRes.rowCount ? Number(depRes.rows[0].department_id) : null;
       }
 
       if (locName) {
@@ -1298,44 +1411,55 @@ app.put(
           `SELECT location_id FROM location WHERE location_name = $1`,
           [locName],
         );
-        locationId = locRes.rowCount
-          ? Number(locRes.rows[0].location_id)
-          : null;
+        locationId = locRes.rowCount ? Number(locRes.rows[0].location_id) : null;
       }
 
+      // ✅ education: "Bachelor's Degree" -> education.education_id
+      if (eduName) {
+        const eduRes = await client.query(
+          `SELECT education_id FROM education WHERE education_level = $1`,
+          [eduName],
+        );
+        educationId = eduRes.rowCount ? Number(eduRes.rows[0].education_id) : null;
+      }
+
+      // Update job
       await client.query(
         `
-      UPDATE job
-      SET
-        job_title = $2,
-        job_category = $3,
-        job_description = $4,
-        work_status = $5,
-        department = $6,
-        job_location = $7,
-        job_status_id = $8,
-        min_years_experience = $9,
-        education_req = $10,
-        job_salary = $11,
-        start_date = $12
-      WHERE job_id = $1
-      `,
+        UPDATE job
+        SET
+          job_title = $2,
+          job_category = $3,
+          job_group = $4,
+          job_description = $5,
+          work_status = $6,
+          department = $7,
+          job_location = $8,
+          job_status_id = $9,
+          min_years_experience = $10,
+          education_req = $11,
+          job_salary = $12,
+          start_date = $13
+        WHERE job_id = $1
+        `,
         [
           jobId,
           job?.job_title ?? null,
           job?.job_category ?? null,
+          job?.job_group ?? null,
           job?.job_description ?? null,
           job?.work_status ?? null,
           departmentId,
           locationId,
           job?.job_status_id ?? null,
           job?.min_years_experience ?? null,
-          job?.education_req ?? null,
+          educationId, // ✅ CHANGED (was job?.education_req)
           job?.job_salary ?? null,
           job?.start_date ?? null,
         ],
       );
 
+      // Replace skills
       await client.query(`DELETE FROM job_skill WHERE job_id = $1`, [jobId]);
 
       if (Array.isArray(skills) && skills.length > 0) {
@@ -1353,14 +1477,10 @@ app.put(
               ? null
               : Number(s.required_level);
 
-          if (
-            reqLevel !== null &&
-            (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)
-          ) {
+          if (reqLevel !== null && (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)) {
             await client.query("ROLLBACK");
             return res.status(400).json({
-              error:
-                "required_level must be a number between 0 and 5 (or null).",
+              error: "required_level must be a number between 0 and 5 (or null).",
             });
           }
 
@@ -1378,25 +1498,26 @@ app.put(
 
           await client.query(
             `
-          INSERT INTO job_skill (job_id, skill_id, required_level, importance_weight)
-          VALUES ($1, $2, $3, $4)
-          `,
+            INSERT INTO job_skill (job_id, skill_id, required_level, importance_weight)
+            VALUES ($1, $2, $3, $4)
+            `,
             [jobId, skillId, reqLevel, weight],
           );
         }
       }
 
       await client.query("COMMIT");
-      res.json({ ok: true });
+      return res.json({ ok: true });
     } catch (err: any) {
       await client.query("ROLLBACK");
       console.error("PUT /api/jobs/:id failed:", err?.message ?? err);
-      res.status(500).json({ error: err?.message ?? "Failed to save job" });
+      return res.status(500).json({ error: err?.message ?? "Failed to save job" });
     } finally {
       client.release();
     }
   },
 );
+
 
 // Delete job + required skills
 app.delete(
@@ -1640,8 +1761,13 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
+app.use(
+  "/api/jobs",
+  requireAuth,
+  requireRole("manager", "employee"),
+  jobRoutes,
+);
 
-app.use("/api/jobs", jobRoutes);
 
 /* ----------------------------- Start ----------------------------- */
 
