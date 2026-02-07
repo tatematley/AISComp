@@ -8,6 +8,9 @@ import { isManager } from "../lib/auth";
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
 
+// ✅ job_group is string codes like "P" | "M" | "S"
+type JobGroupOption = { id: string; name: string };
+
 type JobSkillRow = {
   jobskill_id: number;
   skill_id: number;
@@ -21,6 +24,7 @@ type JobData = {
     job_id: number;
     job_title: string;
     job_category: string | null;
+    job_group: string | null; // ✅ ADD
     job_description: string | null;
     department: string | null;
     job_status_id: number | null;
@@ -51,6 +55,10 @@ export default function JobEdit() {
   const [locations, setLocations] = useState<Option[]>([]);
   const [education, setEducation] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
+
+  // ✅ ADD: job groups dropdown
+  const [jobGroups, setJobGroups] = useState<JobGroupOption[]>([]);
+  const [jobGroup, setJobGroup] = useState<string | "">("");
 
   const [jobTitle, setJobTitle] = useState("");
   const [jobCategory, setJobCategory] = useState("");
@@ -109,6 +117,7 @@ export default function JobEdit() {
           locations: Option[];
           education: Option[];
           skills: SkillOption[];
+          job_groups: JobGroupOption[]; // ✅ ADD
         };
 
         setJobData(jobJson);
@@ -118,6 +127,9 @@ export default function JobEdit() {
         setLocations(metaJson.locations);
         setEducation(metaJson.education);
         setSkillsCatalog(metaJson.skills);
+
+        // ✅ ADD
+        setJobGroups(metaJson.job_groups ?? []);
 
         setJobTitle(jobJson.job.job_title ?? "");
         setJobCategory(jobJson.job.job_category ?? "");
@@ -132,6 +144,9 @@ export default function JobEdit() {
         setJobLocation(jobJson.job.job_location ?? "");
         setWorkStatus(jobJson.job.work_status ?? "");
         setStartDate(jobJson.job.start_date ? jobJson.job.start_date.slice(0, 10) : "");
+
+        // ✅ ADD: seed job_group
+        setJobGroup(jobJson.job.job_group ?? "");
 
         setSkillEdits(
           (jobJson.skills ?? []).map((s) => ({
@@ -150,7 +165,7 @@ export default function JobEdit() {
     };
 
     run();
-  }, [jobId]);
+  }, [jobId, navigate]);
 
   const skillOptionsFiltered = useMemo(() => {
     const existing = new Set(skillEdits.map((s) => s.skill_id));
@@ -176,7 +191,6 @@ export default function JobEdit() {
     const picked = skillsCatalog.find((s) => s.id === newSkillId);
     if (!picked) return;
 
-    // required level: 0–5 or null
     const requiredText = newRequiredLevel.trim();
     let lvl: number | null = null;
 
@@ -189,7 +203,6 @@ export default function JobEdit() {
       lvl = n;
     }
 
-    // importance weight: number or null
     const weightText = newImportanceWeight.trim();
     let w: number | null = null;
 
@@ -232,6 +245,7 @@ export default function JobEdit() {
         job: {
           job_title: jobTitle,
           job_category: jobCategory || null,
+          job_group: jobGroup === "" ? null : jobGroup, // ✅ ADD
           job_description: jobDescription || null,
           department: department || null,
           job_status_id: jobStatusId === "" ? null : jobStatusId,
@@ -339,6 +353,23 @@ export default function JobEdit() {
                   {jobStatuses.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* ✅ ADD: Job Group */}
+              <div className="profileEditField">
+                <div className="profileEditLabel">Job Group</div>
+                <select
+                  className="profileEditSelect"
+                  value={jobGroup}
+                  onChange={(e) => setJobGroup(e.target.value === "" ? "" : e.target.value)}
+                >
+                  <option value="">—</option>
+                  {jobGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
                     </option>
                   ))}
                 </select>

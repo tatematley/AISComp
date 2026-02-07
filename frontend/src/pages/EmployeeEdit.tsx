@@ -35,12 +35,17 @@ type ProfileData = {
     department_name: string | null;
     location_name: string | null;
     education_level: string | null;
+
+    // ✅ ADD: status fields (candidate table)
+    candidate_status: number | null;
+    candidate_status_description: string | null;
   } | null;
   skills: SkillRow[];
 };
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
+type StatusOption = { id: number; name: string };
 
 export default function EmployeeEdit() {
   const { id } = useParams();
@@ -58,6 +63,10 @@ export default function EmployeeEdit() {
   const [locations, setLocations] = useState<Option[]>([]);
   const [education, setEducation] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
+
+  // ✅ ADD: statuses dropdown (from /api/meta/profile-edit)
+  const [statuses, setStatuses] = useState<StatusOption[]>([]);
+  const [candidateStatus, setCandidateStatus] = useState<number | "">("");
 
   const [position, setPosition] = useState("");
   const [email, setEmail] = useState("");
@@ -113,12 +122,16 @@ export default function EmployeeEdit() {
         }
 
         const profileJson = (await profileRes.json()) as ProfileData;
+
         const metaJson = (await metaRes.json()) as {
           pronouns: Option[];
           departments: Option[];
           locations: Option[];
           education: Option[];
           skills: SkillOption[];
+
+          // ✅ IMPORTANT: backend returns this key
+          candidate_statuses: StatusOption[];
         };
 
         if (!profileJson.candidate.internal) {
@@ -133,6 +146,9 @@ export default function EmployeeEdit() {
         setEducation(metaJson.education);
         setSkillsCatalog(metaJson.skills);
 
+        // ✅ ADD
+        setStatuses(metaJson.candidate_statuses ?? []);
+
         setPosition(profileJson.candidate.position ?? "");
         setEmail(profileJson.candidate.email ?? "");
         setPhone(profileJson.candidate.phone_number ?? "");
@@ -140,28 +156,37 @@ export default function EmployeeEdit() {
         setApplicationDate(
           profileJson.candidate.application_date
             ? profileJson.candidate.application_date.slice(0, 10)
-            : ""
+            : "",
         );
 
         setPronounsId(profileJson.candidate.pronouns_id ?? "");
 
         setCurrentRole(profileJson.internal?.currentrole ?? "");
-        setYearsExp(profileJson.internal?.years_exp != null ? String(profileJson.internal.years_exp) : "");
-        setAvailabilityHours(
-          profileJson.internal?.availability_hours != null ? String(profileJson.internal.availability_hours) : ""
+        setYearsExp(
+          profileJson.internal?.years_exp != null ? String(profileJson.internal.years_exp) : "",
         );
-        setStartDate(profileJson.internal?.start_date ? profileJson.internal.start_date.slice(0, 10) : "");
+        setAvailabilityHours(
+          profileJson.internal?.availability_hours != null
+            ? String(profileJson.internal.availability_hours)
+            : "",
+        );
+        setStartDate(
+          profileJson.internal?.start_date ? profileJson.internal.start_date.slice(0, 10) : "",
+        );
 
         setDepartmentId(profileJson.internal?.department_id ?? "");
         setLocationId(profileJson.internal?.location_id ?? "");
         setEducationId(profileJson.internal?.education_level_id ?? "");
+
+        // ✅ ADD (seed status from profile)
+        setCandidateStatus(profileJson.internal?.candidate_status ?? "");
 
         setSkillEdits(
           profileJson.skills.map((s) => ({
             candidate_skill_id: s.candidate_skill_id,
             skill_name: s.skill_name,
             proficiency_level: s.proficiency_level,
-          }))
+          })),
         );
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load edit page");
@@ -180,7 +205,9 @@ export default function EmployeeEdit() {
 
   const updateSkillLevel = (candidate_skill_id: number, level: number | null) => {
     setSkillEdits((prev) =>
-      prev.map((s) => (s.candidate_skill_id === candidate_skill_id ? { ...s, proficiency_level: level } : s))
+      prev.map((s) =>
+        s.candidate_skill_id === candidate_skill_id ? { ...s, proficiency_level: level } : s,
+      ),
     );
   };
 
@@ -240,6 +267,9 @@ export default function EmployeeEdit() {
           department_id: departmentId === "" ? null : departmentId,
           location_id: locationId === "" ? null : locationId,
           education_level_id: educationId === "" ? null : educationId,
+
+          // ✅ ADD: status sent to backend (employee profile PUT route should persist it)
+          candidate_status: candidateStatus === "" ? null : candidateStatus,
         },
         skills: skillEdits.map((s) => ({
           candidate_skill_id: s.candidate_skill_id,
@@ -297,7 +327,8 @@ export default function EmployeeEdit() {
 
               <h1 className="profileEditTitle">Edit Employee</h1>
               <p className="profileEditSubtitle">
-                <strong>{profile.candidate.name}</strong> (locked) • ID {profile.candidate.candidate_id}
+                <strong>{profile.candidate.name}</strong> (locked) • ID{" "}
+                {profile.candidate.candidate_id}
               </p>
             </div>
 
@@ -322,7 +353,11 @@ export default function EmployeeEdit() {
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Employee ID (locked)</div>
-                <input className="profileEditInput" value={String(profile.candidate.candidate_id)} disabled />
+                <input
+                  className="profileEditInput"
+                  value={String(profile.candidate.candidate_id)}
+                  disabled
+                />
               </div>
 
               {/* Editable candidate_information */}
@@ -341,7 +376,9 @@ export default function EmployeeEdit() {
                 <select
                   className="profileEditSelect"
                   value={pronounsId}
-                  onChange={(e) => setPronounsId(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setPronounsId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 >
                   <option value="">—</option>
                   {pronouns.map((p) => (
@@ -382,12 +419,8 @@ export default function EmployeeEdit() {
                 />
               </div>
 
-
-
               {/* Internal section */}
-              <div className="profileEditSectionHeader">
-                Internal Details
-              </div>
+              <div className="profileEditSectionHeader">Internal Details</div>
 
               <div className="profileEditField">
                 <div className="profileEditLabel">Current Role</div>
@@ -408,12 +441,33 @@ export default function EmployeeEdit() {
                 />
               </div>
 
+              {/* ✅ ADD: Status dropdown */}
+              <div className="profileEditField">
+                <div className="profileEditLabel">Status</div>
+                <select
+                  className="profileEditSelect"
+                  value={candidateStatus}
+                  onChange={(e) =>
+                    setCandidateStatus(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                >
+                  <option value="">—</option>
+                  {statuses.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="profileEditField">
                 <div className="profileEditLabel">Department</div>
                 <select
                   className="profileEditSelect"
                   value={departmentId}
-                  onChange={(e) => setDepartmentId(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setDepartmentId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 >
                   <option value="">—</option>
                   {departments.map((d) => (
@@ -429,7 +483,9 @@ export default function EmployeeEdit() {
                 <select
                   className="profileEditSelect"
                   value={locationId}
-                  onChange={(e) => setLocationId(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setLocationId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 >
                   <option value="">—</option>
                   {locations.map((l) => (
@@ -445,7 +501,9 @@ export default function EmployeeEdit() {
                 <select
                   className="profileEditSelect"
                   value={educationId}
-                  onChange={(e) => setEducationId(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setEducationId(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                 >
                   <option value="">—</option>
                   {education.map((ed) => (
@@ -477,9 +535,7 @@ export default function EmployeeEdit() {
               </div>
 
               {/* Skills section */}
-              <div className="profileEditSectionHeader">
-                Skills
-              </div>
+              <div className="profileEditSectionHeader">Skills</div>
 
               <div className="profileEditSkillsAddRow">
                 <div className="profileEditField">
@@ -487,12 +543,15 @@ export default function EmployeeEdit() {
                   <select
                     className="profileEditSelect"
                     value={newSkillId}
-                    onChange={(e) => setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))}
+                    onChange={(e) =>
+                      setNewSkillId(e.target.value === "" ? "" : Number(e.target.value))
+                    }
                   >
                     <option value="">Select a skill…</option>
                     {skillOptionsFiltered.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.category ? `${s.category} — ` : ""}{s.name}
+                        {s.category ? `${s.category} — ` : ""}
+                        {s.name}
                       </option>
                     ))}
                   </select>
@@ -532,7 +591,6 @@ export default function EmployeeEdit() {
                         onChange={(e) => {
                           const raw = e.target.value.trim();
 
-                          // empty -> null
                           if (raw === "") {
                             updateSkillLevel(s.candidate_skill_id, null);
                             return;
@@ -545,7 +603,6 @@ export default function EmployeeEdit() {
                         }}
                         placeholder="Lvl"
                       />
-
 
                       <button
                         className="profileEditRemoveBtn"

@@ -8,11 +8,12 @@
 }
 
 .jobShell {
-  max-width: 1600px; /* ← Increased from 1040px to fit 5 cards */
+  max-width: 1040px; /* matches profileShell */
   margin: 0 auto;
   display: grid;
   gap: 16px;
 }
+
 
 /* Header row */
 .jobHeaderRow {
@@ -26,6 +27,10 @@
   box-sizing: border-box;
 
   margin-bottom: 2px;
+}
+
+.jobTopRow {
+  align-items: stretch;
 }
 
 .jobTitleBlock {
@@ -359,6 +364,76 @@
     grid-template-columns: 1fr;
   }
 }
+
+.jobDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 28px;
+  margin-top: 8px;
+}
+
+.jobDetailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jobDetailLabel {
+  font-size: 0.9rem;
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.jobDetailValue {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.jobDescriptionBlock {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jobDescriptionText {
+  margin-top: 8px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.jobTopRow{
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.jobTopRow > *{
+  min-width: 0;   /* ✅ add this */
+}
+
+
+.jobCardHalf{
+  width: 100%;
+  min-width: 0;   /* ✅ add this */
+}
+
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 900px){
+  .jobTopRow{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .jobDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 /* ================= Skeleton Loading ================= */
 
