@@ -171,15 +171,27 @@ export default function Employees() {
                 <div className="employeesCell">{e.position ?? "—"}</div>
 
                 <div className="employeesCell">
-                  {e.email ? (
-                    <a
-                      className="employeesLink"
-                      href={`mailto:${e.email}`}
-                      onClick={(evt) => evt.stopPropagation()}
+                    {e.email ? (
+                    <span
+                        className="employeesLink"
+                        role="link"
+                        tabIndex={0}
+                        onClick={(evt) => {
+                          evt.preventDefault();
+                          evt.stopPropagation();
+                          window.location.href = `mailto:${e.email}`;
+                        }}
+                        onKeyDown={(evt) => {
+                          if (evt.key === "Enter" || evt.key === " ") {
+                            evt.preventDefault();
+                            evt.stopPropagation();
+                            window.location.href = `mailto:${e.email}`;
+                          }
+                        }}
                     >
-                      {e.email}
-                    </a>
-                  ) : (
+                        {e.email}
+                    </span>
+                    ) : (
                     "—"
                   )}
                 </div>
