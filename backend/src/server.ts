@@ -1685,6 +1685,7 @@ app.delete(
   },
 );
 
+app.use("/api/jobs", jobRoutes);
 /* ----------------------------- Register Endpoint ----------------------------- */
 
 app.post("/api/auth/register", async (req, res) => {
