@@ -15,6 +15,7 @@ type Recommendation = {
   skills_required: number;
   breakdown: any[];
   internal?: boolean;
+  name?: string | null;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -52,21 +53,26 @@ router.get("/:jobId/recommendations", async (req, res) => {
         `
         SELECT
           candidate_id,
-          internal
+          internal,
+          name
         FROM candidate_information
         WHERE candidate_id = ANY($1)
         `,
         [candidateIds],
       );
 
-      const internalMap = new Map<number, boolean>();
+      const candidateInfoMap = new Map<number, { internal: boolean; name: string | null }>();
       dbRes.rows.forEach((row) => {
-        internalMap.set(Number(row.candidate_id), row.internal);
+        candidateInfoMap.set(Number(row.candidate_id), {
+          internal: row.internal,
+          name: row.name,
+        });
       });
 
       recommendations = recommendations.map((r) => ({
         ...r,
-        internal: internalMap.get(r.candidate_id) ?? false,
+        internal: candidateInfoMap.get(r.candidate_id)?.internal ?? false,
+        name: candidateInfoMap.get(r.candidate_id)?.name ?? null,
       }));
     }
 

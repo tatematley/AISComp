@@ -12,11 +12,15 @@ import { PDFParse, VerbosityLevel } from "pdf-parse";
 import Anthropic from "@anthropic-ai/sdk";
 import jobRoutes from "./routes/jobs";
 
+const anthropic = new Anthropic();
+
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const port = Number(process.env.PORT) || 5050;
 
@@ -177,7 +181,7 @@ app.get(
   "/api/applicants",
   requireAuth,
   requireRole("manager", "employee"),
-  async (_req, res) => {
+  async (req, res) => {
     try {
 
       const filter = String(req.query.filter ?? "all").toLowerCase();
