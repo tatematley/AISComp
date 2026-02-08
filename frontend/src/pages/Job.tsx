@@ -27,6 +27,7 @@ type SkillBreakdown = {
 type Recommendation = {
   rank: number;
   candidate_id: number;
+  name: string | null;
   current_role: string;
   match_score: number;
   eligible: boolean;

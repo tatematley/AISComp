@@ -12,6 +12,7 @@ type SkillBreakdown = {
 type Recommendation = {
   rank: number;
   candidate_id: number;
+  name: string | null;
   current_role: string;
   match_score: number;
   skills_met: number;
@@ -37,8 +38,8 @@ export default function CandidateCard({
   const [loadingExplanation, setLoadingExplanation] = useState(false);
 
   const {
-    rank,
     candidate_id,
+    name,
     current_role,
     match_score,
     skills_met,
@@ -90,7 +91,7 @@ export default function CandidateCard({
     <div className="candidateCard">
       <div className="candidateHeader">
         <div>
-          <h3 className="candidateName">Candidate #{candidate_id}</h3>
+          <h3 className="candidateName">{name ?? `Candidate #${candidate_id}`}</h3>
           <p className="candidateRole">{current_role}</p>
         </div>
         <div className="matchBadge">{Math.round(match_score * 100)}%</div>
