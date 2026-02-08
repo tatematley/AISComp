@@ -15,6 +15,8 @@ type Recommendation = {
   name: string | null;
   current_role: string;
   match_score: number;
+  skill_match_score?: number;
+  ml_hire_probability?: number;
   skills_met: number;
   skills_required: number;
   breakdown: SkillBreakdown[];
@@ -42,6 +44,8 @@ export default function CandidateCard({
     name,
     current_role,
     match_score,
+    skill_match_score,
+    ml_hire_probability,
     skills_met,
     skills_required,
     breakdown,
@@ -101,6 +105,11 @@ export default function CandidateCard({
         <span>
           Skills: {skills_met}/{skills_required}
         </span>
+        {skill_match_score !== undefined && ml_hire_probability !== undefined && (
+          <span className="mlStats">
+            Skill: {Math.round(skill_match_score * 100)}% | ML: {Math.round(ml_hire_probability * 100)}%
+          </span>
+        )}
       </div>
 
       {topSkills.length > 0 && (
