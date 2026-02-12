@@ -22,7 +22,7 @@
 }
 
 .jobRecTitle {
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.95);
   margin: 0 0 4px 0;
@@ -43,13 +43,13 @@
   padding: 6px 12px;
   border-radius: 999px;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 18px;
   white-space: nowrap;
 }
 
 .jobRecStats {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   margin-bottom: 14px;
   padding: 8px 12px;
@@ -68,7 +68,7 @@
 
 .jobRecAnalysisHeader {
   color: rgba(218, 245, 97, 0.95);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   margin-top: 4px;
 }
@@ -82,7 +82,7 @@
 .jobRecAnalysisNumber {
   color: rgba(218, 245, 97, 0.9);
   font-weight: 800;
-  font-size: 13px;
+  font-size: 15px;
   flex-shrink: 0;
   min-width: 18px;
 }
@@ -95,7 +95,7 @@
 
 .jobRecAnalysisText {
   color: rgba(255, 255, 255, 0.9);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.55;
 }
 
@@ -106,7 +106,7 @@
 
 .jobRecStrengthLabel {
   color: rgba(134, 239, 172, 0.9);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -125,7 +125,7 @@
   color: rgba(134, 239, 172, 1);
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -138,7 +138,7 @@
   padding: 10px 14px;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   transition: all 150ms ease;
   text-align: center;
@@ -190,7 +190,7 @@
 
 .jobRecSectionLabel {
   color: rgba(255, 255, 255, 0.75);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -214,12 +214,12 @@
 
 .jobRecSkillName {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .jobRecSkillLevel {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 6px;
@@ -238,60 +238,11 @@
   color: rgba(251, 191, 36, 1);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .jobRecCard {
-    padding: 16px;
-  }
-
-  .jobRecHeader {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .jobRecBadge {
-    align-self: flex-start;
-  }
-
-  .jobRecSkillRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .jobRecSkillLevel {
-    align-self: flex-start;
-  }
-}
-
-/* AI CSS */
-
 /* Button row - two buttons side by side */
 .jobRecButtonRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-}
-
-/* Make the old single toggle match */
-.jobRecToggle {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.85);
-  padding: 10px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  transition: all 150ms ease;
-  text-align: center;
-}
-
-.jobRecToggle:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
 }
 
 /* AI button - green accent */
@@ -303,7 +254,7 @@
   padding: 10px 14px;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   transition: all 150ms ease;
   text-align: center;
@@ -347,7 +298,7 @@
   }
 }
 
-/* AI Explanation Box */
+/* AI Explanation Box - UPDATED */
 .jobRecExplanationBox {
   background: rgba(218, 245, 97, 0.08);
   border: 1px solid rgba(218, 245, 97, 0.22);
@@ -355,8 +306,7 @@
   padding: 16px;
   margin-top: 14px;
   backdrop-filter: blur(8px);
-  max-height: 200px;
-  overflow-y: auto;
+  max-height: none; /* Removed 200px restriction to allow natural height */
 }
 
 .jobRecExplanationBox::-webkit-scrollbar {
@@ -379,7 +329,7 @@
 
 .jobRecExplanationLabel {
   color: rgba(218, 245, 97, 0.95);
-  font-size: 10.5px;
+  font-size: 14px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -391,7 +341,34 @@
 
 .jobRecExplanationText {
   color: rgba(255, 255, 255, 0.95);
-  font-size: 13.5px;
-  line-height: 1.65;
+  font-size: 15px; /* INCREASED from 13.5px */
+  line-height: 1.7; /* INCREASED from 1.65 */
   margin: 0;
+  font-weight: 500; /* ADDED for better readability */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .jobRecCard {
+    padding: 16px;
+  }
+
+  .jobRecHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .jobRecBadge {
+    align-self: flex-start;
+  }
+
+  .jobRecSkillRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .jobRecSkillLevel {
+    align-self: flex-start;
+  }
 }

@@ -20,6 +20,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// debugging
+app.get("/api/test-anthropic", async (_req, res) => {
+  try {
+    console.log("Testing Anthropic API...");
+    const message = await anthropic.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 100,
+      messages: [{ role: "user", content: "Say hello" }],
+    });
+
+    const textContent = message.content.find((block) => block.type === "text");
+    res.json({
+      success: true,
+      response: textContent?.type === "text" ? textContent.text : "No text",
+      apiKeyExists: !!process.env.ANTHROPIC_API_KEY,
+    });
+  } catch (error) {
+    console.error("Anthropic test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      apiKeyExists: !!process.env.ANTHROPIC_API_KEY,
+    });
+  }
+});
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 const port = Number(process.env.PORT) || 5050;
@@ -183,7 +209,6 @@ app.get(
   requireRole("manager", "employee"),
   async (req, res) => {
     try {
-
       const filter = String(req.query.filter ?? "all").toLowerCase();
 
       let whereClause = "";
@@ -223,7 +248,6 @@ app.get(
     }
   },
 );
-
 
 // CREATE applicant (non-internal candidate_information + optional candidate_skill)
 app.post(
@@ -332,7 +356,6 @@ app.post(
   },
 );
 
-
 // Parse uploaded PDF resume → extract structured applicant info via AI
 app.post(
   "/api/resume/parse",
@@ -425,10 +448,16 @@ Rules:
       const validSkillSet = new Set(availableSkills);
       const seen = new Set<string>();
       const result = {
-        name: typeof parsed.name === "string" ? parsed.name.trim() || null : null,
-        email: typeof parsed.email === "string" ? parsed.email.trim() || null : null,
-        phone: typeof parsed.phone === "string" ? parsed.phone.trim() || null : null,
-        position: typeof parsed.position === "string" ? parsed.position.trim() || null : null,
+        name:
+          typeof parsed.name === "string" ? parsed.name.trim() || null : null,
+        email:
+          typeof parsed.email === "string" ? parsed.email.trim() || null : null,
+        phone:
+          typeof parsed.phone === "string" ? parsed.phone.trim() || null : null,
+        position:
+          typeof parsed.position === "string"
+            ? parsed.position.trim() || null
+            : null,
         skills: Array.isArray(parsed.skills)
           ? parsed.skills
               .filter(
@@ -556,21 +585,27 @@ app.get(
   requireRole("manager"),
   async (_req, res) => {
     try {
-      const [pronouns, departments, locations, education, skills, candidateStatuses] =
-        await Promise.all([
-          pool.query(
-            `SELECT pronoun_id AS id, pronouns AS name FROM pronoun ORDER BY pronoun_id`,
-          ),
-          pool.query(
-            `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
-          ),
-          pool.query(
-            `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
-          ),
-          pool.query(
-            `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
-          ),
-          pool.query(`
+      const [
+        pronouns,
+        departments,
+        locations,
+        education,
+        skills,
+        candidateStatuses,
+      ] = await Promise.all([
+        pool.query(
+          `SELECT pronoun_id AS id, pronouns AS name FROM pronoun ORDER BY pronoun_id`,
+        ),
+        pool.query(
+          `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
+        ),
+        pool.query(
+          `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
+        ),
+        pool.query(
+          `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
+        ),
+        pool.query(`
             SELECT
               s.skill_id AS id,
               s.skill_name AS name,
@@ -579,12 +614,12 @@ app.get(
             LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
             ORDER BY sc.skill_category NULLS LAST, s.skill_name
           `),
-          pool.query(
-            `SELECT candidate_status AS id, candidate_status_description AS name
+        pool.query(
+          `SELECT candidate_status AS id, candidate_status_description AS name
              FROM candidate_status
              ORDER BY candidate_status`,
-          ),
-        ]);
+        ),
+      ]);
 
       res.json({
         pronouns: pronouns.rows,
@@ -600,7 +635,6 @@ app.get(
     }
   },
 );
-
 
 /* ----------------------------- Employee Edit (internal only) ----------------------------- */
 
@@ -707,9 +741,10 @@ app.put(
       );
 
       // ✅ replace skills: delete then re-insert
-      await client.query(`DELETE FROM candidate_skill WHERE candidate_id = $1`, [
-        candidateId,
-      ]);
+      await client.query(
+        `DELETE FROM candidate_skill WHERE candidate_id = $1`,
+        [candidateId],
+      );
 
       if (Array.isArray(skills) && skills.length > 0) {
         const insertedSkillIds = new Set<number>();
@@ -752,7 +787,6 @@ app.put(
     }
   },
 );
-
 
 /* ----------------------------- Applicant Edit (non-internal only) ----------------------------- */
 
@@ -1005,7 +1039,7 @@ app.post(
           internal?.department_id ?? null,
           internal?.location_id ?? null,
           internal?.education_level_id ?? null,
-          internal?.current_candidate ?? true,  
+          internal?.current_candidate ?? true,
           internal?.candidate_status ?? null,
         ],
       );
@@ -1107,20 +1141,21 @@ app.get(
   requireRole("manager"),
   async (_req, res) => {
     try {
-      const [jobStatuses, departments, locations, education, skills] = await Promise.all([
-        pool.query(
-          `SELECT job_status_id AS id, job_status AS name FROM job_status ORDER BY job_status`,
-        ),
-        pool.query(
-          `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
-        ),
-        pool.query(
-          `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
-        ),
-        pool.query(
-          `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
-        ),
-        pool.query(`
+      const [jobStatuses, departments, locations, education, skills] =
+        await Promise.all([
+          pool.query(
+            `SELECT job_status_id AS id, job_status AS name FROM job_status ORDER BY job_status`,
+          ),
+          pool.query(
+            `SELECT department_id AS id, department_name AS name FROM department ORDER BY department_name`,
+          ),
+          pool.query(
+            `SELECT location_id AS id, location_name AS name FROM location ORDER BY location_name`,
+          ),
+          pool.query(
+            `SELECT education_id AS id, education_level AS name FROM education ORDER BY education_id`,
+          ),
+          pool.query(`
           SELECT
             s.skill_id AS id,
             s.skill_name AS name,
@@ -1129,7 +1164,7 @@ app.get(
           LEFT JOIN skill_category sc ON sc.skill_category_id = s.skill_category_id
           ORDER BY sc.skill_category NULLS LAST, s.skill_name
         `),
-      ]);
+        ]);
 
       const jobGroups = [
         { id: "P", name: "Professional" },
@@ -1151,7 +1186,6 @@ app.get(
     }
   },
 );
-
 
 // JobEdit page data
 app.get(
@@ -1214,11 +1248,12 @@ app.get(
       return res.json({ job: jobRes.rows[0], skills: skillsRes.rows });
     } catch (err: any) {
       console.error("GET /api/jobs/:id/edit failed:", err?.message ?? err);
-      return res.status(500).json({ error: err?.message ?? "Failed to load job" });
+      return res
+        .status(500)
+        .json({ error: err?.message ?? "Failed to load job" });
     }
   },
 );
-
 
 // CREATE job + required skills
 // CREATE job + required skills
@@ -1382,7 +1417,10 @@ app.put(
     try {
       await client.query("BEGIN");
 
-      const check = await client.query(`SELECT job_id FROM job WHERE job_id = $1`, [jobId]);
+      const check = await client.query(
+        `SELECT job_id FROM job WHERE job_id = $1`,
+        [jobId],
+      );
       if (check.rowCount === 0) {
         await client.query("ROLLBACK");
         return res.status(404).json({ error: "Job not found" });
@@ -1402,7 +1440,9 @@ app.put(
           `SELECT department_id FROM department WHERE department_name = $1`,
           [depName],
         );
-        departmentId = depRes.rowCount ? Number(depRes.rows[0].department_id) : null;
+        departmentId = depRes.rowCount
+          ? Number(depRes.rows[0].department_id)
+          : null;
       }
 
       if (locName) {
@@ -1410,7 +1450,9 @@ app.put(
           `SELECT location_id FROM location WHERE location_name = $1`,
           [locName],
         );
-        locationId = locRes.rowCount ? Number(locRes.rows[0].location_id) : null;
+        locationId = locRes.rowCount
+          ? Number(locRes.rows[0].location_id)
+          : null;
       }
 
       // ✅ education: "Bachelor's Degree" -> education.education_id
@@ -1419,7 +1461,9 @@ app.put(
           `SELECT education_id FROM education WHERE education_level = $1`,
           [eduName],
         );
-        educationId = eduRes.rowCount ? Number(eduRes.rows[0].education_id) : null;
+        educationId = eduRes.rowCount
+          ? Number(eduRes.rows[0].education_id)
+          : null;
       }
 
       // Update job
@@ -1476,10 +1520,14 @@ app.put(
               ? null
               : Number(s.required_level);
 
-          if (reqLevel !== null && (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)) {
+          if (
+            reqLevel !== null &&
+            (Number.isNaN(reqLevel) || reqLevel < 0 || reqLevel > 5)
+          ) {
             await client.query("ROLLBACK");
             return res.status(400).json({
-              error: "required_level must be a number between 0 and 5 (or null).",
+              error:
+                "required_level must be a number between 0 and 5 (or null).",
             });
           }
 
@@ -1510,13 +1558,14 @@ app.put(
     } catch (err: any) {
       await client.query("ROLLBACK");
       console.error("PUT /api/jobs/:id failed:", err?.message ?? err);
-      return res.status(500).json({ error: err?.message ?? "Failed to save job" });
+      return res
+        .status(500)
+        .json({ error: err?.message ?? "Failed to save job" });
     } finally {
       client.release();
     }
   },
 );
-
 
 // Delete job + required skills
 app.delete(
@@ -1693,20 +1742,28 @@ app.use("/api/jobs", jobRoutes);
 /* ----------------------------- Register Endpoint ----------------------------- */
 
 app.post("/api/auth/register", async (req, res) => {
-  const username = String(req.body?.username ?? "").trim().toLowerCase();
+  const username = String(req.body?.username ?? "")
+    .trim()
+    .toLowerCase();
   const password = String(req.body?.password ?? "");
   const acceptedPolicy = Boolean(req.body?.acceptedPolicy);
 
   if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required." });
+    return res
+      .status(400)
+      .json({ error: "Username and password are required." });
   }
 
   if (password.length < 8) {
-    return res.status(400).json({ error: "Password must be at least 8 characters." });
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 8 characters." });
   }
 
   if (!acceptedPolicy) {
-    return res.status(400).json({ error: "You must accept the Privacy Policy." });
+    return res
+      .status(400)
+      .json({ error: "You must accept the Privacy Policy." });
   }
 
   try {
@@ -1729,7 +1786,9 @@ app.post("/api/auth/register", async (req, res) => {
     );
 
     if (roleRes.rowCount === 0) {
-      return res.status(500).json({ error: "Default role not configured in DB." });
+      return res
+        .status(500)
+        .json({ error: "Default role not configured in DB." });
     }
 
     const user_role_id = Number(roleRes.rows[0].user_role_id);
@@ -1767,7 +1826,6 @@ app.use(
   requireRole("manager", "employee"),
   jobRoutes,
 );
-
 
 /* ----------------------------- Start ----------------------------- */
 
