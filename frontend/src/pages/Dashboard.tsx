@@ -20,7 +20,7 @@ export default function Dashboard() {
         <div className="dashboardCard">
           <iframe
             className="dashboardIframe"
-            src="https://public.tableau.com/views/AISDashboard/Dashboard?:embed=yes&:showVizHome=no&:toolbar=no"
+            src="https://public.tableau.com/views/AIS_comp_Sarah/Dashboard2?:embed=y&:display_count=yes&:showVizHome=no&:toolbar=yes"
             allowFullScreen
           />
         </div>
