@@ -2,6 +2,10 @@ import express from "express";
 import { pool } from "../db";
 import { runMLPipeline } from "../services/mlService";
 import { generateExplanation } from "../services/explanationService";
+import {
+  generateSkillGapSummary,
+  generateFullUpskillPlan,
+} from "../services/skillGapService";
 
 const router = express.Router();
 
@@ -61,7 +65,10 @@ router.get("/:jobId/recommendations", async (req, res) => {
         [candidateIds],
       );
 
-      const candidateInfoMap = new Map<number, { internal: boolean; name: string | null }>();
+      const candidateInfoMap = new Map<
+        number,
+        { internal: boolean; name: string | null }
+      >();
       dbRes.rows.forEach((row) => {
         candidateInfoMap.set(Number(row.candidate_id), {
           internal: row.internal,
@@ -102,7 +109,7 @@ router.get("/:jobId/recommendations", async (req, res) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*              On-demand explanation (UNCHANGED)                              */
+/*              On-demand explanation                                          */
 /* -------------------------------------------------------------------------- */
 
 router.get(
@@ -149,5 +156,91 @@ router.get(
     }
   },
 );
+
+/* -------------------------------------------------------------------------- */
+/*                    Skill Gap Analysis                                       */
+/* -------------------------------------------------------------------------- */
+
+router.get("/:jobId/candidates/:candidateId/skill-gap", async (req, res) => {
+  try {
+    const jobId = Number(req.params.jobId);
+    const candidateId = Number(req.params.candidateId);
+    const detailed = req.query.detailed === "true";
+
+    if (Number.isNaN(jobId) || Number.isNaN(candidateId)) {
+      return res.status(400).json({ error: "Invalid job ID or candidate ID" });
+    }
+
+    console.log(
+      `🎯 Analyzing skill gaps for candidate ${candidateId} on job ${jobId}...`,
+    );
+
+    // Fetch job info
+    const jobRes = await pool.query(
+      `SELECT job_title, d.department_name
+       FROM job j
+       LEFT JOIN department d ON d.department_id = j.department
+       WHERE j.job_id = $1`,
+      [jobId],
+    );
+
+    if (jobRes.rowCount === 0) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const { job_title, department_name } = jobRes.rows[0];
+
+    // Fetch skill gaps
+    const gapsRes = await pool.query(
+      `SELECT 
+         s.skill_name,
+         js.required_level,
+         COALESCE(cs.proficiency_level, 0) as proficiency_level,
+         (js.required_level - COALESCE(cs.proficiency_level, 0)) as gap,
+         COALESCE(js.importance_weight, 1.0) as importance_weight
+       FROM job_skill js
+       JOIN skill s ON s.skill_id = js.skill_id
+       LEFT JOIN candidate_skill cs ON cs.skill_id = js.skill_id AND cs.candidate_id = $1
+       WHERE js.job_id = $2
+         AND js.required_level > COALESCE(cs.proficiency_level, 0)
+       ORDER BY (js.required_level - COALESCE(cs.proficiency_level, 0)) DESC,
+                js.importance_weight DESC`,
+      [candidateId, jobId],
+    );
+
+    const gapSkills = gapsRes.rows;
+
+    // Generate analysis
+    let analysis: string;
+
+    if (detailed) {
+      console.log("📚 Generating detailed upskilling plan...");
+      analysis = await generateFullUpskillPlan(
+        job_title,
+        department_name,
+        gapSkills,
+      );
+    } else {
+      console.log("📝 Generating quick summary...");
+      analysis = await generateSkillGapSummary(
+        job_title,
+        department_name,
+        gapSkills,
+      );
+    }
+
+    res.json({
+      analysis,
+      gap_count: gapSkills.length,
+      gaps: gapSkills,
+    });
+  } catch (error) {
+    console.error("❌ Error in skill gap analysis:", error);
+    res.status(500).json({
+      error: "Unable to generate analysis at this time.",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
 
 export default router;

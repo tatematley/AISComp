@@ -1,0 +1,312 @@
+.fullPlanOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+  overflow-y: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fullPlanModal {
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(218, 245, 97, 0.3);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+  margin: auto;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fullPlanModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 28px 32px;
+  border-bottom: 2px solid rgba(218, 245, 97, 0.2);
+  gap: 24px;
+  flex-shrink: 0;
+  background: rgba(15, 23, 42, 1);
+}
+
+.fullPlanHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fullPlanTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.98);
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.fullPlanSubtitle {
+  font-size: 14px;
+  color: rgba(218, 245, 97, 0.9);
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.fullPlanHeaderActions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.fullPlanDownloadBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(134, 239, 172, 0.15);
+  border: 1.5px solid rgba(134, 239, 172, 0.4);
+  color: rgba(134, 239, 172, 1);
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.fullPlanDownloadBtn:hover:not(:disabled) {
+  background: rgba(134, 239, 172, 0.25);
+  border-color: rgba(134, 239, 172, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(134, 239, 172, 0.2);
+}
+
+.fullPlanDownloadBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fullPlanCloseBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fullPlanCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.fullPlanContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  min-height: 0;
+}
+
+.fullPlanContent::-webkit-scrollbar {
+  width: 10px;
+}
+
+.fullPlanContent::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  margin: 8px 0;
+}
+
+.fullPlanContent::-webkit-scrollbar-thumb {
+  background: rgba(218, 245, 97, 0.35);
+  border-radius: 5px;
+  border: 2px solid rgba(15, 23, 42, 0.98);
+}
+
+.fullPlanContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(218, 245, 97, 0.55);
+}
+
+.fullPlanLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 20px;
+  color: rgba(218, 245, 97, 0.9);
+}
+
+.fullPlanLoading p {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fullPlanBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fullPlanSectionHeader {
+  color: rgba(218, 245, 97, 0.98);
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(218, 245, 97, 0.2);
+}
+
+.fullPlanNumbered {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  line-height: 1.75;
+  padding-left: 8px;
+  font-weight: 600;
+}
+
+.fullPlanBullet {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  line-height: 1.75;
+  padding-left: 24px;
+}
+
+.fullPlanText {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.jobRecFullPlanButton {
+  margin-top: 12px;
+  width: 100%;
+  background: rgba(218, 245, 97, 0.12);
+  border: 1px solid rgba(218, 245, 97, 0.3);
+  color: rgba(218, 245, 97, 0.95);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 150ms ease;
+  text-align: center;
+}
+
+.jobRecFullPlanButton:hover {
+  background: rgba(218, 245, 97, 0.2);
+  border-color: rgba(218, 245, 97, 0.5);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .fullPlanModal {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .fullPlanOverlay {
+    padding: 0;
+  }
+
+  .fullPlanModalHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 24px;
+    gap: 16px;
+  }
+
+  .fullPlanHeaderActions {
+    width: 100%;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .fullPlanDownloadBtn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .fullPlanContent {
+    padding: 24px;
+  }
+
+  .fullPlanTitle {
+    font-size: 20px;
+  }
+
+  .fullPlanSectionHeader {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fullPlanHeaderActions {
+    flex-direction: column;
+  }
+
+  .fullPlanDownloadBtn {
+    width: 100%;
+  }
+
+  .fullPlanCloseBtn {
+    width: 100%;
+  }
+}

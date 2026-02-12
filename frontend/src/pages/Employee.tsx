@@ -170,7 +170,9 @@ export default function Employee() {
         This record is an applicant. Go to{" "}
         <button
           className="profileBackLink"
-          onClick={() => navigate(`/applicants/${candidateId}`, { state: location.state })}
+          onClick={() =>
+            navigate(`/applicants/${candidateId}`, { state: location.state })
+          }
         >
           Applicant page
         </button>
@@ -268,7 +270,9 @@ export default function Employee() {
 
                   <div className="profileInfoItem">
                     <div className="profileLabel">Status</div>
-                    <div className="profileValue">{internal?.candidate_status_description || "—"}</div>
+                    <div className="profileValue">
+                      {internal?.candidate_status_description || "—"}
+                    </div>
                   </div>
 
                   <div className="profileInfoItem">

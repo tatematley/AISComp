@@ -8,12 +8,11 @@
 }
 
 .jobShell {
-  max-width: 1040px; /* matches profileShell */
+  max-width: 1400px; /* ← Change from 1600px to 1400px */
   margin: 0 auto;
   display: grid;
   gap: 16px;
 }
-
 
 /* Header row */
 .jobHeaderRow {
@@ -21,11 +20,7 @@
   gap: 18px;
   align-items: flex-end;
   justify-content: space-between;
-
-  /* align header with card content */
-
   box-sizing: border-box;
-
   margin-bottom: 2px;
 }
 
@@ -45,11 +40,9 @@
   border: none;
   padding: 0;
   margin-bottom: 4px;
-
   color: rgba(255, 255, 255, 0.72);
   font-size: 14.5px;
   font-weight: 700;
-
   cursor: pointer;
   transition:
     color 120ms ease,
@@ -202,7 +195,7 @@
 
 .jobSectionTitle {
   margin: 0;
-  font-size: 15px;
+  font-size: 25px; /* ← INCREASED from 20px */
   font-weight: 900;
   color: rgba(255, 255, 255, 0.88);
   letter-spacing: -0.01em;
@@ -210,13 +203,13 @@
 
 .jobSectionMeta {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 15px;
+  font-size: 17px; /* ← INCREASED from 15px */
   font-weight: 800;
 }
 
 .jobMuted {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 14.5px;
+  font-size: 15px; /* ← INCREASED from 14.5px */
   margin: 0;
 }
 
@@ -237,7 +230,7 @@
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(15, 23, 42, 0.4);
   color: rgba(255, 255, 255, 0.92);
-  font-size: 14.5px;
+  font-size: 15px; /* ← INCREASED from 14.5px */
   font-weight: 800;
   transition:
     transform 120ms ease,
@@ -269,11 +262,11 @@
 .jobPlaceholderRow {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(5, 1fr); /* ← stays 5 columns */
+  gap: 18px; /* ← INCREASED from 14px */
 }
 
-/* Old placeholder cards - can remove these if not needed */
+/* Old placeholder cards */
 .jobPlaceholderCard {
   height: 92px;
   border-radius: 14px;
@@ -285,14 +278,14 @@
 .jobState {
   padding: 18px 16px;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 14.5px;
+  font-size: 15px; /* ← INCREASED from 14.5px */
 }
 
 .jobState.error {
   color: rgba(255, 170, 170, 0.9);
 }
 
-/* AI stuff*/
+/* AI stuff */
 .aiToggle {
   background: rgba(218, 245, 97, 0.08);
   border-color: rgba(218, 245, 97, 0.22);
@@ -322,7 +315,7 @@
     transparent 70%
   );
   animation: shimmer 1.5s ease-out forwards;
-  animation-delay: 0.3s; /* Small delay after cards appear */
+  animation-delay: 0.3s;
   opacity: 0;
 }
 
@@ -340,13 +333,13 @@
 /* Responsive */
 @media (max-width: 1600px) {
   .jobPlaceholderRow {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr); /* ← Keep 5 columns until smaller */
   }
 }
 
 @media (max-width: 1200px) {
   .jobPlaceholderRow {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -360,6 +353,12 @@
     grid-template-columns: 1fr;
   }
 
+  .jobPlaceholderRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
   .jobPlaceholderRow {
     grid-template-columns: 1fr;
   }
@@ -379,13 +378,13 @@
 }
 
 .jobDetailLabel {
-  font-size: 0.9rem;
+  font-size: 0.95rem; /* ← INCREASED from 0.9rem */
   opacity: 0.75;
   font-weight: 600;
 }
 
 .jobDetailValue {
-  font-size: 1.05rem;
+  font-size: 1.1rem; /* ← INCREASED from 1.05rem */
   font-weight: 700;
 }
 
@@ -401,39 +400,33 @@
   opacity: 0.95;
 }
 
-.jobTopRow{
+.jobTopRow {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 18px;
   align-items: start;
 }
 
-.jobTopRow > *{
-  min-width: 0;   /* ✅ add this */
+.jobTopRow > * {
+  min-width: 0;
 }
 
-
-.jobCardHalf{
+.jobCardHalf {
   width: 100%;
-  min-width: 0;   /* ✅ add this */
+  min-width: 0;
 }
 
-
-/* Responsive: stack on smaller screens */
-@media (max-width: 900px){
-  .jobTopRow{
+@media (max-width: 900px) {
+  .jobTopRow {
     grid-template-columns: 1fr;
   }
 }
 
-/* Mobile */
 @media (max-width: 900px) {
   .jobDetailsGrid {
     grid-template-columns: 1fr;
   }
 }
-
-
 
 /* ================= Skeleton Loading ================= */
 
@@ -447,10 +440,10 @@
     rgba(255, 255, 255, 0.05) 50%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
+  animation: skeletonShimmer 1.2s ease-in-out infinite;
 }
 
-@keyframes shimmer {
+@keyframes skeletonShimmer {
   from {
     background-position: 200% 0;
   }

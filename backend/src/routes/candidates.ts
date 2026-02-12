@@ -1,5 +1,6 @@
 import express from "express";
 import { Router } from "express";
+import { pool } from "../db";
 import { runCandidateMLPipeline } from "../services/candidateMLService";
 import {
   generateSkillGapSummary,
@@ -17,6 +18,27 @@ type SkillBreakdown = {
   meets_required: boolean;
   gap: number;
 };
+
+// INTERNAL employees list (Employees.tsx)
+router.get("/", async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        candidate_id,
+        name,
+        position,
+        email,
+        phone_number
+      FROM candidate_information
+      WHERE internal = true
+      ORDER BY candidate_id
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("GET /api/candidates failed:", err);
+    res.status(500).json({ error: "Failed to load candidates" });
+  }
+});
 
 router.get("/:candidateId/job-recommendations", async (req, res) => {
   try {

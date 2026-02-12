@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "../styles/JobRecommendationCard.css";
 import { apiFetch } from "../lib/api";
+import { FullPlanModal } from "./FullPlanModal";
 
 type SkillBreakdown = {
   skill_id: number;
@@ -30,67 +31,19 @@ type JobRecommendation = {
 type Props = {
   recommendation: JobRecommendation;
   candidateId: number;
-};
-
-// Parses Claude's raw text into styled elements
-const formatAnalysis = (text: string) => {
-  return text.split("\n").reduce<React.ReactElement[]>((acc, line, i) => {
-    const trimmed = line.trim();
-    if (!trimmed) return acc;
-
-    // Bold headers like **Skill Name** or ### Skill Name
-    if (/^(\*\*|#{1,3}\s)/.test(trimmed)) {
-      acc.push(
-        <div key={i} className="jobRecAnalysisHeader">
-          {trimmed.replace(/^\*\*|\*\*$|^#{1,3}\s*/g, "")}
-        </div>,
-      );
-    }
-    // Numbered items like "1." or "1)"
-    else if (/^\d+[.)]/.test(trimmed)) {
-      acc.push(
-        <div key={i} className="jobRecAnalysisItem">
-          <span className="jobRecAnalysisNumber">
-            {trimmed.match(/^\d+/)?.[0]}.
-          </span>
-          <span className="jobRecAnalysisText">
-            {trimmed.replace(/^\d+[.)]\s*\*?\*?/, "").replace(/\*\*$/, "")}
-          </span>
-        </div>,
-      );
-    }
-    // Bullet points like "- " or "• " or "* "
-    else if (/^[-•*]\s/.test(trimmed)) {
-      acc.push(
-        <div key={i} className="jobRecAnalysisBullet">
-          <span className="jobRecAnalysisText">
-            {trimmed.replace(/^[-•*]\s*\*?\*?/, "").replace(/\*\*$/, "")}
-          </span>
-        </div>,
-      );
-    }
-    // Regular text
-    else {
-      acc.push(
-        <div key={i} className="jobRecAnalysisItem">
-          <span className="jobRecAnalysisText">
-            {trimmed.replace(/\*\*/g, "")}
-          </span>
-        </div>,
-      );
-    }
-    return acc;
-  }, []);
+  employeeName?: string;
 };
 
 export default function JobRecommendationCard({
   recommendation,
   candidateId,
+  employeeName = "Employee",
 }: Props) {
   const [showSkills, setShowSkills] = useState(false);
   const [showAI, setShowAI] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [showFullPlanModal, setShowFullPlanModal] = useState(false);
 
   const {
     job_id,
@@ -117,124 +70,149 @@ export default function JobRecommendationCard({
     }
 
     setShowAI(true);
-    if (aiAnalysis) return;
+    if (aiSummary) return; // Already loaded
 
     setLoadingAI(true);
     try {
       const res = await apiFetch(
-        `/api/candidates/${candidateId}/job-recommendations/${job_id}/ai-analysis`,
+        `/api/candidates/${candidateId}/job-recommendations/${job_id}/ai-summary`,
       );
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to generate analysis");
+        throw new Error(body.error || "Failed to generate summary");
       }
 
       const data = await res.json();
-      setAiAnalysis(data.analysis);
+      setAiSummary(data.summary);
     } catch (e) {
-      setAiAnalysis("Unable to generate analysis at this time.");
+      console.error("AI Summary error:", e);
+      setAiSummary("Unable to generate summary at this time.");
     } finally {
       setLoadingAI(false);
     }
   };
 
   return (
-    <div className="jobRecCard">
-      <div className="jobRecHeader">
-        <div>
-          <h3 className="jobRecTitle">{job_title}</h3>
-          <p className="jobRecDept">{department}</p>
-        </div>
-        <div className="jobRecBadge">{Math.round(match_score * 100)}%</div>
-      </div>
-
-      <div className="jobRecStats">
-        <span>
-          Skills Ready: {skills_met}/{skills_required}
-        </span>
-      </div>
-
-      {strengthSkills.length > 0 && (
-        <div className="jobRecStrengths">
-          <div className="jobRecStrengthLabel">Your Strengths:</div>
-          <div className="jobRecSkillTags">
-            {strengthSkills.slice(0, 3).map((skill) => (
-              <span key={skill.skill_id} className="jobRecSkillTag strength">
-                ✓ {skill.skill_name}
-              </span>
-            ))}
+    <>
+      <div className="jobRecCard">
+        <div className="jobRecHeader">
+          <div>
+            <h3 className="jobRecTitle">{job_title}</h3>
+            <p className="jobRecDept">{department}</p>
           </div>
+          <div className="jobRecBadge">{Math.round(match_score * 100)}%</div>
         </div>
-      )}
 
-      {/* Button row */}
-      <div className="jobRecButtonRow">
-        <button
-          className="jobRecToggle"
-          onClick={() => setShowSkills(!showSkills)}
-        >
-          {showSkills ? "Hide Skills" : "Show Needed Skills"}
-        </button>
+        <div className="jobRecStats">
+          <span>
+            Skills Ready: {skills_met}/{skills_required}
+          </span>
+        </div>
 
-        <button className="jobRecAiToggle" onClick={handleAI}>
-          {showAI ? "Hide AI" : "AI Analysis"}
-        </button>
+        {strengthSkills.length > 0 && (
+          <div className="jobRecStrengths">
+            <div className="jobRecStrengthLabel">Your Strengths:</div>
+            <div className="jobRecSkillTags">
+              {strengthSkills.slice(0, 3).map((skill) => (
+                <span key={skill.skill_id} className="jobRecSkillTag strength">
+                  ✓ {skill.skill_name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Button row */}
+        <div className="jobRecButtonRow">
+          <button
+            className="jobRecToggle"
+            onClick={() => setShowSkills(!showSkills)}
+          >
+            {showSkills ? "Hide Skills" : "Show Needed Skills"}
+          </button>
+
+          <button className="jobRecAiToggle" onClick={handleAI}>
+            {showAI ? "Hide AI" : "AI Analysis"}
+          </button>
+        </div>
+
+        {/* Skills breakdown */}
+        {showSkills && (
+          <div className="jobRecSkillsBox">
+            {strengthSkills.length > 0 && (
+              <div className="jobRecSection">
+                <div className="jobRecSectionLabel">
+                  Skills You Have ({strengthSkills.length})
+                </div>
+                {strengthSkills.map((skill) => (
+                  <div key={skill.skill_id} className="jobRecSkillRow">
+                    <span className="jobRecSkillName">{skill.skill_name}</span>
+                    <span className="jobRecSkillLevel met">
+                      Your Level: {skill.proficiency_level} / Required:{" "}
+                      {skill.required_level}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {gapSkills.length > 0 && (
+              <div className="jobRecSection">
+                <div className="jobRecSectionLabel">
+                  Skills to Develop ({gapSkills.length})
+                </div>
+                {gapSkills.map((skill) => (
+                  <div key={skill.skill_id} className="jobRecSkillRow">
+                    <span className="jobRecSkillName">{skill.skill_name}</span>
+                    <span className="jobRecSkillLevel gap">
+                      {skill.proficiency_level > 0
+                        ? `Level ${skill.proficiency_level} → ${skill.required_level} needed`
+                        : `Level ${skill.required_level} needed`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI Summary */}
+        {showAI && (
+          <div className="jobRecExplanationBox">
+            <div className="jobRecExplanationLabel">AI GROWTH PLAN</div>
+            {loadingAI ? (
+              <p className="jobRecExplanationText">Generating analysis...</p>
+            ) : aiSummary ? (
+              <>
+                <p className="jobRecExplanationText">{aiSummary}</p>
+                <button
+                  className="jobRecFullPlanButton"
+                  onClick={() => setShowFullPlanModal(true)}
+                >
+                  See Full Plan →
+                </button>
+              </>
+            ) : (
+              <p className="jobRecExplanationText">
+                Click AI Analysis to generate plan
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Skills breakdown */}
-      {showSkills && (
-        <div className="jobRecSkillsBox">
-          {strengthSkills.length > 0 && (
-            <div className="jobRecSection">
-              <div className="jobRecSectionLabel">
-                Skills You Have ({strengthSkills.length})
-              </div>
-              {strengthSkills.map((skill) => (
-                <div key={skill.skill_id} className="jobRecSkillRow">
-                  <span className="jobRecSkillName">{skill.skill_name}</span>
-                  <span className="jobRecSkillLevel met">
-                    Your Level: {skill.proficiency_level} / Required:{" "}
-                    {skill.required_level}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {gapSkills.length > 0 && (
-            <div className="jobRecSection">
-              <div className="jobRecSectionLabel">
-                Skills to Develop ({gapSkills.length})
-              </div>
-              {gapSkills.map((skill) => (
-                <div key={skill.skill_id} className="jobRecSkillRow">
-                  <span className="jobRecSkillName">{skill.skill_name}</span>
-                  <span className="jobRecSkillLevel gap">
-                    {skill.proficiency_level > 0
-                      ? `Level ${skill.proficiency_level} → ${skill.required_level} needed`
-                      : `Level ${skill.required_level} needed`}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Full Plan Modal */}
+      {showFullPlanModal && (
+        <FullPlanModal
+          candidateId={candidateId}
+          jobId={job_id}
+          jobTitle={job_title}
+          department={department}
+          employeeName={employeeName}
+          onClose={() => setShowFullPlanModal(false)}
+        />
       )}
-
-      {/* AI Analysis - now uses formatAnalysis */}
-      {showAI && (
-        <div className="jobRecExplanationBox">
-          <div className="jobRecExplanationLabel">AI Growth Plan</div>
-          {loadingAI ? (
-            <p className="jobRecExplanationText">Generating analysis...</p>
-          ) : aiAnalysis ? (
-            <div className="jobRecAnalysis">{formatAnalysis(aiAnalysis)}</div>
-          ) : (
-            <p className="jobRecExplanationText">Click to generate analysis</p>
-          )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

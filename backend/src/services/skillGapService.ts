@@ -33,11 +33,11 @@ export async function generateSkillGapSummary(
 
 Write a brief, encouraging 2-3 sentence summary of their upskilling journey. Focus on estimated timeline and keep it motivating.`;
 
-    console.log("🤖 Calling Claude 3 Haiku for summary...");
+    console.log("🤖 Calling Claude 3.5 Haiku for summary...");
     const startTime = Date.now();
 
     const message = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307", // ← Original Haiku - should work
+      model: "claude-3-haiku-20240307", // ← UPDATED
       max_tokens: 150,
       messages: [{ role: "user", content: prompt }],
     });
@@ -98,11 +98,11 @@ Timeline: [Realistic estimate like "4-6 weeks with 5 hours/week"]
 
 Continue this format for all ${gapSkills.length} skills. Make it encouraging, specific, and actionable.`;
 
-    console.log("🤖 Calling Claude 3 Haiku for full plan...");
+    console.log("🤖 Calling Claude 3.5 Haiku for full plan...");
     const startTime = Date.now();
 
     const message = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307", // ← Original Haiku - should work
+      model: "claude-3-haiku-20240307", // ← UPDATED
       max_tokens: 2500,
       messages: [{ role: "user", content: prompt }],
     });
