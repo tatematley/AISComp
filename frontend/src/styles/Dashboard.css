@@ -1,11 +1,20 @@
+/* ===== Make body dark blue ===== */
+body {
+  background: var(--midnight) !important;
+  margin: 0;
+  padding: 0;
+}
+
 /* ===== Page wrapper (accounts for AdminNavbar) ===== */
 .dashboardPage {
   min-height: 100vh;
   width: 100%;
-  padding: 60px;
+  padding: 60px 20px; /* Some padding so content doesn't touch edges on small screens */
   box-sizing: border-box;
-  background: var(--midnight);
+  background: var(--midnight); /* ← CHANGED back from transparent */
   color: rgba(255, 255, 255, 0.92);
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 /* ===== Page header under navbar ===== */
@@ -22,7 +31,7 @@
   gap: 6px;
 }
 
-/* ===== Title styles (FORCED so it never goes black) ===== */
+/* ===== Title styles ===== */
 .dashboardTitle {
   margin: 0;
   font-size: 40px;
@@ -52,14 +61,13 @@
   overflow: hidden;
   backdrop-filter: blur(10px);
   width: 100%;
-  max-width: 1000px; /* Adjust this value to make it narrower or wider */
-  margin: 8px auto 48px;
+  margin: 8px 0 48px;
 }
 
 /* ===== Tableau iframe ===== */
 .dashboardIframe {
   width: 100%;
-  height: 900px; /* fixed height = stable Tableau rendering */
+  height: 900px;
   border: none;
   display: block;
 }
@@ -78,13 +86,12 @@
   min-width: 100% !important;
 }
 
-/* ===== Mobile adjustments (layout only, NOT iframe sizing) ===== */
+/* ===== Mobile adjustments ===== */
 @media (max-width: 900px) {
   .dashboardPageHeaderInner {
     padding: 0 18px;
   }
 
-  /* Keep fixed height to avoid Tableau reflow */
   .dashboardIframe {
     height: 900px;
   }

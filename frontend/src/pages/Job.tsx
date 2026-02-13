@@ -73,14 +73,23 @@ export default function Job() {
     "all",
   );
 
+  // ✅ NEW: State for show more/less
+  const [showAllRecs, setShowAllRecs] = useState(false);
+
   const job = data?.job;
   const skills = data?.skills ?? [];
   const recommendations = data?.recommendations ?? [];
 
+  // ✅ NEW: Slice recommendations to show only 3 initially
+  const visibleRecs = showAllRecs
+    ? recommendations
+    : recommendations.slice(0, 3);
+  const hasMore = recommendations.length > 3;
+
   /* ======================= Delete ======================= */
 
   const handleDelete = async () => {
-    if (!window.confirm("Delete this job? This can’t be undone.")) return;
+    if (!window.confirm("Delete this job? This can't be undone.")) return;
 
     try {
       const res = await apiFetch(`/api/jobs/${jobId}`, { method: "DELETE" });
@@ -137,6 +146,7 @@ export default function Job() {
     if (!job) return;
 
     setLoadingRecs(true);
+    setShowAllRecs(false); // ✅ Reset to collapsed when filter changes
 
     apiFetch(`/api/jobs/${jobId}/recommendations?origin=${recFilter}`)
       .then((res) => (res.ok ? res.json() : null))
@@ -160,163 +170,191 @@ export default function Job() {
   /* ======================= Render ======================= */
 
   return (
-  <>
-    <AdminNavbar />
+    <>
+      <AdminNavbar />
 
-    <main className="jobPage">
-      <div className="jobShell">
-        {/* Header */}
-        <div className="jobHeaderRow">
-          <div className="jobTitleBlock">
-            <button className="jobBackLink" onClick={() => navigate("/jobs")}>
-              ← Back to Jobs
-            </button>
-
-            <div className="jobTitleRow">
-              <h1 className="jobTitle">{job.job_title}</h1>
-              {job.job_status && <span className="jobPill">{job.job_status}</span>}
-            </div>
-
-            <p className="jobRole">
-              {job.department}
-              {job.job_location && ` • ${job.job_location}`}
-              {job.work_status && ` • ${job.work_status}`}
-            </p>
-          </div>
-
-          {canEdit && (
-            <div className="jobActionsRow">
-              <button
-                className="profileActionBtn"
-                onClick={() => navigate(`/jobs/${jobId}/edit`)}
-              >
-                Edit
+      <main className="jobPage">
+        <div className="jobShell">
+          {/* Header */}
+          <div className="jobHeaderRow">
+            <div className="jobTitleBlock">
+              <button className="jobBackLink" onClick={() => navigate("/jobs")}>
+                ← Back to Jobs
               </button>
-              <button className="jobActionBtn danger" onClick={handleDelete}>
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* ✅ Main card: Job Details + Skills (Profile-style) */}
-        <section className="jobCard jobMainCard">
-          {/* Job Details header */}
-          <div className="jobSectionHeader">
-            <h2 className="jobSectionTitle">Job Details</h2>
-          </div>
+              <div className="jobTitleRow">
+                <h1 className="jobTitle">{job.job_title}</h1>
+                {job.job_status && (
+                  <span className="jobPill">{job.job_status}</span>
+                )}
+              </div>
 
-          {/* Details grid */}
-          <div className="jobDetailsGrid">
-            <div className="jobDetailItem">
-              <div className="jobDetailLabel">Group</div>
-              <div className="jobDetailValue">{job.job_group ?? "—"}</div>
+              <p className="jobRole">
+                {job.department}
+                {job.job_location && ` • ${job.job_location}`}
+                {job.work_status && ` • ${job.work_status}`}
+              </p>
             </div>
 
-            <div className="jobDetailItem">
-              <div className="jobDetailLabel">Category</div>
-              <div className="jobDetailValue">{job.job_category ?? "—"}</div>
-            </div>
-
-            <div className="jobDetailItem">
-              <div className="jobDetailLabel">Department</div>
-              <div className="jobDetailValue">{job.department ?? "—"}</div>
-            </div>
-
-            <div className="jobDetailItem">
-              <div className="jobDetailLabel">Location</div>
-              <div className="jobDetailValue">{job.job_location ?? "—"}</div>
-            </div>
-
-            <div className="jobDetailItem">
-              <div className="jobDetailLabel">Work Status</div>
-              <div className="jobDetailValue">{job.work_status ?? "—"}</div>
-            </div>
-
-            {"start_date" in job && (
-              <div className="jobDetailItem">
-                <div className="jobDetailLabel">Start Date</div>
-                <div className="jobDetailValue">
-                  {job.start_date ? new Date(job.start_date).toLocaleDateString() : "—"}
-                </div>
+            {canEdit && (
+              <div className="jobActionsRow">
+                <button
+                  className="profileActionBtn"
+                  onClick={() => navigate(`/jobs/${jobId}/edit`)}
+                >
+                  Edit
+                </button>
+                <button className="jobActionBtn danger" onClick={handleDelete}>
+                  Delete
+                </button>
               </div>
             )}
           </div>
 
-          {/* Description */}
-          <div className="jobDescriptionBlock">
-            <div className="jobDetailLabel">Description</div>
-            <div className="jobDescriptionText">{job.job_description ?? "—"}</div>
-          </div>
+          {/* ✅ Main card: Job Details + Skills (Profile-style) */}
+          <section className="jobCard jobMainCard">
+            {/* Job Details header */}
+            <div className="jobSectionHeader">
+              <h2 className="jobSectionTitle">Job Details</h2>
+            </div>
 
-          {/* Divider like Profile */}
-          <div className="jobDivider" />
+            {/* Details grid */}
+            <div className="jobDetailsGrid">
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Group</div>
+                <div className="jobDetailValue">{job.job_group ?? "—"}</div>
+              </div>
 
-          {/* Skills header */}
-          <div className="jobSectionHeader">
-            <h2 className="jobSectionTitle">Required Skills</h2>
-            <div className="jobSectionMeta">{skills.length} total</div>
-          </div>
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Category</div>
+                <div className="jobDetailValue">{job.job_category ?? "—"}</div>
+              </div>
 
-          {/* Skills pills */}
-          {skills.length === 0 ? (
-            <div className="jobMuted">No skills added yet.</div>
-          ) : (
-            <div className="jobSkillsWrap">
-              {skills.map((s) => (
-                <div key={s.job_skill_id} className="jobSkillPill">
-                  <span className="jobSkillName">{s.skill_name}</span>
-                  {s.proficiency_level != null && (
-                    <span className="jobSkillLevel">Lvl {s.proficiency_level}</span>
-                  )}
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Department</div>
+                <div className="jobDetailValue">{job.department ?? "—"}</div>
+              </div>
+
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Location</div>
+                <div className="jobDetailValue">{job.job_location ?? "—"}</div>
+              </div>
+
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Work Status</div>
+                <div className="jobDetailValue">{job.work_status ?? "—"}</div>
+              </div>
+
+              {"start_date" in job && (
+                <div className="jobDetailItem">
+                  <div className="jobDetailLabel">Start Date</div>
+                  <div className="jobDetailValue">
+                    {job.start_date
+                      ? new Date(job.start_date).toLocaleDateString()
+                      : "—"}
+                  </div>
                 </div>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="jobDescriptionBlock">
+              <div className="jobDetailLabel">Description</div>
+              <div className="jobDescriptionText">
+                {job.job_description ?? "—"}
+              </div>
+            </div>
+
+            {/* Divider like Profile */}
+            <div className="jobDivider" />
+
+            {/* Skills header */}
+            <div className="jobSectionHeader">
+              <h2 className="jobSectionTitle">Required Skills</h2>
+              <div className="jobSectionMeta">{skills.length} total</div>
+            </div>
+
+            {/* Skills pills */}
+            {skills.length === 0 ? (
+              <div className="jobMuted">No skills added yet.</div>
+            ) : (
+              <div className="jobSkillsWrap">
+                {skills.map((s) => (
+                  <div key={s.job_skill_id} className="jobSkillPill">
+                    <span className="jobSkillName">{s.skill_name}</span>
+                    {s.proficiency_level != null && (
+                      <span className="jobSkillLevel">
+                        Lvl {s.proficiency_level}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Recommended Candidates */}
+          <section className="jobCard">
+            <div className="jobSectionHeader">
+              <h2 className="jobSectionTitle">Recommended Candidates</h2>
+              <div className="jobSectionMeta">
+                {recommendations.length} matches
+              </div>
+            </div>
+
+            <div className="applicantSegmented">
+              {["all", "internal", "external"].map((f) => (
+                <button
+                  key={f}
+                  className={`segment ${recFilter === f ? "active" : ""}`}
+                  onClick={() =>
+                    setRecFilter(f as "all" | "internal" | "external")
+                  }
+                >
+                  {f[0].toUpperCase() + f.slice(1)}
+                </button>
               ))}
             </div>
-          )}
-        </section>
 
-        {/* Recommended Candidates */}
-        <section className="jobCard">
-          <div className="jobSectionHeader">
-            <h2 className="jobSectionTitle">Recommended Candidates</h2>
-            <div className="jobSectionMeta">{recommendations.length} matches</div>
-          </div>
+            {loadingRecs ? (
+              <div className="jobCandidatesGrid">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="candidateSkeleton" />
+                ))}
+              </div>
+            ) : recommendations.length === 0 ? (
+              <p className="jobMuted">No matching candidates.</p>
+            ) : (
+              <>
+                <div className="jobCandidatesGrid">
+                  {visibleRecs.map((rec) => (
+                    <CandidateCard
+                      key={rec.candidate_id}
+                      recommendation={rec}
+                      jobTitle={job.job_title}
+                      jobId={jobId}
+                    />
+                  ))}
+                </div>
 
-          <div className="applicantSegmented">
-            {["all", "internal", "external"].map((f) => (
-              <button
-                key={f}
-                className={`segment ${recFilter === f ? "active" : ""}`}
-                onClick={() => setRecFilter(f as "all" | "internal" | "external")}
-              >
-                {f[0].toUpperCase() + f.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {loadingRecs ? (
-            <div className="jobPlaceholderRow">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="candidateSkeleton" />
-              ))}
-            </div>
-          ) : recommendations.length === 0 ? (
-            <p className="jobMuted">No matching candidates.</p>
-          ) : (
-            <div className="jobPlaceholderRow">
-              {recommendations.map((rec) => (
-                <CandidateCard
-                  key={rec.candidate_id}
-                  recommendation={rec}
-                  jobTitle={job.job_title}
-                  jobId={jobId}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
-  </>
-);
+                {/* ✅ Show More/Less button */}
+                {hasMore && (
+                  <div className="showMoreContainer">
+                    <button
+                      className="showMoreButton"
+                      onClick={() => setShowAllRecs(!showAllRecs)}
+                    >
+                      {showAllRecs
+                        ? "Show Less"
+                        : `Show ${recommendations.length - 3} More`}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        </div>
+      </main>
+    </>
+  );
 }
