@@ -2,7 +2,7 @@ import "../styles/Login.css";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = "http://localhost:5050";
+import { apiFetch } from "../lib/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,9 +20,8 @@ export default function Login() {
     const password = String(form.get("password") ?? "");
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 

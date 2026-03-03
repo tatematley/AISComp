@@ -67,9 +67,7 @@ export default function CandidateCard({
     // Generate it on-demand
     setLoadingExplanation(true);
     try {
-      const res = await fetch(
-        `http://localhost:5050/api/jobs/${jobId}/recommendations/${candidate_id}/explanation`,
-      );
+      const res = await fetch(`${API_BASE}/api/jobs/...`)
 
       if (!res.ok) {
         throw new Error("Failed to generate explanation");
