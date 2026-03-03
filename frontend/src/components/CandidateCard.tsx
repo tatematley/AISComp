@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "../styles/CandidateCard.css";
-import API_BASE from "../lib/api";
+import { apiFetch } from "../lib/api";
 
 type SkillBreakdown = {
   skill_name: string;
@@ -30,11 +30,7 @@ type Props = {
   jobId: number;
 };
 
-export default function CandidateCard({
-  recommendation,
-  jobTitle: _jobTitle, // ✅ silence unused var error
-  jobId: _jobId, // ✅ silence unused var error
-}: Props) {
+export default function CandidateCard({ recommendation, jobId }: Props) {
   const [showDetails, setShowDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
@@ -59,32 +55,27 @@ export default function CandidateCard({
       return;
     }
 
-    // Show the box
     setShowExplanation(true);
 
-    // If we already have it, just display
+    // already loaded
     if (explanation) return;
 
-    // Generate it on-demand
     setLoadingExplanation(true);
     try {
-      // ✅ replace ... with your real endpoint
-      // If your backend route is:
-      // GET /api/jobs/:jobId/recommendations/:candidateId/explanation
-      const res = await fetch(
-        `${API_BASE}/api/jobs/${_jobId}/recommendations/${candidate_id}/explanation`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
+      // This matches what your search results showed:
+      // /api/jobs/${jobId}/recommendations/${candidate_id}/explanation
+      const res = await apiFetch(
+        `/api/jobs/${jobId}/recommendations/${candidate_id}/explanation`,
+        { method: "GET" }
       );
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to generate explanation");
+        throw new Error(data?.error ?? "Failed to generate explanation");
       }
 
-      const data = await res.json();
-      setExplanation(data.explanation);
+      setExplanation(data.explanation ?? "No explanation returned.");
     } catch (error) {
       console.error("Failed to load explanation:", error);
       setExplanation("Unable to generate explanation at this time.");
@@ -93,7 +84,6 @@ export default function CandidateCard({
     }
   };
 
-  // Get top 3 matched skills to display
   const topSkills = breakdown
     .filter((s) => s.meets_required)
     .sort((a, b) => b.importance_weight - a.importance_weight)
@@ -170,9 +160,7 @@ export default function CandidateCard({
         <div className="explanationBox">
           <div className="explanationLabel">AI Analysis</div>
           <p className="explanationText">
-            {loadingExplanation
-              ? "Generating explanation..."
-              : explanation || "Click to generate explanation"}
+            {loadingExplanation ? "Generating explanation..." : explanation}
           </p>
         </div>
       )}
