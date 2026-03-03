@@ -32,8 +32,8 @@ type Props = {
 
 export default function CandidateCard({
   recommendation,
-  jobTitle: _jobTitle,
-  jobId: _jobId,
+  jobTitle: _jobTitle, // ✅ silence unused var error
+  jobId: _jobId, // ✅ silence unused var error
 }: Props) {
   const [showDetails, setShowDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -68,7 +68,16 @@ export default function CandidateCard({
     // Generate it on-demand
     setLoadingExplanation(true);
     try {
-      const res = await fetch(`${API_BASE}/api/jobs/...`)
+      // ✅ replace ... with your real endpoint
+      // If your backend route is:
+      // GET /api/jobs/:jobId/recommendations/:candidateId/explanation
+      const res = await fetch(
+        `${API_BASE}/api/jobs/${_jobId}/recommendations/${candidate_id}/explanation`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to generate explanation");
@@ -94,7 +103,9 @@ export default function CandidateCard({
     <div className="candidateCard">
       <div className="candidateHeader">
         <div>
-          <h3 className="candidateName">{name ?? `Candidate #${candidate_id}`}</h3>
+          <h3 className="candidateName">
+            {name ?? `Candidate #${candidate_id}`}
+          </h3>
           <p className="candidateRole">{current_role}</p>
         </div>
         <div className="matchBadge">{Math.round(match_score * 100)}%</div>
@@ -106,7 +117,8 @@ export default function CandidateCard({
         </span>
         {skill_match_score !== undefined && ml_hire_probability !== undefined && (
           <span className="mlStats">
-            Skill: {Math.round(skill_match_score * 100)}% | ML: {Math.round(ml_hire_probability * 100)}%
+            Skill: {Math.round(skill_match_score * 100)}% | ML:{" "}
+            {Math.round(ml_hire_probability * 100)}%
           </span>
         )}
       </div>
@@ -141,7 +153,9 @@ export default function CandidateCard({
             <div key={skill.skill_name} className="skillDetail">
               <span className="skillDetailName">{skill.skill_name}</span>
               <span
-                className={`skillDetailStatus ${skill.meets_required ? "met" : "gap"}`}
+                className={`skillDetailStatus ${
+                  skill.meets_required ? "met" : "gap"
+                }`}
               >
                 {skill.meets_required
                   ? `✓ Lvl ${skill.proficiency_level}`
