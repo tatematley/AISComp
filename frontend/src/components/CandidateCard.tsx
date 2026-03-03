@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../styles/CandidateCard.css";
+import API_BASE from "../lib/api";
 
 type SkillBreakdown = {
   skill_name: string;
@@ -32,7 +33,7 @@ type Props = {
 export default function CandidateCard({
   recommendation,
   jobTitle: _jobTitle,
-  jobId,
+  jobId: _jobId,
 }: Props) {
   const [showDetails, setShowDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
