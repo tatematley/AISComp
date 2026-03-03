@@ -1827,6 +1827,10 @@ app.use(
   jobRoutes,
 );
 
+app.get("/healthz", (req, res) => {
+  res.status(200).send("ok");
+});
+
 /* ----------------------------- Start ----------------------------- */
 
 console.log("✅ about to listen, port =", port);
