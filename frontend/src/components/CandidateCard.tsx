@@ -31,7 +31,7 @@ type Props = {
 
 export default function CandidateCard({
   recommendation,
-  jobTitle,
+  jobTitle: _jobTitle,
   jobId,
 }: Props) {
   const [showDetails, setShowDetails] = useState(false);

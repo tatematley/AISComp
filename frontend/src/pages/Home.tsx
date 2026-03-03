@@ -61,7 +61,7 @@ type Persona = {
   icon: React.ReactNode;
 };
 
-const PERSONAS = [
+const PERSONAS: Persona[] = [
   {
     title: "HR Leaders",
     text: "Get a clear view of role coverage and internal mobility using skills-based matching.",
