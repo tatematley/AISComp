@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
+import ResumeUpload, { type ParsedResume } from "../components/ResumeUpload";
 import "../styles/EmployeeEdit.css";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
 type Option = { id: number; name: string };
 type SkillOption = { id: number; name: string; category: string | null };
+type StatusOption = { id: string | number; name: string }; 
 
 export default function ApplicantAdd() {
   const navigate = useNavigate();
@@ -19,13 +21,15 @@ export default function ApplicantAdd() {
   // dropdowns
   const [pronouns, setPronouns] = useState<Option[]>([]);
   const [skillsCatalog, setSkillsCatalog] = useState<SkillOption[]>([]);
+  const [statuses, setStatuses] = useState<StatusOption[]>([]);
+  const [candidateStatus, setCandidateStatus] = useState<string | number | "">("");
 
   // form state (candidate_information)
   const [name, setName] = useState("");
   const [position, setPosition] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [applicationDate, setApplicationDate] = useState<string>(""); // yyyy-mm-dd
+  const [applicationDate, setApplicationDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [pronounsId, setPronounsId] = useState<number | "">("");
 
   // skills editor (same pattern as edit)
@@ -58,10 +62,12 @@ export default function ApplicantAdd() {
         const metaJson = (await metaRes.json()) as {
           pronouns: Option[];
           skills: SkillOption[];
+          candidate_statuses: StatusOption[];
         };
 
         setPronouns(metaJson.pronouns ?? []);
         setSkillsCatalog(metaJson.skills ?? []);
+        setStatuses(metaJson.candidate_statuses ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load add page");
       } finally {
@@ -120,6 +126,36 @@ export default function ApplicantAdd() {
     setNewSkillLevel("");
   };
 
+  const handleResumeParsed = (data: ParsedResume) => {
+    if (data.name) setName(data.name);
+    if (data.position) setPosition(data.position);
+    if (data.email) setEmail(data.email);
+    if (data.phone) setPhone(data.phone);
+
+    if (data.skills.length > 0) {
+      const existingNames = new Set(skillEdits.map((s) => s.skill_name.toLowerCase()));
+      const newSkills: typeof skillEdits = [];
+
+      for (const s of data.skills) {
+        const catalogSkill = skillsCatalog.find(
+          (c) => c.name.toLowerCase() === s.skill_name.toLowerCase(),
+        );
+        if (catalogSkill && !existingNames.has(catalogSkill.name.toLowerCase())) {
+          existingNames.add(catalogSkill.name.toLowerCase());
+          newSkills.push({
+            candidate_skill_id: -Math.floor(Math.random() * 1_000_000),
+            skill_name: catalogSkill.name,
+            proficiency_level: s.proficiency_level ?? null,
+          });
+        }
+      }
+
+      if (newSkills.length > 0) {
+        setSkillEdits((prev) => [...prev, ...newSkills]);
+      }
+    }
+  };
+
   const onCreate = async () => {
     if (!canEdit) return;
 
@@ -139,6 +175,7 @@ export default function ApplicantAdd() {
           phone_number: phone.trim() || null,
           application_date: applicationDate || null,
           pronouns_id: pronounsId === "" ? null : pronounsId,
+          candidate_status: candidateStatus === "" ? null : candidateStatus,
         },
         skills: skillEdits.map((s) => ({
           candidate_skill_id: s.candidate_skill_id, // temp ids ok; server ignores
@@ -213,6 +250,8 @@ export default function ApplicantAdd() {
           {/* form card */}
           <section className="profileEditCard">
             <div className="profileEditGrid">
+              <ResumeUpload onParsed={handleResumeParsed} />
+
               <div className="profileEditField">
                 <div className="profileEditLabel">Name</div>
                 <input
@@ -257,6 +296,22 @@ export default function ApplicantAdd() {
                   value={applicationDate}
                   onChange={(e) => setApplicationDate(e.target.value)}
                 />
+              </div>
+
+              <div className="profileEditField">
+                <div className="profileEditLabel">Status</div>
+                <select
+                  className="profileEditSelect"
+                  value={candidateStatus}
+                  onChange={(e) => setCandidateStatus(e.target.value === "" ? "" : e.target.value)}
+                >
+                  <option value="">—</option>
+                  {statuses.map((s) => (
+                    <option key={String(s.id)} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="profileEditField">

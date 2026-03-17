@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../styles/CandidateCard.css";
+import { apiFetch } from "../lib/api";
 
 type SkillBreakdown = {
   skill_name: string;
@@ -12,8 +13,11 @@ type SkillBreakdown = {
 type Recommendation = {
   rank: number;
   candidate_id: number;
+  name: string | null;
   current_role: string;
   match_score: number;
+  skill_match_score?: number;
+  ml_hire_probability?: number;
   skills_met: number;
   skills_required: number;
   breakdown: SkillBreakdown[];
@@ -26,21 +30,19 @@ type Props = {
   jobId: number;
 };
 
-export default function CandidateCard({
-  recommendation,
-  jobTitle,
-  jobId,
-}: Props) {
+export default function CandidateCard({ recommendation, jobId }: Props) {
   const [showDetails, setShowDetails] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
 
   const {
-    rank,
     candidate_id,
+    name,
     current_role,
     match_score,
+    skill_match_score,
+    ml_hire_probability,
     skills_met,
     skills_required,
     breakdown,
@@ -53,25 +55,27 @@ export default function CandidateCard({
       return;
     }
 
-    // Show the box
     setShowExplanation(true);
 
-    // If we already have it, just display
+    // already loaded
     if (explanation) return;
 
-    // Generate it on-demand
     setLoadingExplanation(true);
     try {
-      const res = await fetch(
-        `http://localhost:5050/api/jobs/${jobId}/recommendations/${candidate_id}/explanation`,
+      // This matches what your search results showed:
+      // /api/jobs/${jobId}/recommendations/${candidate_id}/explanation
+      const res = await apiFetch(
+        `/api/jobs/${jobId}/recommendations/${candidate_id}/explanation`,
+        { method: "GET" }
       );
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to generate explanation");
+        throw new Error(data?.error ?? "Failed to generate explanation");
       }
 
-      const data = await res.json();
-      setExplanation(data.explanation);
+      setExplanation(data.explanation ?? "No explanation returned.");
     } catch (error) {
       console.error("Failed to load explanation:", error);
       setExplanation("Unable to generate explanation at this time.");
@@ -80,7 +84,6 @@ export default function CandidateCard({
     }
   };
 
-  // Get top 3 matched skills to display
   const topSkills = breakdown
     .filter((s) => s.meets_required)
     .sort((a, b) => b.importance_weight - a.importance_weight)
@@ -90,7 +93,9 @@ export default function CandidateCard({
     <div className="candidateCard">
       <div className="candidateHeader">
         <div>
-          <h3 className="candidateName">Candidate #{candidate_id}</h3>
+          <h3 className="candidateName">
+            {name ?? `Candidate #${candidate_id}`}
+          </h3>
           <p className="candidateRole">{current_role}</p>
         </div>
         <div className="matchBadge">{Math.round(match_score * 100)}%</div>
@@ -100,6 +105,12 @@ export default function CandidateCard({
         <span>
           Skills: {skills_met}/{skills_required}
         </span>
+        {skill_match_score !== undefined && ml_hire_probability !== undefined && (
+          <span className="mlStats">
+            Skill: {Math.round(skill_match_score * 100)}% | ML:{" "}
+            {Math.round(ml_hire_probability * 100)}%
+          </span>
+        )}
       </div>
 
       {topSkills.length > 0 && (
@@ -132,7 +143,9 @@ export default function CandidateCard({
             <div key={skill.skill_name} className="skillDetail">
               <span className="skillDetailName">{skill.skill_name}</span>
               <span
-                className={`skillDetailStatus ${skill.meets_required ? "met" : "gap"}`}
+                className={`skillDetailStatus ${
+                  skill.meets_required ? "met" : "gap"
+                }`}
               >
                 {skill.meets_required
                   ? `✓ Lvl ${skill.proficiency_level}`
@@ -147,9 +160,7 @@ export default function CandidateCard({
         <div className="explanationBox">
           <div className="explanationLabel">AI Analysis</div>
           <p className="explanationText">
-            {loadingExplanation
-              ? "Generating explanation..."
-              : explanation || "Click to generate explanation"}
+            {loadingExplanation ? "Generating explanation..." : explanation}
           </p>
         </div>
       )}

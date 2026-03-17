@@ -182,7 +182,9 @@ export default function Jobs() {
                   <div className="jobsSecondary">
                     {j.job_category ?? "—"} • {j.work_status ?? "—"}
                   </div>
-                  <div className="jobsDesc">{clamp(j.job_description, 110)}</div>
+                  <div className="jobsDesc">
+                    {clamp(j.job_description, 110)}
+                  </div>
                 </div>
 
                 <div className="jobsCell">{j.department ?? "—"}</div>

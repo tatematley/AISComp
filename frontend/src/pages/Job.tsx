@@ -6,6 +6,8 @@ import "../styles/Job.css";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
+/* ======================= Types ======================= */
+
 type JobSkill = {
   job_skill_id: number;
   skill_name: string;
@@ -25,6 +27,7 @@ type SkillBreakdown = {
 type Recommendation = {
   rank: number;
   candidate_id: number;
+  name: string | null;
   current_role: string;
   match_score: number;
   eligible: boolean;
@@ -32,6 +35,7 @@ type Recommendation = {
   skills_required: number;
   total_gap: number;
   breakdown: SkillBreakdown[];
+  internal: boolean;
 };
 
 type JobData = {
@@ -39,16 +43,20 @@ type JobData = {
     job_id: number;
     job_title: string;
     job_category: string | null;
+    job_group: string | null;
     job_description: string | null;
     work_status: string | null;
     department: string | null;
     job_location: string | null;
     job_status: string | null;
     job_status_id: number | null;
+    start_date?: string | null;
   };
   skills: JobSkill[];
   recommendations?: Recommendation[];
 };
+
+/* ======================= Component ======================= */
 
 export default function Job() {
   const { id } = useParams();
@@ -61,16 +69,33 @@ export default function Job() {
   const [loadingRecs, setLoadingRecs] = useState(false);
   const [error, setError] = useState("");
 
+  const [recFilter, setRecFilter] = useState<"all" | "internal" | "external">(
+    "all",
+  );
+
+  // ✅ NEW: State for show more/less
+  const [showAllRecs, setShowAllRecs] = useState(false);
+
+  const job = data?.job;
+  const skills = data?.skills ?? [];
+  const recommendations = data?.recommendations ?? [];
+
+  // ✅ NEW: Slice recommendations to show only 3 initially
+  const visibleRecs = showAllRecs
+    ? recommendations
+    : recommendations.slice(0, 3);
+  const hasMore = recommendations.length > 3;
+
+  /* ======================= Delete ======================= */
+
   const handleDelete = async () => {
-    const ok = window.confirm("Delete this job? This can’t be undone.");
-    if (!ok) return;
+    if (!window.confirm("Delete this job? This can't be undone.")) return;
 
     try {
       const res = await apiFetch(`/api/jobs/${jobId}`, { method: "DELETE" });
 
       if (res.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.clear();
         navigate("/login");
         return;
       }
@@ -86,7 +111,8 @@ export default function Job() {
     }
   };
 
-  // Fetch job details
+  /* ======================= Fetch Job ======================= */
+
   useEffect(() => {
     if (Number.isNaN(jobId)) {
       setError("Invalid job ID");
@@ -97,8 +123,7 @@ export default function Job() {
     apiFetch(`/api/jobs/${jobId}`)
       .then(async (res) => {
         if (res.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          localStorage.clear();
           navigate("/login");
           return null;
         }
@@ -110,29 +135,23 @@ export default function Job() {
 
         return res.json();
       })
-      .then((json) => {
-        if (json) setData(json);
-      })
+      .then((json) => json && setData(json))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [jobId, navigate]);
 
-  // Fetch recommendations separately
+  /* ======================= Fetch Recommendations ======================= */
+
   useEffect(() => {
-    if (Number.isNaN(jobId) || !data) return;
+    if (!job) return;
 
     setLoadingRecs(true);
+    setShowAllRecs(false); // ✅ Reset to collapsed when filter changes
 
-    fetch(`http://localhost:5050/api/jobs/${jobId}/recommendations`)
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("Failed to load recommendations");
-          return null;
-        }
-        return res.json();
-      })
+    apiFetch(`/api/jobs/${jobId}/recommendations?origin=${recFilter}`)
+      .then((res) => (res.ok ? res.json() : null))
       .then((mlData) => {
-        if (mlData && mlData.recommendations) {
+        if (mlData?.recommendations) {
           setData((prev) =>
             prev ? { ...prev, recommendations: mlData.recommendations } : prev,
           );
@@ -140,13 +159,15 @@ export default function Job() {
       })
       .catch((e) => console.error("Error loading recommendations:", e))
       .finally(() => setLoadingRecs(false));
-  }, [jobId, data?.job.job_id]);
+  }, [jobId, job, recFilter]);
+
+  /* ======================= Early exits ======================= */
 
   if (loading) return <div className="jobState">Loading…</div>;
   if (error) return <div className="jobState error">{error}</div>;
-  if (!data) return null;
+  if (!job) return null;
 
-  const { job, skills, recommendations } = data;
+  /* ======================= Render ======================= */
 
   return (
     <>
@@ -154,14 +175,10 @@ export default function Job() {
 
       <main className="jobPage">
         <div className="jobShell">
-          {/* Header row */}
+          {/* Header */}
           <div className="jobHeaderRow">
             <div className="jobTitleBlock">
-              <button
-                className="jobBackLink"
-                onClick={() => navigate("/jobs")}
-                type="button"
-              >
+              <button className="jobBackLink" onClick={() => navigate("/jobs")}>
                 ← Back to Jobs
               </button>
 
@@ -173,9 +190,9 @@ export default function Job() {
               </div>
 
               <p className="jobRole">
-                {job.department || "—"}
-                {job.job_location ? ` • ${job.job_location}` : ""}
-                {job.work_status ? ` • ${job.work_status}` : ""}
+                {job.department}
+                {job.job_location && ` • ${job.job_location}`}
+                {job.work_status && ` • ${job.work_status}`}
               </p>
             </div>
 
@@ -183,67 +200,83 @@ export default function Job() {
               <div className="jobActionsRow">
                 <button
                   className="profileActionBtn"
-                  type="button"
                   onClick={() => navigate(`/jobs/${jobId}/edit`)}
                 >
                   Edit
                 </button>
-
-                <button
-                  className="jobActionBtn danger"
-                  type="button"
-                  onClick={handleDelete}
-                >
+                <button className="jobActionBtn danger" onClick={handleDelete}>
                   Delete
                 </button>
               </div>
             )}
           </div>
 
-          {/* Main card */}
-          <section className="jobCard">
-            <div className="jobInfoGrid">
-              <div className="jobInfoItem">
-                <div className="jobLabel">Category</div>
-                <div className="jobValue">{job.job_category || "—"}</div>
+          {/* ✅ Main card: Job Details + Skills (Profile-style) */}
+          <section className="jobCard jobMainCard">
+            {/* Job Details header */}
+            <div className="jobSectionHeader">
+              <h2 className="jobSectionTitle">Job Details</h2>
+            </div>
+
+            {/* Details grid */}
+            <div className="jobDetailsGrid">
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Group</div>
+                <div className="jobDetailValue">{job.job_group ?? "—"}</div>
               </div>
 
-              <div className="jobInfoItem">
-                <div className="jobLabel">Status</div>
-                <div className="jobValue">{job.job_status || "—"}</div>
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Category</div>
+                <div className="jobDetailValue">{job.job_category ?? "—"}</div>
               </div>
 
-              <div className="jobInfoItem">
-                <div className="jobLabel">Department</div>
-                <div className="jobValue">{job.department || "—"}</div>
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Department</div>
+                <div className="jobDetailValue">{job.department ?? "—"}</div>
               </div>
 
-              <div className="jobInfoItem">
-                <div className="jobLabel">Location</div>
-                <div className="jobValue">{job.job_location || "—"}</div>
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Location</div>
+                <div className="jobDetailValue">{job.job_location ?? "—"}</div>
+              </div>
+
+              <div className="jobDetailItem">
+                <div className="jobDetailLabel">Work Status</div>
+                <div className="jobDetailValue">{job.work_status ?? "—"}</div>
+              </div>
+
+              {"start_date" in job && (
+                <div className="jobDetailItem">
+                  <div className="jobDetailLabel">Start Date</div>
+                  <div className="jobDetailValue">
+                    {job.start_date
+                      ? new Date(job.start_date).toLocaleDateString()
+                      : "—"}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="jobDescriptionBlock">
+              <div className="jobDetailLabel">Description</div>
+              <div className="jobDescriptionText">
+                {job.job_description ?? "—"}
               </div>
             </div>
 
-            {job.job_description && (
-              <>
-                <div className="jobDivider" />
-                <div className="jobDescription">
-                  <div className="jobLabel">Description</div>
-                  <p className="jobDescriptionText">{job.job_description}</p>
-                </div>
-              </>
-            )}
-
-            {/* Skills */}
+            {/* Divider like Profile */}
             <div className="jobDivider" />
 
+            {/* Skills header */}
             <div className="jobSectionHeader">
               <h2 className="jobSectionTitle">Required Skills</h2>
               <div className="jobSectionMeta">{skills.length} total</div>
             </div>
 
+            {/* Skills pills */}
             {skills.length === 0 ? (
-              <div className="jobMuted">No required skills listed.</div>
+              <div className="jobMuted">No skills added yet.</div>
             ) : (
               <div className="jobSkillsWrap">
                 {skills.map((s) => (
@@ -264,30 +297,60 @@ export default function Job() {
           <section className="jobCard">
             <div className="jobSectionHeader">
               <h2 className="jobSectionTitle">Recommended Candidates</h2>
-              {recommendations && recommendations.length > 0 && (
-                <div className="jobSectionMeta">
-                  {recommendations.length} matches
-                </div>
-              )}
+              <div className="jobSectionMeta">
+                {recommendations.length} matches
+              </div>
+            </div>
+
+            <div className="applicantSegmented">
+              {["all", "internal", "external"].map((f) => (
+                <button
+                  key={f}
+                  className={`segment ${recFilter === f ? "active" : ""}`}
+                  onClick={() =>
+                    setRecFilter(f as "all" | "internal" | "external")
+                  }
+                >
+                  {f[0].toUpperCase() + f.slice(1)}
+                </button>
+              ))}
             </div>
 
             {loadingRecs ? (
-              <p className="jobMuted">Loading recommendations...</p>
-            ) : !recommendations || recommendations.length === 0 ? (
-              <p className="jobMuted">
-                No recommendations available for this position.
-              </p>
-            ) : (
-              <div className="jobPlaceholderRow">
-                {recommendations.map((rec) => (
-                  <CandidateCard
-                    key={rec.candidate_id}
-                    recommendation={rec}
-                    jobTitle={job.job_title}
-                    jobId={jobId} // ← Add this
-                  />
+              <div className="jobCandidatesGrid">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="candidateSkeleton" />
                 ))}
               </div>
+            ) : recommendations.length === 0 ? (
+              <p className="jobMuted">No matching candidates.</p>
+            ) : (
+              <>
+                <div className="jobCandidatesGrid">
+                  {visibleRecs.map((rec) => (
+                    <CandidateCard
+                      key={rec.candidate_id}
+                      recommendation={rec}
+                      jobTitle={job.job_title}
+                      jobId={jobId}
+                    />
+                  ))}
+                </div>
+
+                {/* ✅ Show More/Less button */}
+                {hasMore && (
+                  <div className="showMoreContainer">
+                    <button
+                      className="showMoreButton"
+                      onClick={() => setShowAllRecs(!showAllRecs)}
+                    >
+                      {showAllRecs
+                        ? "Show Less"
+                        : `Show ${recommendations.length - 3} More`}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/Applicants.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AdminNavbar from "../components/AdminNavbar";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
@@ -35,11 +35,13 @@ export default function Applicants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<ApplicantFilter>("all");
 
   const navigate = useNavigate();
+  const location = useLocation();
   const canEdit = isManager();
 
   /* ----------------------------- Fetch applicants ----------------------------- */
@@ -194,6 +196,7 @@ export default function Applicants() {
             pageRows.map((a) => (
               <Link
                 to={`/applicants/${a.candidate_id}`}
+                state={{ from: location.pathname + location.search }}
                 className="applicantsRowLink"
                 key={a.candidate_id}
               >

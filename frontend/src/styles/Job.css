@@ -8,7 +8,7 @@
 }
 
 .jobShell {
-  max-width: 1600px; /* ← Increased from 1040px to fit 5 cards */
+  max-width: 1400px;
   margin: 0 auto;
   display: grid;
   gap: 16px;
@@ -20,12 +20,12 @@
   gap: 18px;
   align-items: flex-end;
   justify-content: space-between;
-
-  /* align header with card content */
-
   box-sizing: border-box;
-
   margin-bottom: 2px;
+}
+
+.jobTopRow {
+  align-items: stretch;
 }
 
 .jobTitleBlock {
@@ -40,11 +40,9 @@
   border: none;
   padding: 0;
   margin-bottom: 4px;
-
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
-
   cursor: pointer;
   transition:
     color 120ms ease,
@@ -90,7 +88,7 @@
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: transparent;
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
 }
 
@@ -157,7 +155,7 @@
 }
 
 .jobLabel {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.62);
   margin-bottom: 4px;
 }
@@ -181,7 +179,7 @@
 .jobDescriptionText {
   margin: 6px 0 0;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 13.5px;
+  font-size: 14.5px;
   line-height: 1.55;
   max-width: 80ch;
 }
@@ -197,7 +195,7 @@
 
 .jobSectionTitle {
   margin: 0;
-  font-size: 15px;
+  font-size: 25px;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.88);
   letter-spacing: -0.01em;
@@ -205,13 +203,13 @@
 
 .jobSectionMeta {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 800;
 }
 
 .jobMuted {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13.5px;
+  font-size: 15px;
   margin: 0;
 }
 
@@ -232,7 +230,7 @@
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(15, 23, 42, 0.4);
   color: rgba(255, 255, 255, 0.92);
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 800;
   transition:
     transform 120ms ease,
@@ -251,7 +249,7 @@
 }
 
 .jobSkillLevel {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   padding: 4px 8px;
   border-radius: 999px;
@@ -260,15 +258,73 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* Recommendations Grid - 5 cards in a row */
-.jobPlaceholderRow {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
+/* ================= Segmented Filter Buttons ================= */
+.applicantSegmented {
+  display: inline-flex;
+  gap: 8px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin-bottom: 18px;
 }
 
-/* Old placeholder cards - can remove these if not needed */
+.applicantSegmented .segment {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.applicantSegmented .segment:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.applicantSegmented .segment.active {
+  background: rgba(218, 245, 97, 0.15);
+  color: rgba(218, 245, 97, 0.95);
+}
+
+/* ================= 3-Column Candidates Grid ================= */
+.jobCandidatesGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 18px;
+}
+
+/* Show More button container */
+.showMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Show More button */
+.showMoreButton {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.showMoreButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Old placeholder cards */
 .jobPlaceholderCard {
   height: 92px;
   border-radius: 14px;
@@ -280,14 +336,14 @@
 .jobState {
   padding: 18px 16px;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 13.5px;
+  font-size: 15px;
 }
 
 .jobState.error {
   color: rgba(255, 170, 170, 0.9);
 }
 
-/* AI stuff*/
+/* AI stuff */
 .aiToggle {
   background: rgba(218, 245, 97, 0.08);
   border-color: rgba(218, 245, 97, 0.22);
@@ -317,7 +373,7 @@
     transparent 70%
   );
   animation: shimmer 1.5s ease-out forwards;
-  animation-delay: 0.3s; /* Small delay after cards appear */
+  animation-delay: 0.3s;
   opacity: 0;
 }
 
@@ -332,16 +388,10 @@
   }
 }
 
-/* Responsive */
-@media (max-width: 1600px) {
-  .jobPlaceholderRow {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
+/* ================= Responsive ================= */
 @media (max-width: 1200px) {
-  .jobPlaceholderRow {
-    grid-template-columns: repeat(2, 1fr);
+  .jobCandidatesGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
@@ -355,7 +405,95 @@
     grid-template-columns: 1fr;
   }
 
-  .jobPlaceholderRow {
+  .jobCandidatesGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.jobDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 28px;
+  margin-top: 8px;
+}
+
+.jobDetailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jobDetailLabel {
+  font-size: 0.95rem;
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+.jobDetailValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.jobDescriptionBlock {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jobDescriptionText {
+  margin-top: 8px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.jobTopRow {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.jobTopRow > * {
+  min-width: 0;
+}
+
+.jobCardHalf {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .jobTopRow {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .jobDetailsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================= Skeleton Loading ================= */
+
+.candidateSkeleton {
+  height: 240px;
+  border-radius: 14px;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.05) 50%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
   }
 }

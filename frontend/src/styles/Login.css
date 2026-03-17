@@ -62,7 +62,7 @@
 }
 
 .loginLinkText {
-  font-size: 13px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.75);
   font-weight: 600;
 }
@@ -72,7 +72,7 @@
   border: none;
   padding: 0;
 
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 900;
   color: #ffffff;
   cursor: pointer;
@@ -123,7 +123,7 @@
   display: grid;
   gap: 6px;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -158,7 +158,7 @@
   border-radius: 999px;
 
   font-family: inherit;
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: 0.01em;
 
@@ -205,7 +205,7 @@
 .loginLink {
   color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 

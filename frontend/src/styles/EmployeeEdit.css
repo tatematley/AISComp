@@ -38,7 +38,7 @@
   cursor: pointer;
 
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
   transition: color 120ms ease, transform 120ms ease;
 }
@@ -57,7 +57,7 @@
 .profileEditSubtitle {
   margin: 6px;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
 }
 
@@ -108,7 +108,7 @@
 }
 
 .profileEditLabel {
-  font-size: 12px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.62);
   margin-bottom: 6px;
   font-weight: 800;
@@ -168,7 +168,7 @@
   margin-top: 6px;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.85);
 }
@@ -254,7 +254,7 @@
 
 .profileEditMuted {
   color: rgba(255, 255, 255, 0.72);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 /* Bottom row */
@@ -293,11 +293,125 @@
 .profileEditState {
   padding: 18px 16px;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 13.5px;
+  font-size: 14.5px;
 }
 
 .profileEditState.error {
   color: rgba(255, 170, 170, 0.9);
+}
+
+/* Resume upload zone */
+.resumeUploadZone {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+}
+
+.resumeUploadDropArea {
+  position: relative;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.resumeUploadDropArea:hover,
+.resumeUploadDropArea--over {
+  border-color: rgba(218, 245, 97, 0.55);
+  background: rgba(218, 245, 97, 0.06);
+}
+
+.resumeUploadInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.resumeUploadInput:disabled {
+  cursor: not-allowed;
+}
+
+.resumeUploadContent {
+  position: relative;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.resumeUploadIcon {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.resumeUploadLabel {
+  font-size: 14.5px;
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 700;
+}
+
+.resumeUploadBrowse {
+  color: rgba(218, 245, 97, 0.9);
+}
+
+.resumeUploadStatus {
+  font-size: 14.5px;
+  color: rgba(218, 245, 97, 0.85);
+  font-weight: 800;
+}
+
+.resumeUploadError {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: rgba(255, 170, 170, 0.9);
+}
+
+.resumeUploadAttached {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(218, 245, 97, 0.3);
+  background: rgba(218, 245, 97, 0.08);
+}
+
+.resumeUploadAttachedIcon {
+  color: rgba(218, 245, 97, 0.9);
+  font-size: 16px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.resumeUploadAttachedName {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14.5px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resumeUploadChangeBtn {
+  background: none;
+  border: none;
+  color: rgba(218, 245, 97, 0.85);
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.resumeUploadChangeBtn:hover {
+  color: rgba(218, 245, 97, 1);
 }
 
 /* Responsive */
