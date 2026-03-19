@@ -1,8 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import { editWithOpenAI } from "./llmEditorService";
 
 type SkillBreakdown = {
   skill_name: string;
@@ -34,6 +31,10 @@ export async function generateExplanation(
   jobData: JobData,
 ): Promise<string> {
   try {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
     const sortedSkills = [...recommendation.breakdown].sort(
       (a, b) => b.importance_weight - a.importance_weight,
     );
@@ -53,16 +54,26 @@ Strengths: ${strengths.join(", ") || "None"}
 Gaps: ${gaps.join(", ") || "None"}
 Write 2 sentences explaining why they're ranked #${recommendation.rank}.`;
 
+    const draftPrompt = `Rank #${recommendation.rank} candidate (${recommendation.current_role}) for ${jobData.job_title}. ${Math.round(recommendation.match_score * 100)}% match.
+Strengths: ${strengths.join(", ") || "None"}
+Gaps: ${gaps.join(", ") || "None"}
+Write 2 sentences explaining why they're ranked #${recommendation.rank}.`;
+
     const message = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 150, // ← Increased from 100 to 150
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: draftPrompt }],
     });
 
     const textContent = message.content.find((block) => block.type === "text");
-    return textContent?.type === "text"
-      ? textContent.text
-      : "Explanation unavailable";
+    const draft =
+      textContent?.type === "text" ? textContent.text : "Explanation unavailable";
+
+    return await editWithOpenAI({
+      contentType: "recommendation explanation",
+      originalPrompt: draftPrompt,
+      draft,
+    });
   } catch (error) {
     console.error("Error generating explanation:", error);
     return "Unable to generate explanation at this time.";

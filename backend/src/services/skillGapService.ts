@@ -1,8 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import { editWithOpenAI } from "./llmEditorService";
 
 type SkillGap = {
   skill_name: string;
@@ -19,6 +16,10 @@ export async function generateSkillGapSummary(
   gapSkills: SkillGap[],
 ): Promise<string> {
   try {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
     if (gapSkills.length === 0) {
       return "Great news — you meet all the skill requirements for this role! Focus on gaining experience to strengthen your candidacy.";
     }
@@ -45,9 +46,16 @@ Write a brief, encouraging 2-3 sentence summary of their upskilling journey. Foc
     console.log(`✅ Summary generated in ${Date.now() - startTime}ms`);
 
     const textContent = message.content.find((block) => block.type === "text");
-    return textContent?.type === "text"
-      ? textContent.text
-      : "Your personalized upskilling plan is ready.";
+    const draft =
+      textContent?.type === "text"
+        ? textContent.text
+        : "Your personalized upskilling plan is ready.";
+
+    return await editWithOpenAI({
+      contentType: "upskilling summary",
+      originalPrompt: prompt,
+      draft,
+    });
   } catch (error) {
     console.error("❌ Error generating summary:", error);
     return "Unable to generate summary at this time.";
@@ -61,6 +69,10 @@ export async function generateFullUpskillPlan(
   gapSkills: SkillGap[],
 ): Promise<string> {
   try {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
     if (gapSkills.length === 0) {
       return "You have demonstrated proficiency in all required skills for this position. Continue building practical experience and consider mentoring others to deepen your expertise.";
     }
@@ -110,9 +122,14 @@ Continue this format for all ${gapSkills.length} skills. Make it encouraging, sp
     console.log(`✅ Full plan generated in ${Date.now() - startTime}ms`);
 
     const textContent = message.content.find((block) => block.type === "text");
-    return textContent?.type === "text"
-      ? textContent.text
-      : "Full plan unavailable.";
+    const draft =
+      textContent?.type === "text" ? textContent.text : "Full plan unavailable.";
+
+    return await editWithOpenAI({
+      contentType: "upskilling plan",
+      originalPrompt: prompt,
+      draft,
+    });
   } catch (error) {
     console.error("❌ Error generating full plan:", error);
     return "Unable to generate detailed plan at this time.";
