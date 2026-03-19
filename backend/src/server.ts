@@ -1680,6 +1680,7 @@ app.get(
         { id: "P", name: "Professional" },
         { id: "M", name: "Management" },
         { id: "S", name: "Support" },
+        { id: "T", name: "Technical" },
       ];
 
       res.json({

@@ -210,6 +210,11 @@ export default function ApplicantEdit() {
     if (!profile) return;
     if (!canEdit) return;
 
+    if (phone && phone.replace(/\D/g, "").length !== 10) {
+      setError("Phone number must be 10 digits.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
 

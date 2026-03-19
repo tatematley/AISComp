@@ -181,6 +181,7 @@ export default function EmployeeAdd() {
 
     try {
       if (!name.trim()) throw new Error("Name is required.");
+      if (phone && phone.replace(/\D/g, "").length !== 10) throw new Error("Phone number must be 10 digits.");
 
       const payload = {
         candidate: {

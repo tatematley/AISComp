@@ -6,6 +6,13 @@ import "../styles/Job.css";
 import { apiFetch } from "../lib/api";
 import { isManager } from "../lib/auth";
 
+const JOB_GROUP_LABELS: Record<string, string> = {
+  P: "Professional",
+  M: "Management",
+  S: "Support",
+  T: "Technical",
+};
+
 /* ======================= Types ======================= */
 
 type JobSkill = {
@@ -222,7 +229,7 @@ export default function Job() {
             <div className="jobDetailsGrid">
               <div className="jobDetailItem">
                 <div className="jobDetailLabel">Group</div>
-                <div className="jobDetailValue">{job.job_group ?? "—"}</div>
+                <div className="jobDetailValue">{job.job_group ? (JOB_GROUP_LABELS[job.job_group] ?? job.job_group) : "—"}</div>
               </div>
 
               <div className="jobDetailItem">

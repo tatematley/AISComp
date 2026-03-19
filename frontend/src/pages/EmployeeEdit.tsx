@@ -247,6 +247,11 @@ export default function EmployeeEdit() {
   const onSave = async () => {
     if (!profile) return;
 
+    if (phone && phone.replace(/\D/g, "").length !== 10) {
+      setError("Phone number must be 10 digits.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
