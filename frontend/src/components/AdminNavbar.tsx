@@ -1,6 +1,8 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import "../styles/AdminNavbar.css";
+import { apiFetch } from "../lib/api";
+import { clearStoredAuth } from "../lib/auth";
 
 type NavbarProps = {
   userImageUrl?: string;
@@ -53,10 +55,10 @@ export default function Navbar({ userImageUrl, onLogout }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
     setOpen(false);
+    clearStoredAuth();
+    await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     onLogout?.();
     navigate("/", { replace: true });
   };
@@ -96,6 +98,11 @@ export default function Navbar({ userImageUrl, onLogout }: NavbarProps) {
             }>
               Applicants
             </NavLink>
+            <NavLink to="/integrate" className={({ isActive }) =>
+              `adminNavLink ${isActive ? "active" : ""}`
+            }>
+              Integrate
+            </NavLink>
           </nav>
         </nav>
 
@@ -125,6 +132,18 @@ export default function Navbar({ userImageUrl, onLogout }: NavbarProps) {
                   {/* Role underneath */}
                   <div className="adminNavMenuSub">{roleLabel}</div>
                 </div>
+
+                <button
+                  className="adminNavMenuItem"
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/security");
+                  }}
+                >
+                  Security
+                </button>
 
                 <button
                   className="adminNavMenuItem"

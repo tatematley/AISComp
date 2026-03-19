@@ -4,6 +4,7 @@ export type AuthedUser = {
   user_id: number;
   username: string;
   role: Role;
+  mfaEnabled?: boolean;
 };
 
 export function getUser(): AuthedUser | null {
@@ -17,4 +18,18 @@ export function getUser(): AuthedUser | null {
 
 export function isManager() {
   return getUser()?.role === "manager";
+}
+
+export function storeUser(user: AuthedUser | null) {
+  if (!user) {
+    localStorage.removeItem("user");
+    return;
+  }
+
+  localStorage.setItem("user", JSON.stringify(user));
+}
+
+export function clearStoredAuth() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
 }
