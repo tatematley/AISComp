@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import CookieConsentBanner from "./components/CookieConsentBanner";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -21,40 +22,51 @@ import JobEdit from "./pages/JobEdit";
 import JobAdd from "./pages/JobAdd";
 
 import Dashboard from "./pages/Dashboard";
+import Integrations from "./pages/Integrations";
+import Security from "./pages/Security";
 
 
 export default function App() {
   return (
-    <Routes>
-      {/* Public pages */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/create-user" element={<CreateUser />} />
-      <Route path="/privacy" element={<Privacy />} />
+    <>
+      <Routes>
+        {/* Public pages */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/create-user" element={<CreateUser />} />
+        <Route path="/privacy" element={<Privacy />} />
 
-      {/* Employees (internal candidates) */}
-      <Route path="/employees" element={<Employees />} />
-      <Route path="/employees/:id" element={<Employee />} />
-      <Route path="/employees/:id/edit" element={<EmployeeEdit />} />
-      <Route path="/employees/new" element={<EmployeeAdd />} />
-
-
-      {/* Applicants (non-internal candidates) */}
-      <Route path="/applicants" element={<Applicants />} />
-      <Route path="/applicants/:id" element={<Applicant />} />
-      <Route path="/applicants/:id/edit" element={<ApplicantEdit />} />
-      <Route path="/applicants/new" element={<ApplicantAdd />} />
+        {/* Employees (internal candidates) */}
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/employees/:id" element={<Employee />} />
+        <Route path="/employees/:id/edit" element={<EmployeeEdit />} />
+        <Route path="/employees/new" element={<EmployeeAdd />} />
 
 
-      {/* Jobs */}
-      <Route path="/jobs" element={<Jobs />} />
-      <Route path="/jobs/:id" element={<Job />} />
-      <Route path="/jobs/:id/edit" element={<JobEdit />} />
-      <Route path="/jobs/new" element={<JobAdd />} />
+        {/* Applicants (non-internal candidates) */}
+        <Route path="/applicants" element={<Applicants />} />
+        <Route path="/applicants/:id" element={<Applicant />} />
+        <Route path="/applicants/:id/edit" element={<ApplicantEdit />} />
+        <Route path="/applicants/new" element={<ApplicantAdd />} />
 
-      {/* Dashboard */}
-      <Route path="/dashboard" element={<Dashboard />} />
 
-    </Routes>
+        {/* Jobs */}
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/jobs/:id" element={<Job />} />
+        <Route path="/jobs/:id/edit" element={<JobEdit />} />
+        <Route path="/jobs/new" element={<JobAdd />} />
+
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Integrations */}
+        <Route path="/integrate" element={<Integrations />} />
+
+        {/* Security */}
+        <Route path="/security" element={<Security />} />
+      </Routes>
+
+      <CookieConsentBanner />
+    </>
   );
 };

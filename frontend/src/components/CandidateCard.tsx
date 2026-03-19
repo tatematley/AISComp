@@ -66,7 +66,7 @@ export default function CandidateCard({ recommendation, jobId }: Props) {
       // /api/jobs/${jobId}/recommendations/${candidate_id}/explanation
       const res = await apiFetch(
         `/api/jobs/${jobId}/recommendations/${candidate_id}/explanation`,
-        { method: "GET" }
+        { method: "GET" },
       );
 
       const data = await res.json();
@@ -105,12 +105,13 @@ export default function CandidateCard({ recommendation, jobId }: Props) {
         <span>
           Skills: {skills_met}/{skills_required}
         </span>
-        {skill_match_score !== undefined && ml_hire_probability !== undefined && (
-          <span className="mlStats">
-            Skill: {Math.round(skill_match_score * 100)}% | ML:{" "}
-            {Math.round(ml_hire_probability * 100)}%
-          </span>
-        )}
+        {skill_match_score !== undefined &&
+          ml_hire_probability !== undefined && (
+            <span className="mlStats">
+              Skill: {Math.round(skill_match_score * 100)}% | ML:{" "}
+              {Math.round(ml_hire_probability * 100)}%
+            </span>
+          )}
       </div>
 
       {topSkills.length > 0 && (

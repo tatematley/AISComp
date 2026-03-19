@@ -6,6 +6,7 @@ import { pool } from "./db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import type { Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 import candidateRoutes from "./routes/candidates";
 import multer from "multer";
 import { PDFParse, VerbosityLevel } from "pdf-parse";
@@ -17,7 +18,26 @@ const anthropic = new Anthropic();
 dotenv.config();
 
 const app = express();
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ??
+  process.env.FRONTEND_ORIGIN ??
+  "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // debugging
@@ -62,6 +82,7 @@ type AuthedUser = {
   user_id: number;
   username: string;
   role: string; // "manager" | "employee"
+  mfaEnabled?: boolean;
 };
 
 const ROLES = {
@@ -71,24 +92,261 @@ const ROLES = {
 
 type AuthedRequest = Request & { user?: AuthedUser };
 
-function signToken(user: AuthedUser) {
+type TotpSetupTokenPayload = {
+  purpose: "mfa-setup";
+  user_id: number;
+  username: string;
+  secret: string;
+};
+
+type MfaChallengeTokenPayload = {
+  purpose: "mfa-login";
+  user_id: number;
+  username: string;
+  role: string;
+};
+
+const AUTH_COOKIE_NAME = "ais_auth";
+const MFA_ISSUER = process.env.MFA_ISSUER || "Candid";
+const TOTP_PERIOD_SECONDS = 30;
+const TOTP_DIGITS = 6;
+
+function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET missing");
-  return jwt.sign(user, secret, { expiresIn: "2h" });
+  return secret;
 }
 
-function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
-  console.log("AUTH header:", req.headers.authorization);
+function getSameSiteValue(): "lax" | "strict" | "none" {
+  const configured = String(process.env.COOKIE_SAME_SITE ?? "lax").toLowerCase();
+  if (configured === "strict" || configured === "none") return configured;
+  return "lax";
+}
 
+function useSecureCookies() {
+  const configured = String(process.env.COOKIE_SECURE ?? "").toLowerCase();
+  if (configured === "true") return true;
+  if (configured === "false") return false;
+  return process.env.NODE_ENV === "production";
+}
+
+function getAuthCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: useSecureCookies(),
+    sameSite: getSameSiteValue(),
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 2,
+  } as const;
+}
+
+function setAuthCookie(res: Response, token: string) {
+  res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
+}
+
+function clearAuthCookie(res: Response) {
+  res.clearCookie(AUTH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: useSecureCookies(),
+    sameSite: getSameSiteValue(),
+    path: "/",
+  });
+}
+
+function parseCookies(req: Request) {
+  const raw = req.headers.cookie ?? "";
+  return raw.split(";").reduce<Record<string, string>>((acc, part) => {
+    const [name, ...rest] = part.trim().split("=");
+    if (!name) return acc;
+    acc[name] = decodeURIComponent(rest.join("=") ?? "");
+    return acc;
+  }, {});
+}
+
+function getTokenFromRequest(req: Request) {
   const header = req.headers.authorization;
-  const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
+  const bearerToken = header?.startsWith("Bearer ") ? header.slice(7) : null;
+  if (bearerToken) return bearerToken;
+
+  const cookies = parseCookies(req);
+  return cookies[AUTH_COOKIE_NAME] ?? null;
+}
+
+function base32Encode(buffer: Buffer) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = 0;
+  let value = 0;
+  let output = "";
+
+  for (const byte of buffer) {
+    value = (value << 8) | byte;
+    bits += 8;
+
+    while (bits >= 5) {
+      output += alphabet[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+
+  if (bits > 0) {
+    output += alphabet[(value << (5 - bits)) & 31];
+  }
+
+  return output;
+}
+
+function base32Decode(value: string) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const normalized = value.toUpperCase().replace(/[^A-Z2-7]/g, "");
+  let bits = 0;
+  let current = 0;
+  const output: number[] = [];
+
+  for (const char of normalized) {
+    const index = alphabet.indexOf(char);
+    if (index < 0) continue;
+
+    current = (current << 5) | index;
+    bits += 5;
+
+    if (bits >= 8) {
+      output.push((current >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+
+  return Buffer.from(output);
+}
+
+function generateTotpSecret() {
+  return base32Encode(crypto.randomBytes(20));
+}
+
+function generateHotp(secret: string, counter: number) {
+  const counterBuffer = Buffer.alloc(8);
+  counterBuffer.writeBigUInt64BE(BigInt(counter));
+
+  const hmac = crypto
+    .createHmac("sha1", base32Decode(secret))
+    .update(counterBuffer)
+    .digest();
+
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const binary =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+
+  return String(binary % 10 ** TOTP_DIGITS).padStart(TOTP_DIGITS, "0");
+}
+
+function verifyTotpCode(secret: string, code: string, window = 1) {
+  const normalizedCode = code.replace(/\s+/g, "");
+  if (!/^\d{6}$/.test(normalizedCode)) return false;
+
+  const counter = Math.floor(Date.now() / 1000 / TOTP_PERIOD_SECONDS);
+  for (let offset = -window; offset <= window; offset += 1) {
+    const expected = generateHotp(secret, counter + offset);
+    if (expected === normalizedCode) return true;
+  }
+
+  return false;
+}
+
+function getOtpAuthUrl(secret: string, username: string) {
+  const accountName = encodeURIComponent(`${MFA_ISSUER}:${username}`);
+  const issuer = encodeURIComponent(MFA_ISSUER);
+  return `otpauth://totp/${accountName}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=${TOTP_DIGITS}&period=${TOTP_PERIOD_SECONDS}`;
+}
+
+function signTotpSetupToken(payload: Omit<TotpSetupTokenPayload, "purpose">) {
+  return jwt.sign(
+    { ...payload, purpose: "mfa-setup" } satisfies TotpSetupTokenPayload,
+    getJwtSecret(),
+    { expiresIn: "10m" },
+  );
+}
+
+function verifyTotpSetupToken(token: string) {
+  return jwt.verify(token, getJwtSecret()) as TotpSetupTokenPayload;
+}
+
+function signMfaChallengeToken(payload: Omit<MfaChallengeTokenPayload, "purpose">) {
+  return jwt.sign(
+    { ...payload, purpose: "mfa-login" } satisfies MfaChallengeTokenPayload,
+    getJwtSecret(),
+    { expiresIn: "10m" },
+  );
+}
+
+function verifyMfaChallengeToken(token: string) {
+  return jwt.verify(token, getJwtSecret()) as MfaChallengeTokenPayload;
+}
+
+function signToken(user: AuthedUser) {
+  return jwt.sign(user, getJwtSecret(), { expiresIn: "2h" });
+}
+
+function normalizeRecoveryCode(code: string) {
+  return code.replace(/[^a-z0-9]/gi, "").toUpperCase();
+}
+
+function generateRecoveryCode() {
+  return crypto
+    .randomBytes(5)
+    .toString("hex")
+    .toUpperCase()
+    .match(/.{1,4}/g)
+    ?.join("-") ?? crypto.randomBytes(5).toString("hex").toUpperCase();
+}
+
+async function hashRecoveryCodes(codes: string[]) {
+  return Promise.all(codes.map((code) => bcrypt.hash(normalizeRecoveryCode(code), 10)));
+}
+
+function parseStoredRecoveryCodes(raw: unknown) {
+  if (Array.isArray(raw)) {
+    return raw.filter((item): item is string => typeof item === "string");
+  }
+
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((item): item is string => typeof item === "string")
+        : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+async function consumeRecoveryCode(rawStoredCodes: unknown, providedCode: string) {
+  const normalized = normalizeRecoveryCode(providedCode);
+  const storedCodes = parseStoredRecoveryCodes(rawStoredCodes);
+
+  for (let index = 0; index < storedCodes.length; index += 1) {
+    const matches = await bcrypt.compare(normalized, storedCodes[index]);
+    if (matches) {
+      const remainingCodes = storedCodes.filter((_, currentIndex) => currentIndex !== index);
+      return { matched: true, remainingCodes };
+    }
+  }
+
+  return { matched: false, remainingCodes: storedCodes };
+}
+
+
+function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+  const token = getTokenFromRequest(req);
 
   if (!token) return res.status(401).json({ error: "Missing auth token" });
 
   try {
-    const secret = process.env.JWT_SECRET!;
-    const payload = jwt.verify(token, secret) as AuthedUser;
-    console.log("JWT payload:", payload);
+    const payload = jwt.verify(token, getJwtSecret()) as AuthedUser;
     req.user = payload;
     next();
   } catch {
@@ -127,7 +385,10 @@ app.post("/api/auth/login", async (req, res) => {
         u.user_id,
         u.username,
         u.password,
-        r.user_role
+        r.user_role,
+        COALESCE(u.mfa_enabled, false) AS mfa_enabled,
+        u.mfa_secret,
+        u.mfa_recovery_codes
       FROM app_user u
       JOIN user_roles r ON r.user_role_id = u.user_role_id
       WHERE LOWER(u.username) = $1
@@ -149,14 +410,263 @@ app.post("/api/auth/login", async (req, res) => {
       user_id: Number(row.user_id),
       username: String(row.username),
       role: String(row.user_role).trim().toLowerCase(),
+      mfaEnabled: Boolean(row.mfa_enabled),
     };
 
-    const token = signToken(user);
+    if (Boolean(row.mfa_enabled) && row.mfa_secret) {
+      const challengeToken = signMfaChallengeToken({
+        user_id: user.user_id,
+        username: user.username,
+        role: user.role,
+      });
 
-    return res.json({ token, user });
+      return res.json({
+        mfaRequired: true,
+        challengeToken,
+        user: {
+          user_id: user.user_id,
+          username: user.username,
+          role: user.role,
+          mfaEnabled: true,
+        },
+      });
+    }
+
+    const token = signToken(user);
+    setAuthCookie(res, token);
+
+    return res.json({ user });
   } catch (err) {
     console.error("POST /api/auth/login failed:", err);
     return res.status(500).json({ error: "Login failed" });
+  }
+});
+
+app.post("/api/auth/mfa/verify-login", async (req, res) => {
+  const challengeToken = String(req.body?.challengeToken ?? "");
+  const code = String(req.body?.code ?? "");
+
+  if (!challengeToken || !code) {
+    return res.status(400).json({ error: "Challenge token and code are required." });
+  }
+
+  try {
+    const payload = verifyMfaChallengeToken(challengeToken);
+    if (payload.purpose !== "mfa-login") {
+      return res.status(400).json({ error: "Invalid MFA challenge." });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        u.mfa_enabled,
+        u.mfa_secret,
+        u.mfa_recovery_codes,
+        r.user_role
+      FROM app_user u
+      JOIN user_roles r ON r.user_role_id = u.user_role_id
+      WHERE u.user_id = $1
+      `,
+      [payload.user_id],
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(401).json({ error: "User not found." });
+    }
+
+    const row = result.rows[0];
+    const mfaSecret = String(row.mfa_secret ?? "");
+    const isValidTotp = Boolean(row.mfa_enabled) && mfaSecret
+      ? verifyTotpCode(mfaSecret, code)
+      : false;
+
+    let recoveryConsumed = false;
+    let remainingCodes = parseStoredRecoveryCodes(row.mfa_recovery_codes);
+
+    if (!isValidTotp) {
+      const recoveryResult = await consumeRecoveryCode(row.mfa_recovery_codes, code);
+      recoveryConsumed = recoveryResult.matched;
+      remainingCodes = recoveryResult.remainingCodes;
+    }
+
+    if (!isValidTotp && !recoveryConsumed) {
+      return res.status(401).json({ error: "Invalid verification code." });
+    }
+
+    if (recoveryConsumed) {
+      await pool.query(
+        `UPDATE app_user SET mfa_recovery_codes = $1 WHERE user_id = $2`,
+        [JSON.stringify(remainingCodes), payload.user_id],
+      );
+    }
+
+    const user = {
+      user_id: payload.user_id,
+      username: payload.username,
+      role: String(row.user_role).trim().toLowerCase(),
+      mfaEnabled: true,
+    };
+
+    setAuthCookie(res, signToken(user));
+    return res.json({ user, recoveryCodeUsed: recoveryConsumed });
+  } catch (err) {
+    console.error("POST /api/auth/mfa/verify-login failed:", err);
+    return res.status(401).json({ error: "MFA verification failed." });
+  }
+});
+
+app.post("/api/auth/logout", (_req, res) => {
+  clearAuthCookie(res);
+  return res.sendStatus(204);
+});
+
+app.get("/api/auth/me", requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT COALESCE(mfa_enabled, false) AS mfa_enabled FROM app_user WHERE user_id = $1`,
+      [req.user?.user_id],
+    );
+
+    return res.json({
+      user: {
+        ...req.user,
+        mfaEnabled: Boolean(result.rows[0]?.mfa_enabled),
+      },
+    });
+  } catch (err) {
+    console.error("GET /api/auth/me failed:", err);
+    return res.status(500).json({ error: "Unable to load user." });
+  }
+});
+
+app.get("/api/auth/mfa/status", requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT COALESCE(mfa_enabled, false) AS mfa_enabled FROM app_user WHERE user_id = $1`,
+      [req.user?.user_id],
+    );
+
+    return res.json({
+      mfaEnabled: Boolean(result.rows[0]?.mfa_enabled),
+      username: req.user?.username ?? "",
+      issuer: MFA_ISSUER,
+    });
+  } catch (err) {
+    console.error("GET /api/auth/mfa/status failed:", err);
+    return res.status(500).json({ error: "Unable to load MFA status." });
+  }
+});
+
+app.post("/api/auth/mfa/setup/initiate", requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const secret = generateTotpSecret();
+    const username = req.user?.username ?? "user";
+    const setupToken = signTotpSetupToken({
+      user_id: req.user!.user_id,
+      username,
+      secret,
+    });
+
+    return res.json({
+      setupToken,
+      secret,
+      issuer: MFA_ISSUER,
+      accountName: username,
+      otpAuthUrl: getOtpAuthUrl(secret, username),
+    });
+  } catch (err) {
+    console.error("POST /api/auth/mfa/setup/initiate failed:", err);
+    return res.status(500).json({ error: "Unable to start MFA setup." });
+  }
+});
+
+app.post("/api/auth/mfa/setup/complete", requireAuth, async (req: AuthedRequest, res) => {
+  const setupToken = String(req.body?.setupToken ?? "");
+  const code = String(req.body?.code ?? "");
+
+  if (!setupToken || !code) {
+    return res.status(400).json({ error: "Setup token and code are required." });
+  }
+
+  try {
+    const payload = verifyTotpSetupToken(setupToken);
+    if (payload.purpose !== "mfa-setup" || payload.user_id !== req.user?.user_id) {
+      return res.status(400).json({ error: "Invalid MFA setup request." });
+    }
+
+    const isValid = verifyTotpCode(payload.secret, code);
+    if (!isValid) {
+      return res.status(400).json({ error: "Invalid verification code." });
+    }
+
+    const recoveryCodes = Array.from({ length: 8 }, () => generateRecoveryCode());
+    const recoveryHashes = await hashRecoveryCodes(recoveryCodes);
+
+    await pool.query(
+      `
+      UPDATE app_user
+      SET mfa_enabled = true,
+          mfa_secret = $1,
+          mfa_recovery_codes = $2
+      WHERE user_id = $3
+      `,
+      [payload.secret, JSON.stringify(recoveryHashes), req.user?.user_id],
+    );
+
+    return res.json({
+      mfaEnabled: true,
+      recoveryCodes,
+    });
+  } catch (err) {
+    console.error("POST /api/auth/mfa/setup/complete failed:", err);
+    return res.status(500).json({ error: "Unable to complete MFA setup." });
+  }
+});
+
+app.post("/api/auth/mfa/disable", requireAuth, async (req: AuthedRequest, res) => {
+  const password = String(req.body?.password ?? "");
+  const code = String(req.body?.code ?? "");
+
+  if (!password || !code) {
+    return res.status(400).json({ error: "Password and code are required." });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT password, mfa_secret FROM app_user WHERE user_id = $1`,
+      [req.user?.user_id],
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const row = result.rows[0];
+    const passwordMatches = await bcrypt.compare(password, String(row.password ?? ""));
+    if (!passwordMatches) {
+      return res.status(401).json({ error: "Incorrect password." });
+    }
+
+    const secret = String(row.mfa_secret ?? "");
+    if (!secret || !verifyTotpCode(secret, code)) {
+      return res.status(401).json({ error: "Invalid verification code." });
+    }
+
+    await pool.query(
+      `
+      UPDATE app_user
+      SET mfa_enabled = false,
+          mfa_secret = NULL,
+          mfa_recovery_codes = NULL
+      WHERE user_id = $1
+      `,
+      [req.user?.user_id],
+    );
+
+    return res.json({ mfaEnabled: false });
+  } catch (err) {
+    console.error("POST /api/auth/mfa/disable failed:", err);
+    return res.status(500).json({ error: "Unable to disable MFA." });
   }
 });
 
@@ -1809,11 +2319,13 @@ app.post("/api/auth/register", async (req, res) => {
       user_id: Number(insertRes.rows[0].user_id),
       username: String(insertRes.rows[0].username),
       role,
+      mfaEnabled: false,
     };
 
     const token = signToken(user);
+    setAuthCookie(res, token);
 
-    return res.status(201).json({ token, user });
+    return res.status(201).json({ user });
   } catch (err) {
     console.error("POST /api/auth/register failed:", err);
     return res.status(500).json({ error: "Registration failed" });

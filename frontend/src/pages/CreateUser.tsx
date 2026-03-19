@@ -2,6 +2,7 @@ import "../styles/CreateUser.css";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { storeUser } from "../lib/auth";
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -58,9 +59,7 @@ export default function CreateUser() {
         throw new Error(data?.error ?? "Unable to create user.");
       }
 
-      // If your backend returns token + user (recommended), we store it:
-      if (data?.token) localStorage.setItem("token", data.token);
-      if (data?.user) localStorage.setItem("user", JSON.stringify(data.user));
+      if (data?.user) storeUser(data.user);
 
       // Send them somewhere sensible
       navigate("/employees");

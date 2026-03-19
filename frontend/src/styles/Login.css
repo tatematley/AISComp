@@ -141,6 +141,47 @@
   font-size: 14.5px;
 }
 
+.loginPasswordWrap {
+  position: relative;
+}
+
+.loginPasswordInput {
+  padding-right: 72px;
+  width: 100%;
+}
+
+.loginPasswordToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #87bbd7;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.loginPasswordToggle:hover {
+  color: #b5d8ea;
+}
+
+.loginError {
+  margin: 10px 0 0;
+  color: #ffd7d7;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.loginMfaText {
+  margin: 0 0 4px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
 .loginInput::placeholder {
   color: rgba(255, 255, 255, 0.55);
 }
