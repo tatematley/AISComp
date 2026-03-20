@@ -278,7 +278,7 @@ export default function Employee() {
                   <div className="profileInfoItem">
                     <div className="profileLabel">Phone</div>
                     <div className="profileValue">
-                      {candidate.phone_number || "—"}
+                      {candidate.phone_number ? candidate.phone_number.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : "—"}
                     </div>
                   </div>
                 </div>
