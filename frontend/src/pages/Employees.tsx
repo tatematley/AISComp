@@ -196,7 +196,7 @@ export default function Employees() {
                   )}
                 </div>
 
-                <div className="employeesCell">{e.phone_number ?? "—"}</div>
+                <div className="employeesCell">{e.phone_number ? e.phone_number.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : "—"}</div>
               </div>
             ))
           }

@@ -220,7 +220,7 @@ export default function Applicants() {
                   )}
                 </div>
 
-                <div className="applicantsCell">{a.phone_number ?? "—"}</div>
+                <div className="applicantsCell">{a.phone_number ? a.phone_number.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : "—"}</div>
 
                 <div className="applicantsCell">
                   {formatDate(a.application_date)}
