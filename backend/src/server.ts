@@ -610,7 +610,7 @@ app.post("/api/auth/mfa/setup/complete", requireAuth, async (req: AuthedRequest,
           mfa_recovery_codes = $2
       WHERE user_id = $3
       `,
-      [payload.secret, JSON.stringify(recoveryHashes), req.user?.user_id],
+      [payload.secret, recoveryHashes, req.user?.user_id],
     );
 
     return res.json({
