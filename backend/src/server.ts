@@ -241,7 +241,7 @@ function generateHotp(secret: string, counter: number) {
   return String(binary % 10 ** TOTP_DIGITS).padStart(TOTP_DIGITS, "0");
 }
 
-function verifyTotpCode(secret: string, code: string, window = 1) {
+function verifyTotpCode(secret: string, code: string, window = 2) {
   const normalizedCode = code.replace(/\s+/g, "");
   if (!/^\d{6}$/.test(normalizedCode)) return false;
 
