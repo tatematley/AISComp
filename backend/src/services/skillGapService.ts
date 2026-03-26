@@ -32,7 +32,11 @@ export async function generateSkillGapSummary(
 
     const prompt = `An employee wants to move into a ${jobTitle} role in ${department}. Their top skill gaps are: ${skillsList}.
 
-Write a brief, encouraging 2-3 sentence summary of their upskilling journey. Focus on estimated timeline and keep it motivating.`;
+Write a brief, encouraging 2-3 sentence summary of their upskilling journey. Focus on estimated timeline and keep it motivating.
+Base the summary only on job-relevant skills, development needs, and the information provided here.
+Before finalizing, review the summary for bias or potentially biased language and remove any direct or indirect references, assumptions, stereotypes, or implications related to protected characteristics such as gender, race, ethnicity, age, disability, religion, sexual orientation, or nationality.
+Do not infer demographic information or use proxies for protected characteristics.
+Keep the tone fair, neutral, supportive, and evidence-based.`;
 
     console.log("🤖 Calling Claude 3.5 Haiku for summary...");
     const startTime = Date.now();
@@ -108,7 +112,11 @@ Timeline: [Realistic estimate like "4-6 weeks with 5 hours/week"]
 
 ---
 
-Continue this format for all ${gapSkills.length} skills. Make it encouraging, specific, and actionable.`;
+Continue this format for all ${gapSkills.length} skills. Make it encouraging, specific, and actionable.
+Base the plan only on job-relevant skills, development needs, and the information provided here.
+Before finalizing, review the plan for bias or potentially biased language and remove any direct or indirect references, assumptions, stereotypes, or implications related to protected characteristics such as gender, race, ethnicity, age, disability, religion, sexual orientation, or nationality.
+Do not infer demographic information or use proxies for protected characteristics.
+Keep the recommendations fair, neutral, supportive, and evidence-based.`;
 
     console.log("🤖 Calling Claude 3.5 Haiku for full plan...");
     const startTime = Date.now();
@@ -123,7 +131,9 @@ Continue this format for all ${gapSkills.length} skills. Make it encouraging, sp
 
     const textContent = message.content.find((block) => block.type === "text");
     const draft =
-      textContent?.type === "text" ? textContent.text : "Full plan unavailable.";
+      textContent?.type === "text"
+        ? textContent.text
+        : "Full plan unavailable.";
 
     return await editWithOpenAI({
       contentType: "upskilling plan",
