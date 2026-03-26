@@ -930,6 +930,9 @@ Rules:
 - Set any missing field to null.
 - Return an empty array for skills if none match.
 - Estimate proficiency_level (0–5) for each skill based on context clues (years of experience, role seniority, keywords like "proficient", "expert", "managed", etc.). Default to 2 if unclear.
+- Review your extraction for bias or potentially biased reasoning before finalizing.
+- Do not infer or rely on protected characteristics or sensitive traits such as gender, race, ethnicity, age, disability, religion, sexual orientation, or nationality.
+- Ignore demographic details unless they are explicitly needed for one of the requested JSON fields, and never use them to influence skill extraction or proficiency estimates.
 - Output ONLY the JSON.`;
 
       const message = await anthropic.messages.create({
