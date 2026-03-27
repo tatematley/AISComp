@@ -277,7 +277,7 @@ export default function Integrations() {
                 <div>
                   <div className="integrationsHeroLabel">Featured workflow</div>
                   <div className="integrationsHeroTitle">
-                    Make AIS Comp look instantly integration-ready for recruiting teams
+                    Explore connected recruiting workflows across job boards and custom tools
                   </div>
                 </div>
                 <button type="button" className="integrationsHeroCta">
