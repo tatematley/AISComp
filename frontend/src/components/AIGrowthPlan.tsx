@@ -15,6 +15,49 @@ type AIGrowthPlanProps = {
   employeeName: string;
 };
 
+const formatPlan = (text: string) => {
+  return text
+    .split("\n")
+    .map((line, i) => {
+      const trimmed = line.trim();
+      if (!trimmed) return null;
+
+      if (/^\d+\./.test(trimmed)) {
+        return (
+          <div key={i} className="text-green-400 font-bold text-lg mt-4 mb-2">
+            {trimmed}
+          </div>
+        );
+      }
+
+      if (/^[-•*]/.test(trimmed)) {
+        return (
+          <div key={i} className="text-gray-300 leading-relaxed pl-6">
+            {trimmed.replace(/^[-•*]\s*/, "• ")}
+          </div>
+        );
+      }
+
+      if (/^(\*\*|#{1,3})/.test(trimmed) || trimmed.endsWith(":")) {
+        return (
+          <div
+            key={i}
+            className="text-slate-100 font-semibold mt-3 mb-1 tracking-tight"
+          >
+            {trimmed.replace(/^\*\*|\*\*$|^#{1,3}\s*/g, "")}
+          </div>
+        );
+      }
+
+      return (
+        <div key={i} className="text-gray-300 leading-relaxed">
+          {trimmed}
+        </div>
+      );
+    })
+    .filter(Boolean);
+};
+
 export function AIGrowthPlan({
   plan,
   jobTitle,
@@ -87,10 +130,8 @@ export function AIGrowthPlan({
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="prose prose-invert max-w-none">
-                <div className="whitespace-pre-wrap text-gray-300 leading-relaxed">
-                  {plan.fullPlan}
-                </div>
+              <div className="flex flex-col gap-4">
+                <div>{formatPlan(plan.fullPlan)}</div>
               </div>
             </div>
           </div>
