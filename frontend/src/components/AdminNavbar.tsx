@@ -142,7 +142,7 @@ export default function Navbar({ userImageUrl, onLogout }: NavbarProps) {
                     navigate("/security");
                   }}
                 >
-                  Security
+                  Settings
                 </button>
 
                 <button
