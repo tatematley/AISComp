@@ -51,7 +51,7 @@ export default function Login() {
       }
 
       storeUser(data.user ?? null);
-      navigate("/dashboard");
+      navigate("/applicants");
     } catch (err: any) {
       setError(err?.message ?? "Login failed");
     } finally {
@@ -83,7 +83,7 @@ export default function Login() {
       storeUser(data.user ?? null);
       setMfaChallenge(null);
       setMfaCode("");
-      navigate("/dashboard");
+      navigate("/applicants");
     } catch (err: any) {
       setError(err?.message ?? "Verification failed");
     } finally {
