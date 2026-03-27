@@ -21,10 +21,10 @@ const formatAnalysis = (text: string) => {
       const trimmed = line.trim();
       if (!trimmed) return null;
 
-      // Numbered items
+      // Skill titles / numbered items
       if (/^\d+\./.test(trimmed)) {
         return (
-          <div key={i} className="fullPlanNumbered">
+          <div key={i} className="fullPlanRoleTitle">
             {trimmed}
           </div>
         );

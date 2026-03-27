@@ -213,12 +213,13 @@
   border-bottom: 1px solid rgba(218, 245, 97, 0.2);
 }
 
-.fullPlanNumbered {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 15px;
-  line-height: 1.75;
-  padding-left: 8px;
-  font-weight: 600;
+.fullPlanRoleTitle {
+  color: rgba(74, 222, 128, 0.98);
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 800;
+  margin-top: 10px;
+  margin-bottom: 2px;
 }
 
 .fullPlanBullet {
