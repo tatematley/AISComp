@@ -17,7 +17,7 @@ export default function Navbar({ userImageUrl, onLogout }: NavbarProps) {
   const userPhotoMap: Record<string, string> = {
     tatematley: "/images/profiles/tate.jpeg",
     sarahboyer: "/images/profiles/sarah.jpeg",
-    zburnsie: "/images/profiles/zach.jpeg",
+    zburnsie: "/images/profiles/Henry.png",
   };
 
   const getStoredUser = () => {
